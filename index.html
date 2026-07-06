@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Fatima Bakery ATX — Artisan Sourdough · Liberty Hill, TX</title>
+<meta name="description" content="Fatima Bakery ATX bakes artisan sourdough in Liberty Hill, serving Santa Rita Ranch, Leander, Georgetown, Cedar Park, and North Austin with Friday pickup, local delivery, and farmers market pop-ups."/>
+<link rel="icon" type="image/png" href="/images/logo.png"/>
+<link rel="apple-touch-icon" href="/images/logo.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500;1,700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:     #f5eed8;
+  --cream-lt:  #faf7ee;
+  --beige:     #e8dfc8;
+  --green:     #2a3d28;
+  --green-md:  #3d5c3a;
+  --green-lt:  #587a54;
+  --gold:      #c9a84c;
+  --gold-lt:   #dfc078;
+  --ink:       #1c1a14;
+  --ink2:      #3d3620;
+  --ink3:      #6b5f42;
+  --border:    rgba(42,61,40,0.13);
+  --fd: 'Playfair Display', Georgia, serif;
+  --fb: 'Lora', Georgia, serif;
+  --fc: 'Cinzel', serif;
+}
+
+/* ── GOLD LABEL ── */
+.gold-label{
+  display:inline-block !important;
+  background:var(--gold) !important;
+  color:var(--green) !important;
+  font-family:var(--fc);
+  font-size:.6rem;
+  font-weight:600;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  padding:.22rem .8rem;
+  margin-bottom:.9rem;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--cream-lt);
+  color:var(--ink);
+  font-family:var(--fb);
+  font-size:19px;
+  line-height:1.75;
+  overflow-x:hidden;
+}
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.022;pointer-events:none;z-index:9999;
+}
+
+/* ── NAV ── */
+@media print{
+  }
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  padding-top:0;
+}
+.hero-photo{
+  position:relative;overflow:hidden;
+}
+.hero-photo img{
+  width:100%;height:100%;object-fit:cover;
+  display:block;
+}
+.hero-content{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:5rem 4rem 5rem 3rem;
+  background:var(--cream-lt);
+}
+.eyebrow{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.18em;font-weight:600;
+  text-transform:uppercase;color:var(--green);
+  background:var(--gold);display:inline-block;
+  padding:.2rem .8rem;margin-bottom:1.2rem;
+}
+.eyebrow::before{
+  content:'';display:block;
+  width:28px;height:1px;background:var(--gold);
+}
+h1{
+  font-family:var(--fd);font-size:clamp(2.8rem,4.6vw,5rem);
+  font-weight:400;line-height:1.06;
+  color:var(--green);
+  margin-bottom:1.2rem;
+}
+h1 em{font-style:italic;color:var(--green-md);}
+.hero-sub{
+  font-size:1rem;color:var(--ink3);
+  max-width:380px;margin-bottom:2rem;line-height:1.8;
+}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;}
+.btn-primary{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.15em;
+  text-transform:uppercase;text-decoration:none;
+  background:var(--green);color:var(--cream);
+  padding:.8rem 2rem;border-radius:1px;
+  transition:background .2s;display:inline-block;
+}
+.btn-primary:hover{background:var(--green-md);}
+.btn-ghost{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.15em;
+  text-transform:uppercase;text-decoration:none;
+  border:1px solid var(--border);color:var(--ink2);
+  padding:.8rem 2rem;border-radius:1px;
+  transition:border-color .2s,color .2s;display:inline-block;
+}
+.btn-ghost:hover{border-color:var(--green-lt);color:var(--green);}
+
+/* ── STORY ── */
+.story{
+  background:var(--cream);
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0;min-height:600px;
+}
+.story-photos{
+  display:grid;
+  grid-template-rows:2fr 1fr;
+  gap:0;
+}
+.story-photo-main img,
+.story-photo-inset img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.story-photo-main{overflow:hidden;}
+.story-photo-inset{overflow:hidden;}
+.story-text{
+  padding:5rem 4rem;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.section-label{
+  font-family:var(--fc);font-size:.72rem;letter-spacing:.18em;font-weight:400;
+  text-transform:uppercase;color:var(--ink3);
+  margin-bottom:.8rem;
+  display:flex;align-items:center;gap:.8rem;
+}
+.section-label::before{content:'';display:block;width:20px;height:1px;background:var(--gold);}
+.story-text h2{
+  font-family:var(--fd);font-size:clamp(1.9rem,2.6vw,2.6rem);font-weight:400;
+  color:var(--green);line-height:1.15;margin-bottom:1.2rem;
+}
+.story-text h2 em{font-style:italic;}
+.story-text p{
+  font-size:1rem;color:var(--ink2);line-height:1.75;
+  margin-bottom:1rem;max-width:420px;
+}
+.pullquote{
+  background:var(--green);color:var(--cream);
+  padding:1.2rem 1.5rem;margin:1.2rem 0;
+  border-left:3px solid var(--gold);
+  font-style:italic;font-size:.95rem;line-height:1.7;
+}
+
+/* ── FAITH ── */
+.faith{
+  background:var(--beige);
+  display:flex;justify-content:center;
+  padding:5rem 4rem;
+}
+.faith-text{
+  max-width:640px;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;
+}
+.faith-text .section-label{justify-content:center;}
+.faith-text h2{
+  font-family:var(--fd);font-size:clamp(1.9rem,2.6vw,2.6rem);font-weight:400;
+  color:var(--green);line-height:1.15;margin-bottom:1rem;
+}
+.faith-text h2 em{font-style:italic;}
+.faith-text p{
+  font-size:1rem;color:var(--ink2);line-height:1.75;
+  margin-bottom:1rem;max-width:420px;
+}
+.rosary{
+  display:flex;align-items:center;gap:.35rem;margin:1.2rem 0;
+}
+.bead{
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(42,61,40,.2);
+}
+.bead.lg{width:9px;height:9px;background:rgba(42,61,40,.35);}
+.scripture{
+  border-left:2px solid var(--gold);
+  padding:.6rem 1rem;
+  font-style:italic;color:var(--ink3);font-size:.88rem;line-height:1.7;
+  margin:1rem 0;
+}
+
+/* ── EVENTS ── */
+.events{
+  background:var(--cream-lt);
+  padding:5rem 4rem;
+}
+.events-header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  margin-bottom:3rem;
+}
+.events-header h2{
+  font-family:var(--fd);font-size:clamp(2.2rem,3vw,3rem);font-weight:700;
+  color:var(--green);
+}
+.events-header h2 em{font-style:italic;}
+.events-header a{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--green-lt);text-decoration:none;
+}
+.events-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;max-width:760px;
+}
+.event-card{
+  border:1px solid var(--border);
+  padding:1.8rem;background:var(--cream);
+  display:flex;flex-direction:column;gap:.5rem;
+  transition:border-color .2s;
+}
+.event-card:hover{border-color:var(--green-lt);}
+.event-card.featured{
+  background:var(--green);border-color:var(--green);color:var(--cream);
+}
+.event-day{
+  font-family:var(--fd);font-size:3.2rem;font-weight:300;
+  color:var(--gold);line-height:1;
+}
+.event-card.featured .event-day{color:var(--gold-lt);}
+.event-month{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;
+}
+.event-card.featured .event-month{color:rgba(245,238,216,.82);}
+.event-name{
+  font-family:var(--fd);font-size:1rem;font-weight:700;
+  color:var(--green);margin-bottom:.2rem;
+}
+.event-card.featured .event-name{color:var(--cream);}
+.event-loc{
+  font-family:var(--fb);font-size:.82rem;font-style:italic;
+  color:var(--ink3);
+}
+.event-card.featured .event-loc{color:rgba(245,238,216,.6);}
+.event-tag{
+  display:inline-block;margin-top:.5rem;
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.1em;
+  text-transform:uppercase;
+  background:rgba(201,168,76,.15);color:var(--gold);
+  padding:.2rem .6rem;border-radius:1px;
+  align-self:flex-start;
+}
+.event-card.featured .event-tag{background:rgba(201,168,76,.2);}
+.event-horizon{
+  background:transparent;border-style:dashed;
+  border-color:rgba(42,61,40,.2);opacity:.6;
+}
+.event-horizon .event-day{color:rgba(42,61,40,.2);}
+
+/* ── WAITLIST ── */
+.waitlist{
+  background:var(--green);
+  padding:4rem;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:4rem;align-items:center;
+}
+.waitlist h2{
+  font-family:var(--fd);font-size:2rem;font-weight:400;
+  color:var(--cream);line-height:1.3;margin-bottom:.8rem;
+}
+.waitlist h2 em{font-style:italic;color:var(--gold-lt);}
+.waitlist p{
+  font-size:.9rem;color:rgba(245,238,216,.65);line-height:1.7;
+}
+.wl-form{display:flex;flex-direction:column;gap:.8rem;}
+.wl-form label{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.15em;
+  text-transform:uppercase;color:rgba(245,238,216,.75);
+}
+.wl-input-row{display:flex;gap:.8rem;}
+.wl-form input{
+  flex:1;
+  background:rgba(245,238,216,.08);
+  border:1px solid rgba(245,238,216,.2);
+  color:var(--cream);
+  padding:.75rem 1rem;
+  font-family:var(--fb);font-size:.9rem;
+  outline:none;border-radius:1px;
+  transition:border-color .2s;
+}
+.wl-form input::placeholder{color:rgba(245,238,216,.3);}
+.wl-form input:focus{border-color:var(--gold);}
+.wl-submit{
+  font-family:var(--fc);font-size:.6rem;letter-spacing:.15em;
+  text-transform:uppercase;
+  background:var(--gold);color:var(--green);
+  border:none;padding:.75rem 1.5rem;
+  cursor:pointer;border-radius:1px;
+  transition:background .2s;white-space:nowrap;
+}
+.wl-submit:hover{background:var(--gold-lt);}
+.wl-note{
+  font-family:var(--fb);font-size:.82rem;font-style:italic;
+  color:rgba(245,238,216,.75);
+  margin-top:.4rem;
+  line-height:1.6;
+}
+
+
+/* ── LOCAL SEO SERVICE AREAS ── */
+.local-seo{
+  background:var(--cream-lt);
+  padding:5rem 4rem;
+}
+.local-seo-inner{max-width:980px;margin:0 auto;}
+.local-seo h2{
+  font-family:var(--fd);font-size:clamp(2rem,3vw,2.8rem);font-weight:700;
+  color:var(--green);line-height:1.15;margin:.25rem 0 1rem;
+}
+.local-seo .intro{font-size:1rem;color:var(--ink2);line-height:1.75;max-width:720px;margin-bottom:2rem;}
+.local-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;}
+.local-card{background:var(--cream);border:1px solid var(--border);padding:1.2rem;}
+.local-card h3{font-family:var(--fd);font-size:1.15rem;color:var(--green);margin-bottom:.45rem;}
+.local-card p{font-size:.88rem;line-height:1.65;color:var(--ink3);}
+@media(max-width:980px){.local-grid{grid-template-columns:repeat(2,1fr);}.local-seo{padding:4rem 2rem;}}
+@media(max-width:640px){.local-grid{grid-template-columns:1fr;}.local-seo{padding:3.5rem 1.4rem;}}
+
+/* ── ORDER CTA ── */
+.faq{background:var(--green);padding:5rem 2rem;}
+.faq-inner{max-width:760px;margin:0 auto;}
+.faq h2{font-family:var(--fd);font-size:2rem;font-weight:400;color:var(--cream);text-align:center;margin:.4rem 0 2.2rem;}
+.faq .section-label{color:var(--gold-lt);justify-content:center;}
+.faq-list{display:flex;flex-direction:column;gap:.2rem;}
+.faq-item{border-bottom:1px solid rgba(245,238,216,.18);}
+.faq-item summary{
+  font-family:var(--fb);font-size:1.15rem;font-weight:500;color:var(--cream);
+  padding:1.25rem .3rem;cursor:pointer;list-style:none;
+  display:flex;justify-content:space-between;align-items:center;gap:1rem;
+}
+.faq-item summary::-webkit-details-marker{display:none;}
+.faq-item summary::after{
+  content:"+";font-family:var(--fd);font-size:1.6rem;color:var(--gold-lt);
+  flex-shrink:0;transition:transform .2s;line-height:1;
+}
+.faq-item[open] summary::after{content:"\2212";}
+.faq-item[open] summary{color:var(--gold-lt);}
+.faq-item p{
+  font-family:var(--fb);font-size:1.02rem;line-height:1.8;color:rgba(245,238,216,.9);
+  margin:0 .3rem 1.4rem;max-width:64ch;
+}
+.faq-item a{color:var(--gold-lt);text-decoration:underline;font-weight:500;}
+@media(max-width:640px){
+  .faq{padding:3.5rem 1.4rem;}
+  .faq h2{font-size:1.65rem;}
+  .faq-item summary{font-size:1.05rem;}
+  .faq-item p{font-size:1rem;}
+}
+.order-cta{
+  background:var(--beige);
+  padding:5rem 4rem;
+  text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:1rem;
+  position:relative;overflow:hidden;
+}
+.order-cta::before{
+  content:'';position:absolute;inset:0;
+  background:url("/images/bg-texture.jpg") center/cover no-repeat;
+  opacity:.06;
+}
+.order-cta h2{
+  font-family:var(--fd);font-size:clamp(1.9rem,2.6vw,2.6rem);font-weight:400;
+  color:var(--green);line-height:1.15;
+  position:relative;z-index:1;
+}
+.order-cta h2 em{font-style:italic;}
+.order-cta p{
+  font-size:.95rem;color:var(--ink3);
+  max-width:460px;line-height:1.8;
+  position:relative;z-index:1;
+}
+.cta-buttons{
+  display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;
+  margin-top:.5rem;position:relative;z-index:1;
+}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--green);
+  padding:3.5rem 4rem 2rem;
+  display:grid;grid-template-columns:2fr 1fr 1fr;
+  gap:3rem;
+}
+.footer-brand{
+  font-family:var(--fc);font-size:.75rem;letter-spacing:.2em;
+  color:var(--cream);margin-bottom:.8rem;
+}
+.footer-tagline{
+  font-family:var(--fb);font-size:.85rem;font-style:italic;
+  color:rgba(245,238,216,.72);line-height:1.7;max-width:280px;
+  margin-bottom:1rem;
+}
+.footer-col h4{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--gold-lt);
+  margin-bottom:1rem;
+}
+.footer-col a,
+.footer-col p{
+  display:block;
+  font-family:var(--fb);font-size:.85rem;
+  color:rgba(245,238,216,.75);text-decoration:none;
+  margin-bottom:.4rem;line-height:1.7;
+  transition:color .2s;
+}
+.footer-col a:hover{color:var(--cream);}
+.footer-bottom{
+  width:100%;
+  border-top:1px solid rgba(245,238,216,.1);
+  padding-top:1.5rem;margin-top:1rem;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.footer-social{display:flex;gap:1rem;align-items:center;}
+.footer-social a{color:rgba(245,238,216,.85);transition:color .2s,transform .2s;display:inline-flex;padding:.2rem;}
+.footer-social a:hover{color:var(--gold,#c9a84c);}
+.footer-bottom a{color:rgba(245,238,216,.82);text-decoration:none;transition:color .2s;}
+.footer-bottom a:hover{color:var(--gold,#c9a84c);}
+.footer-bottom p{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.08em;
+  text-transform:uppercase;color:rgba(245,238,216,.62);
+}
+
+/* ── DIVIDERS ── */
+.grain-divider{
+  height:2px;
+  background:linear-gradient(to right, transparent, var(--gold), transparent);
+  opacity:.3;
+}
+
+/* ── INLINE CTA STRIP ── */
+.inline-cta{
+  background:var(--cream);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  padding:1.2rem 4rem;
+  display:flex;justify-content:space-between;align-items:center;gap:2rem;
+}
+.inline-cta p{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink2);
+}
+.event-order-link{
+  display:inline-block;margin-top:.8rem;
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--gold);
+  text-decoration:none;
+  transition:color .2s;
+}
+.event-card.featured .event-order-link{color:var(--gold-lt);}
+.event-order-link:hover{color:var(--green);}
+.event-card.featured .event-order-link:hover{color:white;}
+
+/* ── PHOTO BREAK ── */
+.photo-break{
+  display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;
+  max-width:1000px;margin:3rem auto;padding:0 4rem;
+}
+.photo-break figure{position:relative;overflow:hidden;aspect-ratio:4/3;}
+.photo-break img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-break figcaption{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent, rgba(28,26,20,.65));
+  padding:2rem 1.2rem .8rem;
+  font-family:var(--fc);font-size:.65rem;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(245,238,216,.75);
+}
+.photo-break-placeholder{
+  background:linear-gradient(135deg,var(--beige),var(--cream-lt));
+  display:flex;align-items:center;justify-content:center;
+}
+.photo-break-placeholder span{
+  font-family:var(--fc);font-size:.6rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink3);opacity:.6;
+}
+
+/* ── PILGRIMAGE BRIDGE ── */
+.pilgrimage-bridge{
+  background:var(--cream-lt);
+  padding:0 4rem 4rem;
+  text-align:center;
+  max-width:760px;margin:0 auto;
+}
+.pilgrimage-bridge p{
+  font-size:1.05rem;color:var(--ink2);line-height:1.85;
+  font-family:var(--fd);
+  margin-bottom:1rem;
+}
+.pilgrimage-bridge p:last-child{margin-bottom:0;}
+.pilgrimage-bridge p em{font-style:italic;color:var(--green-md);}
+.bridge-tagline{
+  font-style:italic;color:var(--green-md);
+  font-size:1.15rem;
+}
+.bridge-quote{font-size:1.05rem;}
+.bridge-note{
+  font-family:var(--fb) !important;font-size:.85rem !important;
+  color:var(--ink3) !important;font-style:italic;line-height:1.7 !important;
+}
+
+/* ── FAITH TAGLINE ── */
+.faith-tagline{
+  font-family:var(--fd) !important;font-size:1.15rem !important;
+  font-style:italic;color:var(--green-md) !important;
+  margin-bottom:1.2rem !important;
+}
+
+@media(max-width:860px){
+  .hero,.story,.waitlist{grid-template-columns:1fr;}
+  .faith{padding:3rem 1.5rem;}
+  .photo-break{grid-template-columns:1fr;padding:0 1.5rem;}
+  .pilgrimage-bridge{padding:0 1.5rem 3rem;}
+  .events-grid{grid-template-columns:1fr;}
+  footer{grid-template-columns:1fr;}
+  .events-header{flex-direction:column;align-items:flex-start;gap:.8rem;}
+  .hero-content{padding:3rem 2rem;}
+  }
+
+
+/* ── BREAD SHOWCASE ── */
+.bread-showcase{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  min-height:520px;
+  background:var(--cream-lt);
+}
+.bread-showcase-img{
+  overflow:hidden;
+  position:relative;
+}
+.bread-showcase-img img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.bread-showcase-text{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:4rem;
+  gap:1rem;
+}
+.bread-showcase-text h2{
+  font-family:var(--fd);
+  font-size:clamp(2rem,3vw,3rem);
+  font-weight:400;
+  color:var(--green);
+  line-height:1.1;
+}
+.bread-showcase-text h2 em{font-style:italic;color:var(--green-md);}
+.bread-showcase-text p{
+  font-size:1rem;
+  color:var(--ink2);
+  line-height:1.8;
+  max-width:380px;
+}
+@media(max-width:860px){
+  .bread-showcase{grid-template-columns:1fr;}
+  .bread-showcase-img{min-height:300px;}
+  .bread-showcase-text{padding:2.5rem 1.5rem;}
+}
+
+
+/* ── SITE HEADER + HAMBURGER NAV ── */
+.site-header{
+  background:var(--green);
+  border-bottom:1px solid rgba(201,168,76,.18);
+  padding:0 2rem;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  position:sticky;
+  top:0;
+  z-index:500;
+  width:100%;
+  box-sizing:border-box;
+}
+.sh-brand{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  text-decoration:none;
+  flex-shrink:0;
+}
+.sh-logo{
+  height:36px;
+  width:36px;
+  border-radius:50%;
+  object-fit:cover;
+  flex-shrink:0;
+}
+.sh-name{
+  font-family:var(--fc);
+  font-size:.82rem;
+  letter-spacing:.13em;
+  color:var(--cream);
+  font-weight:600;
+  white-space:nowrap;
+}
+.sh-name strong{color:var(--gold);font-weight:700;}
+/* Desktop inline nav */
+.sh-nav{
+  display:flex;
+  align-items:center;
+  gap:1.6rem;
+  flex:1;
+  justify-content:center;
+}
+.sh-nav a{
+  font-family:var(--fc);
+  font-size:.66rem;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  text-decoration:none;
+  color:rgba(245,238,216,.72);
+  white-space:nowrap;
+  transition:color .18s;
+  padding:.15rem 0;
+  border-bottom:1px solid transparent;
+}
+.sh-nav a:hover,
+.sh-nav a.active{
+  color:var(--gold);
+  border-bottom-color:rgba(201,168,76,.4);
+}
+/* Order CTA button */
+.sh-order{
+  font-family:var(--fc);
+  font-size:.68rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  text-decoration:none;
+  background:var(--gold);
+  color:var(--green);
+  padding:.38rem 1.1rem;
+  font-weight:600;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.sh-order:hover{background:var(--gold-lt);}
+/* Hamburger button */
+.sh-hamburger{
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  width:40px;
+  height:40px;
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  padding:6px;
+  flex-shrink:0;
+  margin-right:2px;
+  -webkit-appearance:none;
+  appearance:none;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
+.sh-hamburger:focus,.sh-hamburger:focus-visible,.sh-hamburger:active{
+  outline:none;background:transparent;
+}
+.sh-hamburger span{
+  display:block;
+  width:26px;
+  height:3px;
+  background:#f5eed8;
+  border-radius:2px;
+  transition:transform .22s, opacity .18s;
+}
+.sh-hamburger.open span:nth-child(1){transform:translateY(8.5px) rotate(45deg);}
+.sh-hamburger.open span:nth-child(2){opacity:0;}
+.sh-hamburger.open span:nth-child(3){transform:translateY(-8.5px) rotate(-45deg);}
+/* Mobile drawer */
+.sh-drawer{
+  display:none;
+  position:fixed;
+  top:56px;left:0;right:0;
+  background:var(--green);
+  border-bottom:1px solid rgba(201,168,76,.18);
+  flex-direction:column;
+  padding:1rem 2rem 1.5rem;
+  gap:.1rem;
+  z-index:499;
+  box-shadow:0 8px 24px rgba(0,0,0,.18);
+}
+.sh-drawer.open{display:flex;}
+.sh-drawer a{
+  font-family:var(--fc);
+  font-size:.68rem;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  text-decoration:none;
+  color:rgba(245,238,216,.8);
+  padding:.75rem 0;
+  border-bottom:1px solid rgba(245,238,216,.08);
+  transition:color .18s;
+}
+.sh-drawer a:last-child{border-bottom:none;}
+.sh-drawer a:hover,
+.sh-drawer a.active{color:var(--gold);}
+/* Responsive */
+@media(max-width:700px){
+  .sh-nav{display:none;}
+  .sh-hamburger{display:flex;}
+  .sh-order{display:none;}
+}
+@media(max-width:480px){
+  .sh-name{font-size:.88rem;}
+  .sh-order{font-size:.72rem;padding:.42rem 1rem;}
+  .site-header{padding:0 1rem;}
+  .sh-drawer{padding:1rem 1.5rem 1.5rem;}
+}
+
+/* ── HERO DUAL-BOULE ── */
+.hero-photo--dual{
+  display:grid;
+  grid-template-columns:45fr 55fr;
+  gap:3px;
+  background:var(--cream-lt);
+  position:relative;
+  overflow:hidden;
+}
+.hero-boule{
+  overflow:hidden;
+  position:relative;
+}
+.hero-boule img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  transition:transform .6s ease;
+}
+.hero-boule:hover img{transform:scale(1.03);}
+.hero-photo-overlay{display:none;}
+@media(max-width:860px){
+  .hero-photo--dual{
+    grid-template-columns:45fr 55fr;
+    min-height:260px;
+  }
+}
+@media(max-width:500px){
+  .hero-photo--dual{
+    grid-template-columns:45fr 55fr;
+  }
+}
+
+/* ── LEGIBILITY PASS — readable text at all sizes ── */
+
+/* Header & nav */
+.sh-name            { font-size: .88rem; }
+.sh-nav a           { font-size: .62rem; letter-spacing: .12em; }
+.sh-order           { font-size: .65rem; letter-spacing: .12em; }
+.sh-drawer a        { font-size: .72rem; letter-spacing: .12em; padding: .85rem 0; }
+
+/* Eyebrow / gold labels */
+.gold-label         { font-size: .68rem; letter-spacing: .13em; }
+.eyebrow            { font-size: .68rem; letter-spacing: .13em; }
+.section-label      { font-size: .75rem; letter-spacing: .14em; }
+
+/* Buttons */
+.btn-primary        { font-size: .7rem;  letter-spacing: .13em; }
+.btn-ghost          { font-size: .7rem;  letter-spacing: .13em; }
+
+/* Events */
+.events-header a    { font-size: .68rem; letter-spacing: .12em; }
+.event-month        { font-size: .65rem; letter-spacing: .12em; }
+.event-tag          { font-size: .6rem;  letter-spacing: .1em;  }
+.event-order-link   { font-size: .65rem; letter-spacing: .12em; }
+
+/* Photo captions — decorative, but floor at .6rem */
+.photo-break figcaption { font-size: .6rem; letter-spacing: .12em; }
+
+/* Waitlist form label */
+.wl-form label      { font-size: .65rem; letter-spacing: .12em; }
+.wl-submit          { font-size: .68rem; letter-spacing: .13em; }
+.wl-note            { font-size: .88rem; }
+
+/* Footer */
+.footer-brand       { font-size: .82rem; letter-spacing: .16em; }
+.footer-tagline     { font-size: .9rem;  }
+.footer-col h4      { font-size: .65rem; letter-spacing: .14em; }
+.footer-col a,
+.footer-col p       { font-size: .9rem;  }
+.footer-bottom p    { font-size: .68rem; letter-spacing: .08em; }
+
+/* Order / Pilgrim Membership labels */
+.order-group-title  { font-size: .72rem; letter-spacing: .13em; }
+.oi-name            { font-size: 1.05rem; }
+.oi-desc            { font-size: .85rem;  }
+.oi-price           { font-size: .95rem;  }
+.form-row label     { font-size: .68rem; letter-spacing: .13em; }
+.plan-label         { font-size: .68rem; letter-spacing: .1em;  }
+.best-tag           { font-size: .68rem; letter-spacing: .1em;  }
+.sub-plan-label,
+.plan-weeks         { font-size: 1.9rem; }
+
+/* Contact form */
+.contact-form .btn-primary { font-size: .7rem; }
+
+/* Collection page badges */
+.sub-plan-price     { font-size: 1.05rem; }
+
+/* ── MOBILE overrides (≤640px) ── */
+@media (max-width: 640px) {
+  body                { font-size: 17px; }
+
+  /* Header */
+  .sh-name            { font-size: .95rem; }
+  .sh-order           { font-size: .72rem; padding: .42rem 1rem; }
+  .sh-drawer a        { font-size: .82rem; letter-spacing: .1em; padding: 1rem 0; }
+
+  /* Gold labels / eyebrows */
+  .gold-label         { font-size: .72rem; }
+  .section-label      { font-size: .78rem; }
+
+  /* Buttons — tappable size */
+  .btn-primary,
+  .btn-ghost          { font-size: .78rem; padding: .9rem 1.8rem; }
+
+  /* Events */
+  .events-header a    { font-size: .72rem; }
+  .event-month        { font-size: .72rem; }
+  .event-tag          { font-size: .68rem; }
+
+  /* Waitlist */
+  .wl-form label      { font-size: .72rem; }
+  .wl-submit          { font-size: .75rem; padding: .85rem 1.4rem; }
+
+  /* Footer — readable, not microscopic */
+  .footer-col h4      { font-size: .72rem; }
+  .footer-col a,
+  .footer-col p       { font-size: .95rem; }
+  .footer-bottom p    { font-size: .62rem; }
+
+  /* Order form */
+  .order-group-title  { font-size: .78rem; }
+  .form-row label     { font-size: .72rem; }
+  .plan-label         { font-size: .65rem; }
+  .best-tag           { font-size: .62rem; }
+}
+</style>
+<style id="ig-mobile-scroll-fix">
+@media (max-width:900px){
+    .hero{position:static !important; min-height:auto !important; padding-top:0 !important;}
+  body::after{display:none !important;}
+}
+</style>
+</head>
+<body>
+
+<!-- SITE HEADER -->
+<header class="site-header">
+  <a class="sh-brand" href="/">
+    <img class="sh-logo" src="/images/logo.png" alt="Fatima Bakery ATX logo"/>
+    <span class="sh-name">Fatima Bakery <strong>ATX</strong></span>
+  </a>
+  <nav class="sh-nav">
+    <a href="/" class="active">Home</a>
+    <a href="/story">My Story</a>
+    <a href="/collection">Pilgrim Collection</a>
+    <a href="/contact">Contact</a>
+    <a href="/order">Order</a>
+  </nav>
+  <a class="sh-order" href="/order#Pilgrim Membership">Membership</a>
+  <button class="sh-hamburger" id="sh-hamburger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+<!-- MOBILE DRAWER -->
+<nav class="sh-drawer" id="sh-drawer">
+  <a href="/" class="active">Home</a>
+  <a href="/story">My Story</a>
+  <a href="/collection">Pilgrim Collection</a>
+  <a href="/contact">Contact</a>
+  <a href="/order">Order</a>
+  <a href="/order#Pilgrim Membership" style="color:var(--gold);margin-top:.4rem;">Membership</a>
+</nav>
+
+<!-- HERO: BREAD FIRST -->
+<section class="hero">
+  <div class="hero-photo hero-photo--dual">
+    <div class="hero-boule hero-boule--left">
+      <img src="/images/hero-scoring.jpg" alt="Hand-scored sourdough boule with wheat-stalk pattern" loading="eager"/>
+    </div>
+    <div class="hero-boule hero-boule--right">
+      <img src="/images/crumb-shot.jpg" alt="Guadalupe sourdough crumb with roasted poblano and sharp cheddar" loading="eager"/>
+    </div>
+  </div>
+  <div class="hero-content">
+    <h1>Handmade sourdough<br>from our<br><em>Liberty Hill kitchen.</em></h1>
+    <p class="hero-sub">Slow-fermented and baked by hand every Thursday, with curbside pickup and neighborhood delivery around Santa Rita Ranch on Friday morning. Orders close Wednesday evening.</p>
+    <div class="hero-btns">
+      <a class="btn-primary" href="/order" style="background:var(--gold);color:var(--green);border:none;">Order This Week</a>
+      <a class="btn-ghost" href="/order">Order a Loaf</a>
+    </div>
+  </div>
+</section>
+
+<div class="grain-divider"></div>
+
+<!-- MEET LINDSAY -->
+<section class="bread-showcase">
+  <div class="bread-showcase-img">
+    <img src="/images/home-hero-lindsay.jpg" alt="Lindsay, founder of Fatima Bakery ATX"/>
+  </div>
+  <div class="bread-showcase-text">
+    <div class="section-label gold-label">The Baker</div>
+    <h2>I'm Lindsay.<br><em>I love to make connections through shared experiences.</em></h2>
+    <p>I'm the founder and baker of Fatima Bakery ATX. My sourdough journey began with a love for gathering people around the table, sharing wholesome bread, and fostering meaningful connections through food. Baking from our home here near Santa Rita Ranch, I love knowing each loaf is headed to a neighbor's table. The journey to each of these pilgrimage places they're named after starts with each loaf.</p>
+    <a href="/story" class="btn-primary">My Story</a>
+  </div>
+</section>
+
+<div class="grain-divider"></div>
+
+<!-- FAITH -->
+<section class="faith" id="faith">
+  <div class="faith-text">
+    <div class="section-label gold-label">The Pilgrimage Collection</div>
+    <h2>Named for places<br>that inspire pilgrimage.</h2>
+    <p class="faith-tagline"><em>Inspired by sacred places around the world. Each loaf draws from a place, a tradition, and the flavors that gather people around the table.</em></p>
+    <p>The Pilgrimage Collection is named for sacred sites that people travel thousands of miles to visit: Fátima, Lourdes, Guadalupe, Santiago, Kibeho. Each place carries real meaning, and every loaf is named for one of them, baked with the same care and patience those places inspire.</p>
+    <a class="btn-primary" href="/order" style="margin-top:1rem;display:inline-block;">See the Full Collection</a>
+  </div>
+</section>
+
+<!-- EVENTS -->
+<section class="events" id="events">
+  <div class="events-header">
+    <div>
+      <div class="section-label gold-label">Where to Find Us</div>
+      <h2>Markets &amp; Neighborhood Events</h2>
+    </div>
+    <a href="/#events">All events →</a>
+  </div>
+  <div class="events-grid">
+    <div class="event-card featured">
+      <div class="event-day">6</div>
+      <div class="event-month">August 2026</div>
+      <div class="event-name">Wolf Ranch Community – River Camp</div>
+      <div class="event-loc">101 River Overlook Rd · Georgetown, TX 78626</div>
+      <div class="event-tag">5:00–8:30 PM</div>
+    </div>
+  </div>
+</section>
+
+<div class="grain-divider"></div>
+
+<!-- WAITLIST -->
+<section class="waitlist" id="waitlist">
+  <div>
+    <div class="section-label gold-label" style="color:rgba(245,238,216,.72);letter-spacing:.18em;font-size:.75rem;">Stay Connected</div>
+    <h2>Join the Fatima Bakery newsletter list.</h2>
+    <p>Get the Friday preorder link, market reminders, and small-batch sourdough updates for Liberty Hill and nearby North Austin communities. No spam, just bread worth knowing about.</p>
+  </div>
+  <div class="wl-form">
+    <label>Your email</label>
+    <div class="wl-input-row">
+      <input type="email" placeholder="you@example.com"/>
+      <button class="wl-submit">Join</button>
+    </div>
+    <p class="wl-note"><em>One simple note when Friday bread or a market batch is ready.</em></p>
+  </div>
+</section>
+
+
+<!-- LOCAL SOURDOUGH / SEO -->
+<section class="local-seo" id="local-sourdough">
+  <div class="local-seo-inner">
+    <div class="section-label gold-label">Local Sourdough</div>
+    <h2>Small-batch sourdough for Liberty Hill and nearby North Austin communities.</h2>
+    <p class="intro">Fatima Bakery ATX bakes naturally fermented artisan sourdough from our Liberty Hill home kitchen near Santa Rita Ranch. We serve neighbors looking for fresh Friday bread, market pickup, and local sourdough preorder options across Liberty Hill, Leander, Georgetown, Cedar Park, and North Austin.</p>
+    <div class="local-grid" aria-label="Fatima Bakery ATX local service areas">
+      <article class="local-card">
+        <h3>Liberty Hill</h3>
+        <p>Home-baked sourdough near Santa Rita Ranch with Friday pickup and neighborhood delivery options.</p>
+      </article>
+      <article class="local-card">
+        <h3>Leander</h3>
+        <p>Fresh artisan sourdough for Leander families who want a simple Friday preorder link and small-batch bread.</p>
+      </article>
+      <article class="local-card">
+        <h3>Georgetown</h3>
+        <p>Find us at Georgetown-area markets and preorder naturally fermented loaves for upcoming pickup windows.</p>
+      </article>
+      <article class="local-card">
+        <h3>Cedar Park</h3>
+        <p>Serving Cedar Park bread lovers through market days, Friday list updates, and local preorder announcements.</p>
+      </article>
+      <article class="local-card">
+        <h3>North Austin</h3>
+        <p>Small-batch sourdough for North Austin neighbors who want handcrafted bread without grocery-store shortcuts.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ORDER CTA -->
+<section class="faq" id="faq">
+  <div class="faq-inner">
+  <div class="section-label gold-label">Good to Know</div>
+  <h2>Frequently asked questions</h2>
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>Where can I see your menu?</summary>
+      <p>Our full Pilgrimage Collection of five sourdough boules plus seasonal extras is right on the <a href="/order">order page</a>. We bake in Liberty Hill and serve nearby customers in Santa Rita Ranch, Leander, Georgetown, Cedar Park, and North Austin through Friday preorders, market pickup, and limited local delivery.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Are your ingredients organic?</summary>
+      <p>We prioritize organic, foundational ingredients. Our bread products are principally organic, while the specialty loaves use high quality, small batch ingredients that aren't all certified organic. Every boule is naturally leavened, with no preservatives and no commercial yeast.</p>
+    </details>
+    <details class="faq-item">
+      <summary>How big are the loaves, and are they sliced?</summary>
+      <p>Our standard Fatima boule is roughly 800g, a generous round loaf made to share. We bake them whole and unsliced, so you get the full crackling crust and a longer shelf life. Slice it fresh at home whenever you're ready.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Do you offer pickup or delivery?</summary>
+      <p>Both. <strong>Curbside pickup</strong> is Fridays from 9am to 12pm at 112 Civita Road in Liberty Hill. <strong>Delivery</strong> is also Fridays from 9am to 12pm to the Santa Rita Ranch neighborhood, within a 5 mile radius, for a flat $5. We'll ask you to text us at <a href="sms:+15122991241">(512) 299-1241</a> when you're on your way, so each loaf is as fresh as possible.</p>
+    </details>
+    <details class="faq-item">
+      <summary>How should I store my bread?</summary>
+      <p>Keep your loaf at room temperature in a paper bag or wrapped in a clean kitchen towel, and enjoy it within two to three days. Avoid the fridge, as it dries bread out. To keep it longer, slice and freeze in an airtight bag for up to two months, then toast or warm before serving.</p>
+    </details>
+    <details class="faq-item">
+      <summary>When do you bake, and when do orders close?</summary>
+      <p>We bake fresh every Thursday, with curbside pickup and delivery on Friday morning. Orders close <strong>Wednesday evening</strong> so we have time to mix, ferment, and bake each loaf with care. Our dough takes about three days from start to finish.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Do you have allergen information?</summary>
+      <p>All loaves contain gluten (wheat flour). Several contain dairy: Lourdes (Gruyère), Guadalupe (cheddar), Santiago (Manchego), and Kibeho (butter). Guadalupe also contains pepitas (pumpkin seeds), so anyone with a nut or seed allergy should avoid it. If you have specific concerns, message us before ordering and we'll help.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Do you take catering or bulk orders?</summary>
+      <p>Not at this time. We're a small home bakery focused on our weekly Thursday bake. For questions about a larger order, reach out at <a href="mailto:hello@fatimabakery.com">hello@fatimabakery.com</a> and we'll do our best to help.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Is this a licensed bakery?</summary>
+      <p>Yes. Fatima Bakery ATX is a licensed Texas Cottage Food Operation, baked with care in our home kitchen in Liberty Hill.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Still have questions?</summary>
+      <p>Reach us anytime at <a href="mailto:hello@fatimabakery.com">hello@fatimabakery.com</a> or send a DM on Instagram <a href="https://instagram.com/fatimabakeryatx">@fatimabakeryatx</a>.</p>
+    </details>
+  </div>
+  </div>
+</section>
+
+<section class="order-cta">
+  <div class="section-label gold-label">Ready to Order</div>
+  <h2>Real bread takes<br><em>three days to make.</em></h2>
+  <p>Fresh bread every week. Curbside pickup and delivery Friday morning, and orders close Wednesday evening.</p>
+  <div class="cta-buttons">
+    <a class="btn-primary" href="/order">Order This Week's Loaf</a>
+    <a class="btn-ghost" href="/order#Pilgrim Membership">Join Loaf Reserve</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-brand">Fatima Bakery <strong>ATX</strong></div>
+    <p class="footer-tagline">Artisan sourdough baked slowly with care, named for sacred places around the world.</p>
+    <p style="font-family:var(--fc);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,238,216,.72);">Liberty Hill, Texas &middot; Est. 2026 &middot; Licensed Cottage Food Operation</p>
+  </div>
+  <div class="footer-col">
+    <h4>Explore</h4>
+    <a href="/story">My Story</a>
+    <a href="/collection">The Pilgrimage Collection</a>
+    <a href="/#events">Markets &amp; Events</a>
+    <a href="/#waitlist">Join the Waitlist</a>
+  </div>
+  <div class="footer-col">
+    <h4>Order</h4>
+    <a href="/collection">Browse the Menu</a>
+    <a href="/order">Order a Loaf</a>
+    <a href="/order#Pilgrim Membership">Loaf Reserve Membership</a>
+    <a href="/contact">Contact</a>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2026 Fatima Bakery ATX &middot; All rights reserved &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a></p>
+    <div class="footer-social">
+      <a href="https://instagram.com/fatimabakeryatx" aria-label="Instagram" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      </a>
+      <a href="https://www.facebook.com/profile.php?id=61590028629242" aria-label="Facebook" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.9 3.78-3.9 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.9h-2.34V22c4.78-.79 8.44-4.94 8.44-9.94z"/></svg>
+      </a>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+(function(){
+  var btn = document.getElementById('sh-hamburger');
+  var drawer = document.getElementById('sh-drawer');
+  if(!btn || !drawer) return;
+  btn.addEventListener('click', function(){
+    var open = drawer.classList.toggle('open');
+    btn.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open);
+  });
+  // Close drawer on link click
+  drawer.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){
+      drawer.classList.remove('open');
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  });
+  // Close on outside click
+  document.addEventListener('click', function(e){
+    if(!btn.contains(e.target) && !drawer.contains(e.target)){
+      drawer.classList.remove('open');
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="theme-color" content="#2a3d28"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<link rel="apple-touch-icon" href="/images/logo.png"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Terms of Service — Fatima Bakery ATX</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500;1,700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:    #f5eed8;
+  --cream-lt: #faf7ee;
+  --beige:    #e8dfc8;
+  --green:    #2a3d28;
+  --green-md: #3d5c3a;
+  --green-lt: #587a54;
+  --gold:     #c9a84c;
+  --gold-lt:  #dfc078;
+  --gold-dk:  #a07828;
+  --ink:      #1c1a14;
+  --ink2:     #3d3620;
+  --ink3:     #6b5f42;
+  --border:   rgba(42,61,40,0.13);
+  --fd: 'Playfair Display', Georgia, serif;
+  --fb: 'Lora', Georgia, serif;
+  --fc: 'Cinzel', serif;
+}
+
+/* ── GOLD LABEL ── */
+.gold-label{
+  display:inline-block !important;
+  background:var(--gold) !important;
+  color:var(--green) !important;
+  font-family:var(--fc);
+  font-size:.6rem;
+  font-weight:600;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  padding:.22rem .8rem;
+  margin-bottom:.9rem;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--cream-lt);
+  color:var(--ink);
+  font-family:var(--fb);
+  font-size:19px;
+  line-height:1.75;
+  overflow-x:hidden;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.02;pointer-events:none;z-index:9999;
+}
+
+
+/* ── PAGE HEADER ── */
+.page-header{
+  padding:3rem 2.5rem 2.5rem;
+  text-align:center;
+  background:var(--cream);
+  border-bottom:1px solid var(--border);
+}
+.ph-eyebrow{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.2em;
+  text-transform:uppercase;
+  margin-bottom:1rem;
+}
+.page-header h1{
+  font-family:var(--fd);font-size:clamp(2.6rem,4.2vw,4.2rem);
+  font-weight:400;color:var(--green);line-height:1.1;
+  margin-bottom:.8rem;
+}
+.page-header p{
+  font-family:var(--fd);font-size:1.05rem;font-style:italic;
+  color:var(--ink3);
+}
+
+/* ── SECTION HEADERS ── */
+.menu-section{padding:2rem 2.5rem;max-width:1200px;margin:0 auto;}
+.menu-section-title{
+  display:flex;align-items:center;gap:1.5rem;
+  margin-bottom:2.5rem;
+}
+.menu-section-title h2{
+  font-family:var(--fc);font-size:.75rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--green);
+  white-space:nowrap;font-weight:600;
+}
+.menu-section-title .rule{flex:1;height:1px;background:var(--border);}
+.menu-section-title .price-note{
+  font-family:var(--fb);font-size:.8rem;font-style:italic;color:var(--ink3);
+  white-space:nowrap;
+}
+
+/* ── BOULE CARDS ── */
+.boules-grid{
+  display:block;
+}
+.boules-grid .boule-card{
+  width:100%;
+  margin-bottom:1.2rem;
+  page-break-inside:avoid;
+}
+.boule-card{
+  background:white;
+  border:1px solid var(--border);
+  display:flex;
+  flex-direction:row;
+  overflow:hidden;
+  page-break-inside:avoid;
+  min-height:auto;
+}
+.boule-card:hover{
+  border-color:var(--green-lt);
+  box-shadow:0 4px 24px rgba(42,61,40,.08);
+}
+.boule-photo{
+  flex-shrink:0;
+  width:200px;
+  height:220px;
+  overflow:hidden;
+  background:var(--beige);
+}
+.boule-photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.boule-body{
+  flex:1;
+  padding:1rem 1.4rem;
+  display:flex;flex-direction:column;
+}
+.boule-name-row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:.15rem;overflow:visible;
+}
+.boule-name{
+  font-family:var(--fc);font-size:1.05rem;letter-spacing:.14em;
+  color:var(--green);font-weight:500;
+  overflow:visible;padding-right:.2em;
+}
+.boule-price{
+  font-family:var(--fd);font-size:1.25rem;color:var(--gold-dk);
+  white-space:nowrap;
+}
+.boule-style{
+  font-family:var(--fd);font-size:.95rem;font-weight:500;
+  color:var(--ink2);margin-bottom:.2rem;
+}
+.boule-ingredients{
+  font-family:var(--fb);font-size:.85rem;font-style:italic;
+  color:var(--ink3);margin-bottom:.9rem;
+}
+.boule-place{
+  margin-top:auto;
+  padding-top:.9rem;
+  border-top:1px solid var(--border);
+  font-family:var(--fb);font-size:.8rem;
+  color:var(--ink3);line-height:1.6;
+}
+.boule-place strong{
+  font-family:var(--fc);font-size:.66rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--green);font-weight:600;
+  background:var(--gold);display:inline-block;
+  padding:.15rem .6rem;margin-bottom:.4rem;
+}
+.boule-bundle{
+  display:inline-block;margin-top:.7rem;
+  font-family:var(--fc);font-size:.65rem;letter-spacing:.12em;
+  text-transform:uppercase;
+  background:var(--gold);color:var(--green);
+  padding:.25rem .7rem;
+  font-weight:600;
+  align-self:flex-start;
+}
+
+/* ── EXTRAS GRID ── */
+.extras-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1.2rem;
+}
+.extra-card{
+  width:48%;
+  background:white;
+  border:1px solid var(--border);
+  overflow:hidden;
+  page-break-inside:avoid;
+}
+.extra-photo{
+  width:100%;
+  height:160px;
+  overflow:hidden;
+}
+.extra-photo img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.extra-body{
+  padding:.9rem 1rem;
+}
+
+/* ── SMALL ITEM CARDS ── */
+.small-grid{
+  display:block;
+  column-count:2;
+  column-gap:2rem;
+}
+.small-grid .small-card{
+  break-inside:avoid;
+  display:inline-block;
+  width:100%;
+  margin-bottom:1.5rem;
+}
+.small-card{
+  background:white;border:1px solid var(--border);
+  padding:1.6rem 1.8rem;
+  display:flex;flex-direction:column;gap:.2rem;
+  transition:border-color .25s;
+}
+.small-card:hover{border-color:var(--green-lt);}
+.small-name-row{display:flex;justify-content:space-between;align-items:baseline;}
+.small-name{
+  font-family:var(--fc);font-size:.85rem;letter-spacing:.14em;
+  color:var(--green);font-weight:500;
+}
+.small-price{font-family:var(--fd);font-size:1.1rem;color:var(--gold-dk);white-space:nowrap;}
+.small-desc{
+  font-family:var(--fb);font-size:.85rem;font-style:italic;
+  color:var(--ink3);
+}
+
+/* ── Pilgrim Membership BAND ── */
+.sub-band{
+  background:var(--green);
+  display:flex;
+  flex-direction:row;
+  margin-top:2rem;
+}
+.sub-photo{flex-shrink:0;width:45%;min-height:auto;overflow:hidden;position:relative;}
+.sub-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.sub-photo::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to right, transparent 55%, var(--green));
+}
+.sub-text{
+  flex:1;
+  padding:2.5rem;
+  display:flex;flex-direction:column;justify-content:center;gap:1rem;
+}
+.sub-label{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold);opacity:.75;
+}
+.sub-text h2{
+  font-family:var(--fd);font-size:clamp(1.8rem,2.6vw,2.4rem);
+  font-weight:400;color:var(--cream);line-height:1.2;
+}
+.sub-text > p{
+  font-size:.92rem;color:rgba(245,238,216,.65);line-height:1.8;max-width:420px;
+}
+.sub-plans{
+  display:flex;gap:.8rem;margin-top:.5rem;
+}
+.sub-plan{
+  flex:1;
+  display:block;
+  border:1px solid rgba(245,238,216,.15);
+  padding:1rem .8rem;text-align:center;
+  text-decoration:none;color:inherit;cursor:pointer;
+  transition:border-color .2s,background .2s,transform .15s;
+}
+.sub-plan:hover,.sub-plan:focus-visible{
+  border-color:var(--gold);
+  background:rgba(245,238,216,.06);
+  transform:translateY(-2px);
+}
+.sub-plan.best:hover,.sub-plan.best:focus-visible{
+  background:rgba(201,168,76,.16);
+}
+.sub-plan:hover{border-color:var(--gold);background:rgba(201,168,76,.06);}
+.sub-plan.best{border-color:var(--gold);background:rgba(201,168,76,.08);}
+.best-tag{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--green);background:var(--gold);
+  padding:.2rem .6rem;display:block;margin-bottom:.6rem;text-align:center;
+}
+.plan-weeks{font-family:var(--fd);font-size:1.7rem;font-weight:300;color:var(--gold-lt);line-height:1;margin-bottom:.3rem;}
+.plan-label{font-family:var(--fc);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(245,238,216,.4);margin-bottom:.5rem;}
+.plan-price{font-family:var(--fb);font-size:1.05rem;color:var(--cream);}
+.sub-note{
+  font-family:var(--fb);font-size:.82rem;font-style:italic;
+  text-transform:none;color:rgba(245,238,216,.82);
+  margin-top:.4rem;display:block;
+}
+
+/* ── CTA ── */
+.cta-section{
+  background:var(--beige);
+  padding:4.5rem 3rem;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:1rem;
+}
+.cta-section h2{
+  font-family:var(--fd);font-size:clamp(1.9rem,2.8vw,2.6rem);
+  font-weight:400;color:var(--green);line-height:1.2;
+}
+.cta-section p{font-size:.92rem;color:var(--ink3);max-width:440px;line-height:1.8;}
+.btn-gold{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.15em;
+  text-transform:uppercase;text-decoration:none;
+  background:var(--gold);color:var(--green);
+  padding:.85rem 2.4rem;transition:background .2s;
+  display:inline-block;font-weight:500;margin-top:.4rem;
+}
+.btn-gold:hover{background:var(--gold-lt);}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--green);
+  padding:3rem 3rem 2rem;
+  display:grid;grid-template-columns:2fr 1fr 1fr;gap:3rem;
+}
+.footer-brand{font-family:var(--fc);font-size:.72rem;letter-spacing:.2em;color:var(--cream);margin-bottom:.6rem;min-width:200px;}
+.footer-brand strong{color:var(--gold);font-weight:400;}
+.footer-tagline{
+  font-family:var(--fb);font-size:.85rem;font-style:italic;
+  color:rgba(245,238,216,.72);line-height:1.7;max-width:280px;margin-bottom:.8rem;
+}
+.footer-col h4{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--gold-lt);margin-bottom:.8rem;opacity:.65;
+}
+.footer-col a,.footer-col p{
+  display:block;font-family:var(--fb);font-size:.85rem;
+  color:rgba(245,238,216,.72);text-decoration:none;
+  margin-bottom:.3rem;line-height:1.7;transition:color .2s;
+}
+.footer-col a:hover{color:var(--cream);}
+.footer-bottom{
+  width:100%;border-top:1px solid rgba(245,238,216,.08);
+  padding-top:1.2rem;margin-top:.8rem;
+  display:flex;justify-content:space-between;
+}
+.footer-bottom p{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.08em;
+  text-transform:uppercase;color:rgba(245,238,216,.25);
+}
+.footer-social{display:flex;gap:1rem;align-items:center;}
+.footer-social a{color:rgba(245,238,216,.85);transition:color .2s,transform .2s;display:inline-flex;padding:.2rem;}
+.footer-social a:hover{color:var(--gold);}
+.footer-bottom a{color:rgba(245,238,216,.82);text-decoration:none;transition:color .2s;}
+.footer-bottom a:hover{color:var(--gold);}
+
+@media(max-width:900px){
+  .boule-card{flex-direction:column;}
+  .boule-photo{width:100%;height:auto;min-height:auto;}
+  .menu-section-title{flex-wrap:wrap;row-gap:.5rem;}
+  .menu-section-title .rule{display:none;}
+  .price-note{white-space:normal;flex:1 0 100%;font-size:.78rem;}
+  .sub-band{flex-direction:column;}
+  .sub-photo{width:100%;}
+  .sub-photo::after{background:linear-gradient(to bottom, transparent 55%, var(--green));}
+  .sub-plans{grid-template-columns:1fr 1fr 1fr;}
+  footer{grid-template-columns:1fr;}
+  .menu-section{padding:3rem 1.5rem;}
+  .page-header{padding:2rem 1.5rem 2.5rem;}
+}
+
+/* ── SITE HEADER ── */
+/* ── SITE HEADER + HAMBURGER NAV ── */
+.site-header{
+  background:var(--green);
+  border-bottom:1px solid rgba(201,168,76,.18);
+  padding:0 2rem;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  position:sticky;
+  top:0;
+  z-index:500;
+}
+.sh-brand{
+  display:flex;align-items:center;gap:.7rem;
+  text-decoration:none;flex-shrink:0;
+}
+.sh-logo{height:36px;width:36px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+.sh-name{font-family:var(--fc);font-size:.82rem;letter-spacing:.13em;color:var(--cream);font-weight:600;white-space:nowrap;}
+.sh-name strong{color:var(--gold);font-weight:700;}
+.sh-nav{display:flex;align-items:center;gap:1.6rem;flex:1;justify-content:center;}
+.sh-nav a{
+  font-family:var(--fc);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  text-decoration:none;color:rgba(245,238,216,.72);white-space:nowrap;
+  transition:color .18s;padding:.15rem 0;border-bottom:1px solid transparent;
+}
+.sh-nav a:hover,.sh-nav a.active{color:var(--gold);border-bottom-color:rgba(201,168,76,.4);}
+.sh-order{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  text-decoration:none;background:var(--gold);color:var(--green);
+  padding:.38rem 1.1rem;font-weight:600;white-space:nowrap;flex-shrink:0;
+}
+.sh-order:hover{background:var(--gold-lt);}
+.sh-hamburger{
+  display:none;flex-direction:column;justify-content:center;align-items:center;
+  gap:6px;width:40px;height:40px;background:transparent;border:none;cursor:pointer;padding:6px;flex-shrink:0;margin-right:2px;-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:transparent;outline:none;}
+.sh-hamburger:focus,.sh-hamburger:focus-visible,.sh-hamburger:active{outline:none;background:transparent;
+}
+.sh-hamburger span{display:block;width:26px;height:3px;background:#f5eed8;border-radius:2px;transition:transform .22s,opacity .18s;}
+.sh-hamburger.open span:nth-child(1){transform:translateY(8.5px) rotate(45deg);}
+.sh-hamburger.open span:nth-child(2){opacity:0;}
+.sh-hamburger.open span:nth-child(3){transform:translateY(-8.5px) rotate(-45deg);}
+.sh-drawer{
+  display:none;position:fixed;top:56px;left:0;right:0;
+  background:var(--green);border-bottom:1px solid rgba(201,168,76,.18);
+  flex-direction:column;padding:1rem 2rem 1.5rem;gap:.1rem;
+  z-index:499;box-shadow:0 8px 24px rgba(0,0,0,.18);
+}
+.sh-drawer.open{display:flex;}
+.sh-drawer a{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+  text-decoration:none;color:rgba(245,238,216,.8);padding:.75rem 0;
+  border-bottom:1px solid rgba(245,238,216,.08);transition:color .18s;
+}
+.sh-drawer a:last-child{border-bottom:none;}
+.sh-drawer a:hover,.sh-drawer a.active{color:var(--gold);}
+@media(max-width:700px){.sh-nav{display:none;}.sh-hamburger{display:flex;}.sh-order{display:none;}}
+@media(max-width:480px){
+  .sh-name{font-size:.88rem;}
+  .sh-order{font-size:.72rem;padding:.42rem 1rem;}
+  .site-header{padding:0 1rem;}
+  .sh-drawer{padding:1rem 1.5rem 1.5rem;}
+}
+
+/* ── LEGIBILITY PASS — readable text at all sizes ── */
+.sh-name            { font-size: .88rem; }
+.sh-nav a           { font-size: .62rem; letter-spacing: .12em; }
+.sh-order           { font-size: .65rem; letter-spacing: .12em; }
+.sh-drawer a        { font-size: .72rem; letter-spacing: .12em; padding: .85rem 0; }
+.gold-label         { font-size: .68rem; letter-spacing: .13em; }
+.eyebrow            { font-size: .68rem; letter-spacing: .13em; }
+.section-label      { font-size: .75rem; letter-spacing: .14em; }
+.btn-primary        { font-size: .7rem;  letter-spacing: .13em; }
+.btn-ghost          { font-size: .7rem;  letter-spacing: .13em; }
+.events-header a    { font-size: .68rem; letter-spacing: .12em; }
+.event-month        { font-size: .65rem; letter-spacing: .12em; }
+.event-tag          { font-size: .6rem;  letter-spacing: .1em;  }
+.event-order-link   { font-size: .65rem; letter-spacing: .12em; }
+.photo-break figcaption { font-size: .6rem; letter-spacing: .12em; }
+.wl-form label      { font-size: .65rem; letter-spacing: .12em; }
+.wl-submit          { font-size: .68rem; letter-spacing: .13em; }
+.wl-note            { font-size: .88rem; }
+.footer-brand       { font-size: .82rem; letter-spacing: .16em; }
+.footer-tagline     { font-size: .9rem;  }
+.footer-col h4      { font-size: .65rem; letter-spacing: .14em; }
+.footer-col a,
+.footer-col p       { font-size: .9rem;  }
+.footer-bottom p    { font-size: .68rem; letter-spacing: .08em; }
+.order-group-title  { font-size: .72rem; letter-spacing: .13em; }
+.oi-name            { font-size: 1.05rem; }
+.oi-desc            { font-size: .85rem;  }
+.oi-price           { font-size: .95rem;  }
+.form-row label     { font-size: .68rem; letter-spacing: .13em; }
+.plan-label         { font-size: .68rem; letter-spacing: .1em;  }
+.best-tag           { font-size: .68rem; letter-spacing: .1em;  }
+
+/* Collection-specific */
+.sub-plan-name      { font-size: 1rem; }
+.sub-plan-desc      { font-size: .88rem; }
+.sub-plan-price     { font-size: 1.05rem; }
+.btn-gold           { font-size: .7rem; letter-spacing: .13em; }
+.collection-label   { font-size: .68rem; letter-spacing: .13em; }
+.item-label         { font-size: .65rem; letter-spacing: .12em; }
+
+@media (max-width: 640px) {
+  body                { font-size: 17px; }
+  .sh-name            { font-size: .95rem; }
+  .sh-order           { font-size: .72rem; padding: .42rem 1rem; }
+  .sh-drawer a        { font-size: .82rem; letter-spacing: .1em; padding: 1rem 0; }
+  .gold-label         { font-size: .72rem; }
+  .section-label      { font-size: .78rem; }
+  .btn-primary,
+  .btn-ghost,
+  .btn-gold           { font-size: .78rem; padding: .9rem 1.8rem; }
+  .footer-col h4      { font-size: .72rem; }
+  .footer-col a,
+  .footer-col p       { font-size: .95rem; }
+  .footer-bottom p    { font-size: .62rem; }
+  .form-row label     { font-size: .72rem; }
+  .plan-label         { font-size: .65rem; }
+  .best-tag           { font-size: .62rem; }
+}
+
+/* ── LEGAL PAGES ── */
+.legal-wrap{max-width:760px;margin:0 auto;padding:3.5rem 2rem 4.5rem;}
+.legal-wrap h1{font-family:var(--fd);font-size:clamp(2.2rem,3.6vw,3rem);font-weight:400;color:var(--green);line-height:1.15;margin-bottom:.5rem;}
+.legal-updated{font-family:var(--fb);font-size:.85rem;font-style:italic;color:var(--ink3);margin-bottom:2.2rem;}
+.legal-wrap h2{font-family:var(--fd);font-size:1.35rem;font-weight:500;color:var(--green);margin:2.2rem 0 .7rem;}
+.legal-wrap p{font-family:var(--fb);font-size:.95rem;line-height:1.75;color:var(--ink2);margin-bottom:1rem;}
+.legal-wrap ul{margin:0 0 1rem 1.2rem;}
+.legal-wrap li{font-family:var(--fb);font-size:.95rem;line-height:1.7;color:var(--ink2);margin-bottom:.4rem;}
+.legal-wrap a{color:var(--gold-dk);text-decoration:underline;}
+.legal-note{background:var(--cream);border:1px solid var(--border);padding:1.1rem 1.3rem;margin-top:2.5rem;font-family:var(--fb);font-size:.85rem;font-style:italic;color:var(--ink3);line-height:1.65;}
+</style>
+</head>
+<body>
+
+<!-- SITE HEADER -->
+<header class="site-header">
+  <a class="sh-brand" href="/">
+    <img class="sh-logo" src="/images/logo.png" alt="Fatima Bakery ATX logo"/>
+    <span class="sh-name">Fatima Bakery <strong>ATX</strong></span>
+  </a>
+  <nav class="sh-nav">
+    <a href="/">Home</a>
+    <a href="/story">My Story</a>
+    <a href="/collection" class="active">Pilgrim Collection</a>
+    <a href="/contact">Contact</a>
+    <a href="/order">Order</a>
+  </nav>
+  <a class="sh-order" href="/order#Pilgrim Membership">Membership</a>
+  <button class="sh-hamburger" id="sh-hamburger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+<!-- MOBILE DRAWER -->
+<nav class="sh-drawer" id="sh-drawer">
+  <a href="/">Home</a>
+  <a href="/story">My Story</a>
+  <a href="/collection" class="active">Pilgrim Collection</a>
+  <a href="/contact">Contact</a>
+  <a href="/order">Order</a>
+  <a href="/order#Pilgrim Membership" style="color:var(--gold);margin-top:.4rem;">Membership</a>
+</nav>
+
+<main class="legal-wrap">
+  <h1>Terms of Service</h1>
+  <p class="legal-updated">Last updated July 2026</p>
+  <p>These terms cover ordering from Fatima Bakery ATX, a licensed Texas Cottage Food Operation baking from a home kitchen in Liberty Hill. By placing an order, you agree to the following.</p>
+
+  <h2>Ordering and cutoff</h2>
+  <p>We bake fresh every Thursday for curbside pickup and delivery on Friday. Orders close <strong>Wednesday evening</strong> so we have time to mix, ferment, and bake each loaf with care. Orders placed after the cutoff will be scheduled for the following week.</p>
+
+  <h2>Pickup and delivery</h2>
+  <p>Curbside pickup is Fridays from 9am to 12pm at 112 Civita Road, Liberty Hill, TX. Delivery is available Fridays from 9am to 12pm to the Santa Rita Ranch neighborhood, within a 5 mile radius, for a flat $5. To keep your bread at its freshest, we ask that you text us at (512) 299-1241 when you are on your way for pickup, or to confirm your delivery window.</p>
+
+  <h2>Payment</h2>
+  <p>No payment is collected on this website. After you place an order, we email you a confirmation with a secure link to pay by Cash App, Venmo, or Square. Your order is confirmed once payment is received.</p>
+
+  <h2>Refunds</h2>
+  <p>If we are ever unable to fulfill your order, you receive a full refund. Because everything is made fresh to order, we are generally unable to offer refunds for change of mind after baking has begun, but we always want you to be happy, so please reach out if something is not right.</p>
+
+  <h2>Ingredients and allergens</h2>
+  <p>We prioritize organic, foundational ingredients. All loaves contain gluten (wheat flour). Several contain dairy, and one variety contains pepitas (pumpkin seeds). Full allergen details are on our home page. If you have specific concerns, please contact us before ordering. While we bake with care, our home kitchen is not free of common allergens.</p>
+
+  <h2>Cottage food notice</h2>
+  <p>Fatima Bakery ATX operates as a Texas Cottage Food Operation. Our foods are made in a home kitchen that is not inspected by the Department of State Health Services or a local health department.</p>
+
+  <h2>Changes to these terms</h2>
+  <p>We may update these terms from time to time. The current version will always be posted here.</p>
+
+  <h2>Questions</h2>
+  <p>Reach us anytime at <a href="mailto:hello@fatimabakery.com">hello@fatimabakery.com</a> or on Instagram <a href="https://instagram.com/fatimabakeryatx">@fatimabakeryatx</a>.</p>
+
+  <p class="legal-note">These terms are provided for general information and are not legal advice. If your needs are more complex, please consult an attorney.</p>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-brand">Fatima Bakery <strong>ATX</strong></div>
+    <p class="footer-tagline">Artisan sourdough baked slowly with care, named for sacred places around the world.</p>
+    <p style="font-family:var(--fc);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,238,216,.72);">Liberty Hill, Texas &middot; Est. 2026 &middot; Licensed Cottage Food Operation</p>
+  </div>
+  <div class="footer-col">
+    <h4>Explore</h4>
+    <a href="/story">My Story</a>
+    <a href="/collection">The Pilgrimage Collection</a>
+    <a href="/#events">Markets &amp; Events</a>
+    <a href="/#waitlist">Join the Waitlist</a>
+  </div>
+  <div class="footer-col">
+    <h4>Order</h4>
+    <a href="/collection">Browse the Menu</a>
+    <a href="/order">Order a Loaf</a>
+    <a href="/order#Pilgrim Membership">Loaf Reserve Membership</a>
+    <a href="/contact">Contact</a>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2026 Fatima Bakery ATX &middot; All rights reserved &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a></p>
+    <div class="footer-social">
+      <a href="https://instagram.com/fatimabakeryatx" aria-label="Instagram" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      </a>
+      <a href="https://www.facebook.com/profile.php?id=61590028629242" aria-label="Facebook" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.9 3.78-3.9 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.9h-2.34V22c4.78-.79 8.44-4.94 8.44-9.94z"/></svg>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var btn=document.getElementById('sh-hamburger');
+  var drawer=document.getElementById('sh-drawer');
+  if(!btn||!drawer)return;
+  btn.addEventListener('click',function(){
+    var open=drawer.classList.toggle('open');
+    btn.classList.toggle('open',open);
+    btn.setAttribute('aria-expanded',open);
+  });
+  drawer.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click',function(){
+      drawer.classList.remove('open');btn.classList.remove('open');
+      btn.setAttribute('aria-expanded','false');
+    });
+  });
+  document.addEventListener('click',function(e){
+    if(!btn.contains(e.target)&&!drawer.contains(e.target)){
+      drawer.classList.remove('open');btn.classList.remove('open');
+      btn.setAttribute('aria-expanded','false');
+    }
+  });
+})();
+</script>
+</body>
+</html>
