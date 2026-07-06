@@ -1,0 +1,1694 @@
+<head>
+<meta charset="UTF-8"/>
+<meta name="theme-color" content="#2a3d28"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<link rel="apple-touch-icon" href="/images/logo.png"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Order — Fatima Bakery ATX</title>
+<link rel="icon" type="image/png" href="/images/logo.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500;1,700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:     #f5eed8;
+  --cream-lt:  #faf7ee;
+  --beige:     #e8dfc8;
+  --green:     #2a3d28;
+  --green-md:  #3d5c3a;
+  --green-lt:  #587a54;
+  --gold:      #c9a84c;
+  --gold-lt:   #dfc078;
+  --ink:       #1c1a14;
+  --ink2:      #3d3620;
+  --ink3:      #6b5f42;
+  --border:    rgba(42,61,40,0.13);
+  --fd: 'Playfair Display', Georgia, serif;
+  --fb: 'Lora', Georgia, serif;
+  --fc: 'Cinzel', serif;
+}
+
+/* ── GOLD LABEL ── */
+.gold-label{
+  display:inline-block !important;
+  background:var(--gold) !important;
+  color:var(--green) !important;
+  font-family:var(--fc);
+  font-size:.6rem;
+  font-weight:600;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  padding:.22rem .8rem;
+  margin-bottom:.9rem;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--cream-lt);
+  color:var(--ink);
+  font-family:var(--fb);
+  font-size:19px;
+  line-height:1.75;
+  overflow-x:hidden;
+}
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.022;pointer-events:none;z-index:9999;
+}
+
+/* ── NAV ── */
+@media print{
+  }
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  padding-top:0;
+}
+.hero-photo{
+  position:relative;overflow:hidden;
+}
+.hero-photo img{
+  width:100%;height:100%;object-fit:cover;
+  display:block;
+}
+.hero-photo::after{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(to right, transparent 60%, var(--cream-lt) 95%);
+}
+.hero-content{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:5rem 4rem 5rem 3rem;
+  background:var(--cream-lt);
+}
+.eyebrow{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.18em;font-weight:600;
+  text-transform:uppercase;color:var(--green);
+  background:var(--gold);display:inline-block;
+  padding:.2rem .8rem;margin-bottom:1.2rem;
+}
+.eyebrow::before{
+  content:'';display:block;
+  width:28px;height:1px;background:var(--gold);
+}
+h1{
+  font-family:var(--fd);font-size:clamp(2.8rem,4.6vw,5rem);
+  font-weight:400;line-height:1.06;
+  color:var(--green);
+  margin-bottom:1.2rem;
+}
+h1 em{font-style:italic;color:var(--green-md);}
+.hero-sub{
+  font-size:1rem;color:var(--ink3);
+  max-width:380px;margin-bottom:2rem;line-height:1.8;
+}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;}
+.btn-primary{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.15em;
+  text-transform:uppercase;text-decoration:none;
+  background:var(--green);color:var(--cream);
+  padding:.8rem 2rem;border-radius:1px;
+  transition:background .2s;display:inline-block;
+}
+.btn-primary:hover{background:var(--green-md);}
+.btn-ghost{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.15em;
+  text-transform:uppercase;text-decoration:none;
+  border:1px solid var(--border);color:var(--ink2);
+  padding:.8rem 2rem;border-radius:1px;
+  transition:border-color .2s,color .2s;display:inline-block;
+}
+.btn-ghost:hover{border-color:var(--green-lt);color:var(--green);}
+
+/* ── STORY ── */
+.story{
+  background:var(--cream);
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0;min-height:600px;
+}
+.story-photos{
+  display:grid;
+  grid-template-rows:2fr 1fr;
+  gap:0;
+}
+.story-photo-main img,
+.story-photo-inset img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.story-photo-main{overflow:hidden;}
+.story-photo-inset{overflow:hidden;}
+.story-text{
+  padding:5rem 4rem;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.section-label{
+  font-family:var(--fc);font-size:.72rem;letter-spacing:.18em;font-weight:400;
+  text-transform:uppercase;color:var(--ink3);
+  margin-bottom:.8rem;
+  display:flex;align-items:center;gap:.8rem;
+}
+.section-label::before{content:'';display:block;width:20px;height:1px;background:var(--gold);}
+.story-text h2{
+  font-family:var(--fd);font-size:clamp(1.9rem,2.6vw,2.6rem);font-weight:400;
+  color:var(--green);line-height:1.15;margin-bottom:1.2rem;
+}
+.story-text h2 em{font-style:italic;}
+.story-text p{
+  font-size:1rem;color:var(--ink2);line-height:1.75;
+  margin-bottom:1rem;max-width:420px;
+}
+.pullquote{
+  background:var(--green);color:var(--cream);
+  padding:1.2rem 1.5rem;margin:1.2rem 0;
+  border-left:3px solid var(--gold);
+  font-style:italic;font-size:.95rem;line-height:1.7;
+}
+
+/* ── FAITH ── */
+.faith{
+  background:var(--beige);
+  display:flex;justify-content:center;
+  padding:5rem 4rem;
+}
+.faith-text{
+  max-width:640px;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;
+}
+.faith-text .section-label{justify-content:center;}
+.faith-text h2{
+  font-family:var(--fd);font-size:clamp(1.9rem,2.6vw,2.6rem);font-weight:400;
+  color:var(--green);line-height:1.15;margin-bottom:1rem;
+}
+.faith-text h2 em{font-style:italic;}
+.faith-text p{
+  font-size:1rem;color:var(--ink2);line-height:1.75;
+  margin-bottom:1rem;max-width:420px;
+}
+.rosary{
+  display:flex;align-items:center;gap:.35rem;margin:1.2rem 0;
+}
+.bead{
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(42,61,40,.2);
+}
+.bead.lg{width:9px;height:9px;background:rgba(42,61,40,.35);}
+.scripture{
+  border-left:2px solid var(--gold);
+  padding:.6rem 1rem;
+  font-style:italic;color:var(--ink3);font-size:.88rem;line-height:1.7;
+  margin:1rem 0;
+}
+
+/* ── EVENTS ── */
+.events{
+  background:var(--cream-lt);
+  padding:5rem 4rem;
+}
+.events-header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  margin-bottom:3rem;
+}
+.events-header h2{
+  font-family:var(--fd);font-size:clamp(2.2rem,3vw,3rem);font-weight:700;
+  color:var(--green);
+}
+.events-header h2 em{font-style:italic;}
+.events-header a{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--green-lt);text-decoration:none;
+}
+.events-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;max-width:760px;
+}
+.event-card{
+  border:1px solid var(--border);
+  padding:1.8rem;background:var(--cream);
+  display:flex;flex-direction:column;gap:.5rem;
+  transition:border-color .2s;
+}
+.event-card:hover{border-color:var(--green-lt);}
+.event-card.featured{
+  background:var(--green);border-color:var(--green);color:var(--cream);
+}
+.event-day{
+  font-family:var(--fd);font-size:3.2rem;font-weight:300;
+  color:var(--gold);line-height:1;
+}
+.event-card.featured .event-day{color:var(--gold-lt);}
+.event-month{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;
+}
+.event-card.featured .event-month{color:rgba(245,238,216,.82);}
+.event-name{
+  font-family:var(--fd);font-size:1rem;font-weight:700;
+  color:var(--green);margin-bottom:.2rem;
+}
+.event-card.featured .event-name{color:var(--cream);}
+.event-loc{
+  font-family:var(--fb);font-size:.82rem;font-style:italic;
+  color:var(--ink3);
+}
+.event-card.featured .event-loc{color:rgba(245,238,216,.6);}
+.event-tag{
+  display:inline-block;margin-top:.5rem;
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.1em;
+  text-transform:uppercase;
+  background:rgba(201,168,76,.15);color:var(--gold);
+  padding:.2rem .6rem;border-radius:1px;
+  align-self:flex-start;
+}
+.event-card.featured .event-tag{background:rgba(201,168,76,.2);}
+.event-horizon{
+  background:transparent;border-style:dashed;
+  border-color:rgba(42,61,40,.2);opacity:.6;
+}
+.event-horizon .event-day{color:rgba(42,61,40,.2);}
+
+/* ── WAITLIST ── */
+.waitlist{
+  background:var(--green);
+  padding:4rem;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:4rem;align-items:center;
+}
+.waitlist h2{
+  font-family:var(--fd);font-size:2rem;font-weight:400;
+  color:var(--cream);line-height:1.3;margin-bottom:.8rem;
+}
+.waitlist h2 em{font-style:italic;color:var(--gold-lt);}
+.waitlist p{
+  font-size:.9rem;color:rgba(245,238,216,.65);line-height:1.7;
+}
+.wl-form{display:flex;flex-direction:column;gap:.8rem;}
+.wl-form label{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.15em;
+  text-transform:uppercase;color:rgba(245,238,216,.75);
+}
+.wl-input-row{display:flex;gap:.8rem;}
+.wl-form input{
+  flex:1;
+  background:rgba(245,238,216,.08);
+  border:1px solid rgba(245,238,216,.2);
+  color:var(--cream);
+  padding:.75rem 1rem;
+  font-family:var(--fb);font-size:.9rem;
+  outline:none;border-radius:1px;
+  transition:border-color .2s;
+}
+.wl-form input::placeholder{color:rgba(245,238,216,.3);}
+.wl-form input:focus{border-color:var(--gold);}
+.wl-submit{
+  font-family:var(--fc);font-size:.6rem;letter-spacing:.15em;
+  text-transform:uppercase;
+  background:var(--gold);color:var(--green);
+  border:none;padding:.75rem 1.5rem;
+  cursor:pointer;border-radius:1px;
+  transition:background .2s;white-space:nowrap;
+}
+.wl-submit:hover{background:var(--gold-lt);}
+.wl-note{
+  font-family:var(--fb);font-size:.82rem;font-style:italic;
+  color:rgba(245,238,216,.75);
+  margin-top:.4rem;
+  line-height:1.6;
+}
+
+/* ── ORDER CTA ── */
+.order-cta{
+  background:var(--beige);
+  padding:5rem 4rem;
+  text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:1rem;
+  position:relative;overflow:hidden;
+}
+.order-cta::before{
+  content:'';position:absolute;inset:0;
+  background:url("/images/bg-texture.jpg") center/cover no-repeat;
+  opacity:.06;
+}
+.order-cta h2{
+  font-family:var(--fd);font-size:clamp(1.9rem,2.6vw,2.6rem);font-weight:400;
+  color:var(--green);line-height:1.15;
+  position:relative;z-index:1;
+}
+.order-cta h2 em{font-style:italic;}
+.order-cta p{
+  font-size:.95rem;color:var(--ink3);
+  max-width:460px;line-height:1.8;
+  position:relative;z-index:1;
+}
+.cta-buttons{
+  display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;
+  margin-top:.5rem;position:relative;z-index:1;
+}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--green);
+  padding:3.5rem 4rem 2rem;
+  display:grid;grid-template-columns:2fr 1fr 1fr;
+  gap:3rem;
+}
+.footer-brand{
+  font-family:var(--fc);font-size:.75rem;letter-spacing:.2em;
+  color:var(--cream);margin-bottom:.8rem;
+}
+.footer-tagline{
+  font-family:var(--fb);font-size:.85rem;font-style:italic;
+  color:rgba(245,238,216,.72);line-height:1.7;max-width:280px;
+  margin-bottom:1rem;
+}
+.footer-col h4{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--gold-lt);
+  margin-bottom:1rem;
+}
+.footer-col a,
+.footer-col p{
+  display:block;
+  font-family:var(--fb);font-size:.85rem;
+  color:rgba(245,238,216,.75);text-decoration:none;
+  margin-bottom:.4rem;line-height:1.7;
+  transition:color .2s;
+}
+.footer-col a:hover{color:var(--cream);}
+.footer-bottom{
+  width:100%;
+  border-top:1px solid rgba(245,238,216,.1);
+  padding-top:1.5rem;margin-top:1rem;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.footer-social{display:flex;gap:1rem;align-items:center;}
+.footer-social a{color:rgba(245,238,216,.85);transition:color .2s,transform .2s;display:inline-flex;padding:.2rem;}
+.footer-social a:hover{color:var(--gold,#c9a84c);}
+.footer-bottom a{color:rgba(245,238,216,.82);text-decoration:none;transition:color .2s;}
+.footer-bottom a:hover{color:var(--gold,#c9a84c);}
+.footer-bottom p{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.08em;
+  text-transform:uppercase;color:rgba(245,238,216,.62);
+}
+
+/* ── DIVIDERS ── */
+.grain-divider{
+  height:2px;
+  background:linear-gradient(to right, transparent, var(--gold), transparent);
+  opacity:.3;
+}
+
+/* ── INLINE CTA STRIP ── */
+.inline-cta{
+  background:var(--cream);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  padding:1.2rem 4rem;
+  display:flex;justify-content:space-between;align-items:center;gap:2rem;
+}
+.inline-cta p{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink2);
+}
+.event-order-link{
+  display:inline-block;margin-top:.8rem;
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--gold);
+  text-decoration:none;
+  transition:color .2s;
+}
+.event-card.featured .event-order-link{color:var(--gold-lt);}
+.event-order-link:hover{color:var(--green);}
+.event-card.featured .event-order-link:hover{color:white;}
+
+/* ── PHOTO BREAK ── */
+.photo-break{
+  display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;
+  max-width:1000px;margin:3rem auto;padding:0 4rem;
+}
+.photo-break figure{position:relative;overflow:hidden;aspect-ratio:4/3;}
+.photo-break img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-break figcaption{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent, rgba(28,26,20,.65));
+  padding:2rem 1.2rem .8rem;
+  font-family:var(--fc);font-size:.65rem;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(245,238,216,.75);
+}
+.photo-break-placeholder{
+  background:linear-gradient(135deg,var(--beige),var(--cream-lt));
+  display:flex;align-items:center;justify-content:center;
+}
+.photo-break-placeholder span{
+  font-family:var(--fc);font-size:.6rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink3);opacity:.6;
+}
+
+/* ── PILGRIMAGE BRIDGE ── */
+.pilgrimage-bridge{
+  background:var(--cream-lt);
+  padding:0 4rem 4rem;
+  text-align:center;
+  max-width:760px;margin:0 auto;
+}
+.pilgrimage-bridge p{
+  font-size:1.05rem;color:var(--ink2);line-height:1.85;
+  font-family:var(--fd);
+  margin-bottom:1rem;
+}
+.pilgrimage-bridge p:last-child{margin-bottom:0;}
+.pilgrimage-bridge p em{font-style:italic;color:var(--green-md);}
+.bridge-tagline{
+  font-style:italic;color:var(--green-md);
+  font-size:1.15rem;
+}
+.bridge-quote{font-size:1.05rem;}
+.bridge-note{
+  font-family:var(--fb) !important;font-size:.85rem !important;
+  color:var(--ink3) !important;font-style:italic;line-height:1.7 !important;
+}
+
+/* ── FAITH TAGLINE ── */
+.faith-tagline{
+  font-family:var(--fd) !important;font-size:1.15rem !important;
+  font-style:italic;color:var(--green-md) !important;
+  margin-bottom:1.2rem !important;
+}
+
+@media(max-width:860px){
+  .hero,.story,.waitlist{grid-template-columns:1fr;}
+  .faith{padding:3rem 1.5rem;}
+  .photo-break{grid-template-columns:1fr;padding:0 1.5rem;}
+  .pilgrimage-bridge{padding:0 1.5rem 3rem;}
+  .events-grid{grid-template-columns:1fr;}
+  footer{grid-template-columns:1fr;}
+  .events-header{flex-direction:column;align-items:flex-start;gap:.8rem;}
+  .hero-content{padding:3rem 2rem;}
+  }
+
+
+/* ── CONTACT ── */
+.contact-hero{
+  background:var(--cream);
+  padding:9rem 4rem 3rem;
+  text-align:center;
+  display:flex;flex-direction:column;align-items:center;
+}
+.contact-hero .section-label{justify-content:center;}
+.contact-hero h1{max-width:680px;}
+.contact-hero p{
+  font-size:1rem;color:var(--ink2);line-height:1.8;
+  max-width:480px;margin-top:.5rem;
+}
+.contact-section{
+  background:var(--cream-lt);
+  padding:1rem 4rem 6rem;
+  display:flex;justify-content:center;
+}
+.contact-form{
+  width:100%;max-width:580px;
+  background:var(--cream);
+  border:1px solid var(--border);
+  padding:3rem;
+  display:flex;flex-direction:column;gap:1.4rem;
+}
+.form-row{display:flex;flex-direction:column;gap:.5rem;}
+.form-row label{
+  font-family:var(--fc);font-size:.6rem;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink3);
+}
+.form-row input,.form-row textarea{
+  font-family:var(--fb);font-size:.95rem;color:var(--ink);
+  border:1px solid var(--border);background:var(--cream-lt);
+  padding:.75rem 1rem;outline:none;border-radius:1px;
+  transition:border-color .2s;resize:vertical;
+}
+.form-row input:focus,.form-row textarea:focus{border-color:var(--green-lt);}
+.contact-form .btn-primary{
+  align-self:flex-start;border:none;cursor:pointer;
+  font-size:.62rem;
+}
+.form-status{
+  font-family:var(--fb);font-size:.85rem;font-style:italic;
+  color:var(--ink3);min-height:1.3rem;line-height:1.6;
+}
+.form-status.success{color:var(--green-md);}
+.form-status.error{color:#a1503c;}
+/* Honeypot field — hidden from real visitors, left for bots to fill */
+.hp-field{
+  position:absolute;left:-9999px;top:auto;
+  width:1px;height:1px;overflow:hidden;
+}
+@media(max-width:860px){
+    .contact-hero{padding:7rem 1.5rem 2.5rem;}
+  .contact-section{padding:1rem 1.5rem 4rem;}
+  .contact-form{padding:2rem 1.5rem;}
+}
+
+/* ── ORDER FORM ── */
+.order-form{max-width:680px;}
+.order-group-title{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--green-md);
+  border-bottom:1px solid var(--border);
+  padding-bottom:.5rem;
+}
+
+/* ── PILGRIMAGE COLLECTION CARDS (visuals first) ── */
+.loaf-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1.1rem;
+  margin-bottom:1.6rem;
+}
+.loaf-card{
+  display:flex;flex-direction:column;
+  border:1px solid var(--border);
+  background:var(--green);
+  overflow:hidden;
+  transition:border-color .2s, box-shadow .2s, transform .2s;
+}
+.loaf-card.selected{
+  border-color:var(--gold);
+  box-shadow:0 6px 22px rgba(201,168,76,.24);
+  transform:translateY(-2px);
+}
+/* Photo is the hero — tall, fills the card */
+.loaf-photo{
+  position:relative;
+  aspect-ratio:3/4;
+  overflow:hidden;
+}
+.loaf-photo img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform .6s ease;
+}
+.loaf-card:hover .loaf-photo img{transform:scale(1.05);}
+/* Name + place sit ON the photo, over a gradient scrim */
+.loaf-overlay{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:1rem 1rem 1.1rem;
+  background:linear-gradient(to top,
+    rgba(28,26,20,.82) 0%,
+    rgba(28,26,20,.42) 38%,
+    rgba(28,26,20,0) 68%);
+}
+.loaf-place{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--gold-lt);margin-bottom:.25rem;
+}
+.loaf-name{
+  font-family:var(--fd);font-size:1.7rem;font-weight:400;
+  color:var(--cream);line-height:.98;margin:0 0 .4rem;
+}
+.loaf-story{
+  font-family:var(--fb);font-size:.78rem;line-height:1.5;
+  color:rgba(245,238,216,.86);margin:0;
+}
+.loaf-price{
+  position:absolute;top:.7rem;right:.7rem;
+  background:var(--gold);color:var(--green);
+  font-family:var(--fd);font-size:1.05rem;font-weight:500;
+  padding:.18rem .6rem;border-radius:2px;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+}
+/* Stepper sits in a quiet strip beneath the photo */
+.loaf-actions{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.6rem .9rem;background:var(--cream-lt);
+}
+.loaf-actions .add-label{
+  font-family:var(--fc);font-size:.6rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink3);
+}
+.loaf-card.selected .loaf-actions .add-label{color:var(--green-md);}
+.loaf-stepper{justify-content:flex-end;gap:.7rem;}
+.loaf-stepper .qty-btn{width:34px;height:34px;font-size:1.2rem;}
+.loaf-stepper .qty-value{font-size:1.05rem;min-width:26px;}
+@media(max-width:640px){
+  .loaf-grid{grid-template-columns:1fr;gap:1.2rem;}
+  .loaf-photo{aspect-ratio:4/5;}
+  .loaf-name{font-size:1.9rem;}
+  .loaf-story{font-size:.84rem;}
+}
+.order-item{
+  display:flex;align-items:center;
+  gap:.9rem;padding:.7rem 0;border-bottom:1px solid var(--border);
+  flex-wrap:nowrap;
+}
+.oi-photo{
+  width:58px;height:58px;object-fit:cover;border-radius:3px;
+  flex-shrink:0;border:1px solid var(--border);
+}
+.order-item:last-of-type{border-bottom:none;}
+.oi-info{display:flex;flex-direction:column;flex:1 1 auto;min-width:0;}
+.oi-name{font-family:var(--fd);font-size:1.05rem;color:var(--green);}
+.oi-desc{font-family:var(--fb);font-size:.78rem;font-style:italic;color:var(--ink3);}
+.oi-price{font-family:var(--fb);font-size:.9rem;color:var(--ink2);min-width:42px;text-align:right;flex-shrink:0;}
+.qty-stepper{display:flex;align-items:center;gap:.55rem;flex-shrink:0;}
+.qty-btn{
+  width:28px;height:28px;border:1px solid var(--border);
+  background:var(--cream-lt);color:var(--green);
+  font-family:var(--fb);font-size:1.1rem;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  border-radius:1px;transition:border-color .2s,background .2s;
+}
+.qty-btn:hover{border-color:var(--gold);background:var(--cream);}
+.qty-value{min-width:22px;text-align:center;font-family:var(--fb);font-size:.95rem;}
+.order-summary{
+  background:var(--cream-lt);border:1px solid var(--border);
+  padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.4rem;
+}
+.summary-row{display:flex;justify-content:space-between;font-size:.9rem;color:var(--ink2);}
+.summary-row.total{
+  font-family:var(--fd);font-size:1.25rem;color:var(--green);
+  border-top:1px solid var(--border);padding-top:.5rem;margin-top:.2rem;
+}
+.radio-row{
+  display:flex;align-items:flex-start;gap:.6rem;
+  font-family:var(--fb);font-size:.92rem;color:var(--ink2);
+  cursor:pointer;line-height:1.5;
+}
+.radio-row input{margin-top:.35rem;accent-color:var(--green-md);flex-shrink:0;}
+.date-hint{font-size:.78rem;color:var(--ink3);font-style:italic;margin-top:.2rem;}
+.fulfillment-note{font-family:var(--fb);font-size:.78rem;font-style:italic;color:var(--ink3);margin:.7rem 0 0;line-height:1.5;}
+.hero-artisan{
+  font-family:var(--fb);font-style:italic;
+  font-size:.92rem;line-height:1.6;color:var(--ink2);
+  max-width:34rem;margin:.9rem auto 0;
+}
+.order-reassure{
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  padding:.95rem 0;margin:.4rem 0 1.2rem;
+}
+.order-reassure p{
+  font-family:var(--fb);font-size:.82rem;line-height:1.6;
+  color:var(--ink2);margin:0;
+}
+.order-reassure strong{color:var(--green);font-weight:600;}
+.pay-methods{
+  display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;
+  margin-top:.8rem;
+}
+.pay-methods-label{
+  font-family:var(--fc);font-size:.62rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink3);margin-right:.2rem;
+}
+.pay-chip{
+  font-family:var(--fb);font-size:.8rem;color:var(--green);
+  background:var(--cream-lt);border:1px solid var(--border);
+  padding:.28rem .7rem;border-radius:2px;
+}
+.date-error{font-size:.8rem;color:#a1503c;font-style:italic;min-height:1.1rem;}
+.sub-tiers{display:flex;gap:.8rem;}
+.sub-loaf-tiers{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.2rem;}
+.sub-loaf{
+  position:relative;border:1px solid var(--border);border-radius:6px;
+  padding:.9rem 1.1rem;cursor:pointer;transition:border-color .2s,background .2s;
+}
+.sub-loaf input{position:absolute;opacity:0;pointer-events:none;}
+.sub-loaf:has(input:checked){border-color:var(--gold);background:rgba(201,168,76,.1);}
+.sub-loaf .loaf-name{font-family:var(--fd);font-size:1.1rem;color:var(--green);margin-bottom:.15rem;}
+.sub-loaf .loaf-desc{font-family:var(--fb);font-size:.85rem;color:var(--ink3);}
+#specialty-picker select{
+  width:100%;padding:.7rem .9rem;font-family:var(--fb);font-size:.95rem;
+  border:1px solid var(--border);border-radius:6px;background:var(--cream-lt);color:var(--ink);
+}
+.sub-tier{
+  flex:1;position:relative;display:block;
+  border:1px solid var(--border);padding:1rem .8rem;text-align:center;
+  cursor:pointer;transition:border-color .2s,background .2s;
+}
+.sub-tier input{position:absolute;opacity:0;pointer-events:none;}
+.sub-tier:has(input:checked){border-color:var(--gold);background:rgba(201,168,76,.1);}
+.sub-tier .plan-weeks{font-family:var(--fd);font-size:1.7rem;font-weight:300;color:var(--green);line-height:1;margin-bottom:.3rem;}
+.sub-tier .plan-label{font-family:var(--fc);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;}
+.sub-tier .plan-price{font-family:var(--fb);font-size:1.05rem;color:var(--green);}
+.sub-tier .best-tag{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--green);background:var(--gold);
+  padding:.2rem .6rem;display:block;margin-bottom:.6rem;text-align:center;
+}
+.reserve-callout{
+  background:var(--green);
+  color:var(--cream);
+  padding:1.4rem 4rem;
+  display:flex;
+  justify-content:center;
+}
+.reserve-callout-inner{
+  width:100%;
+  max-width:900px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1.5rem;
+}
+.reserve-callout h2{
+  font-family:var(--fd);
+  font-size:1.55rem;
+  font-weight:400;
+  line-height:1.2;
+  color:var(--cream);
+  margin:0 0 .25rem;
+}
+.reserve-callout p{
+  font-family:var(--fb);
+  font-size:.9rem;
+  line-height:1.65;
+  color:rgba(245,238,216,.78);
+  margin:0;
+  max-width:560px;
+}
+.reserve-callout .btn-primary{
+  background:var(--gold);
+  color:var(--green);
+  border:none;
+  flex-shrink:0;
+}
+.reserve-callout .btn-primary:hover{background:var(--gold-lt);}
+.order-anchor-target{padding-top:1px;}
+@media(max-width:860px){
+  .sub-tiers{flex-direction:column;}
+  .order-item{flex-wrap:nowrap;gap:.7rem;}
+  .oi-photo{width:54px;height:54px;}
+  .oi-name{font-size:.98rem;}
+  .oi-desc{font-size:.72rem;}
+  .reserve-callout{padding:1.4rem 1.5rem;}
+  .reserve-callout-inner{align-items:flex-start;flex-direction:column;}
+}
+
+/* ── SITE HEADER ── */
+/* ── SITE HEADER + HAMBURGER NAV ── */
+.site-header{
+  background:var(--green);
+  border-bottom:1px solid rgba(201,168,76,.18);
+  padding:0 2rem;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  position:sticky;
+  top:0;
+  z-index:500;
+}
+.sh-brand{
+  display:flex;align-items:center;gap:.7rem;
+  text-decoration:none;flex-shrink:0;
+}
+.sh-logo{height:36px;width:36px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+.sh-name{font-family:var(--fc);font-size:.82rem;letter-spacing:.13em;color:var(--cream);font-weight:600;white-space:nowrap;}
+.sh-name strong{color:var(--gold);font-weight:700;}
+.sh-nav{display:flex;align-items:center;gap:1.6rem;flex:1;justify-content:center;}
+.sh-nav a{
+  font-family:var(--fc);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  text-decoration:none;color:rgba(245,238,216,.72);white-space:nowrap;
+  transition:color .18s;padding:.15rem 0;border-bottom:1px solid transparent;
+}
+.sh-nav a:hover,.sh-nav a.active{color:var(--gold);border-bottom-color:rgba(201,168,76,.4);}
+.sh-order{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  text-decoration:none;background:var(--gold);color:var(--green);
+  padding:.38rem 1.1rem;font-weight:600;white-space:nowrap;flex-shrink:0;
+}
+.sh-order:hover{background:var(--gold-lt);}
+.sh-hamburger{
+  display:none;flex-direction:column;justify-content:center;align-items:center;
+  gap:6px;width:40px;height:40px;background:transparent;border:none;cursor:pointer;padding:6px;flex-shrink:0;margin-right:2px;-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:transparent;outline:none;}
+.sh-hamburger:focus,.sh-hamburger:focus-visible,.sh-hamburger:active{outline:none;background:transparent;
+}
+.sh-hamburger span{display:block;width:26px;height:3px;background:#f5eed8;border-radius:2px;transition:transform .22s,opacity .18s;}
+.sh-hamburger.open span:nth-child(1){transform:translateY(8.5px) rotate(45deg);}
+.sh-hamburger.open span:nth-child(2){opacity:0;}
+.sh-hamburger.open span:nth-child(3){transform:translateY(-8.5px) rotate(-45deg);}
+.sh-drawer{
+  display:none;position:fixed;top:56px;left:0;right:0;
+  background:var(--green);border-bottom:1px solid rgba(201,168,76,.18);
+  flex-direction:column;padding:1rem 2rem 1.5rem;gap:.1rem;
+  z-index:499;box-shadow:0 8px 24px rgba(0,0,0,.18);
+}
+.sh-drawer.open{display:flex;}
+.sh-drawer a{
+  font-family:var(--fc);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+  text-decoration:none;color:rgba(245,238,216,.8);padding:.75rem 0;
+  border-bottom:1px solid rgba(245,238,216,.08);transition:color .18s;
+}
+.sh-drawer a:last-child{border-bottom:none;}
+.sh-drawer a:hover,.sh-drawer a.active{color:var(--gold);}
+@media(max-width:700px){.sh-nav{display:none;}.sh-hamburger{display:flex;}.sh-order{display:none;}}
+@media(max-width:480px){
+  .sh-name{font-size:.88rem;}
+  .sh-order{font-size:.72rem;padding:.42rem 1rem;}
+  .site-header{padding:0 1rem;}
+  .sh-drawer{padding:1rem 1.5rem 1.5rem;}
+}
+
+/* ── LEGIBILITY PASS — readable text at all sizes ── */
+
+/* Header & nav */
+.sh-name            { font-size: .88rem; }
+.sh-nav a           { font-size: .62rem; letter-spacing: .12em; }
+.sh-order           { font-size: .65rem; letter-spacing: .12em; }
+.sh-drawer a        { font-size: .72rem; letter-spacing: .12em; padding: .85rem 0; }
+
+/* Eyebrow / gold labels */
+.gold-label         { font-size: .68rem; letter-spacing: .13em; }
+.eyebrow            { font-size: .68rem; letter-spacing: .13em; }
+.section-label      { font-size: .75rem; letter-spacing: .14em; }
+
+/* Buttons */
+.btn-primary        { font-size: .7rem;  letter-spacing: .13em; }
+.btn-ghost          { font-size: .7rem;  letter-spacing: .13em; }
+
+/* Events */
+.events-header a    { font-size: .68rem; letter-spacing: .12em; }
+.event-month        { font-size: .65rem; letter-spacing: .12em; }
+.event-tag          { font-size: .6rem;  letter-spacing: .1em;  }
+.event-order-link   { font-size: .65rem; letter-spacing: .12em; }
+
+/* Photo captions — decorative, but floor at .6rem */
+.photo-break figcaption { font-size: .6rem; letter-spacing: .12em; }
+
+/* Waitlist form label */
+.wl-form label      { font-size: .65rem; letter-spacing: .12em; }
+.wl-submit          { font-size: .68rem; letter-spacing: .13em; }
+.wl-note            { font-size: .88rem; }
+
+/* Footer */
+.footer-brand       { font-size: .82rem; letter-spacing: .16em; }
+.footer-tagline     { font-size: .9rem;  }
+.footer-col h4      { font-size: .65rem; letter-spacing: .14em; }
+.footer-col a,
+.footer-col p       { font-size: .9rem;  }
+.footer-bottom p    { font-size: .68rem; letter-spacing: .08em; }
+
+/* Order / Pilgrim Membership labels */
+.order-group-title  { font-size: .72rem; letter-spacing: .13em; }
+.oi-name            { font-size: 1.05rem; }
+.oi-desc            { font-size: .85rem;  }
+.oi-price           { font-size: .95rem;  }
+.form-row label     { font-size: .68rem; letter-spacing: .13em; }
+.plan-label         { font-size: .68rem; letter-spacing: .1em;  }
+.best-tag           { font-size: .68rem; letter-spacing: .1em;  }
+.sub-plan-label,
+.plan-weeks         { font-size: 1.9rem; }
+
+/* Contact form */
+.contact-form .btn-primary { font-size: .7rem; }
+
+/* Collection page badges */
+.sub-plan-price     { font-size: 1.05rem; }
+
+/* ── MOBILE overrides (≤640px) ── */
+@media (max-width: 640px) {
+  body                { font-size: 17px; }
+
+  /* Header */
+  .sh-name            { font-size: .95rem; }
+  .sh-order           { font-size: .72rem; padding: .42rem 1rem; }
+  .sh-drawer a        { font-size: .82rem; letter-spacing: .1em; padding: 1rem 0; }
+
+  /* Gold labels / eyebrows */
+  .gold-label         { font-size: .72rem; }
+  .section-label      { font-size: .78rem; }
+
+  /* Buttons — tappable size */
+  .btn-primary,
+  .btn-ghost          { font-size: .78rem; padding: .9rem 1.8rem; }
+
+  /* Events */
+  .events-header a    { font-size: .72rem; }
+  .event-month        { font-size: .72rem; }
+  .event-tag          { font-size: .68rem; }
+
+  /* Waitlist */
+  .wl-form label      { font-size: .72rem; }
+  .wl-submit          { font-size: .75rem; padding: .85rem 1.4rem; }
+
+  /* Footer — readable, not microscopic */
+  .footer-col h4      { font-size: .72rem; }
+  .footer-col a,
+  .footer-col p       { font-size: .95rem; }
+  .footer-bottom p    { font-size: .62rem; }
+
+  /* Order form */
+  .order-group-title  { font-size: .78rem; }
+  .form-row label     { font-size: .72rem; }
+  .plan-label         { font-size: .65rem; }
+  .best-tag           { font-size: .62rem; }
+}
+</style>
+<style id="ig-mobile-scroll-fix">
+@media (max-width:900px){
+    .hero{position:static !important; min-height:auto !important; padding-top:0 !important;}
+  body::after{display:none !important;}
+}
+</style>
+</head>
+<body>
+
+<!-- SITE HEADER -->
+<header class="site-header">
+  <a class="sh-brand" href="/">
+    <img class="sh-logo" src="/images/logo.png" alt="Fatima Bakery ATX logo"/>
+    <span class="sh-name">Fatima Bakery <strong>ATX</strong></span>
+  </a>
+  <nav class="sh-nav">
+    <a href="/">Home</a>
+    <a href="/story">My Story</a>
+    <a href="/collection">Pilgrim Collection</a>
+    <a href="/order">Order</a>
+    <a href="/contact">Contact</a>
+  </nav>
+  <a class="sh-order" href="/order#Pilgrim Membership">Membership</a>
+  <button class="sh-hamburger" id="sh-hamburger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+<!-- MOBILE DRAWER -->
+<nav class="sh-drawer" id="sh-drawer">
+  <a href="/">Home</a>
+  <a href="/story">My Story</a>
+  <a href="/collection">Pilgrim Collection</a>
+  <a href="/contact">Contact</a>
+  <a href="/order">Order</a>
+  <a href="/order#Pilgrim Membership" style="color:var(--gold);margin-top:.4rem;">Membership</a>
+</nav>
+
+<!-- ORDER HEADER -->
+<section class="contact-hero">
+  <div class="section-label gold-label">Place an Order</div>
+  <h1>Fresh bread<br>every week.</h1>
+  <p>Pick your loaves, choose pickup or delivery, and we will have everything ready Friday. Orders close Wednesday at 6 PM.</p>
+  <p class="hero-artisan">Each loaf is naturally leavened and baked by hand the morning of your pickup — slow-fermented over three days, never rushed.</p>
+  <div class="hero-btns">
+    <a class="btn-primary" href="#Pilgrim Membership">Join Loaf Reserve</a>
+    <a class="btn-ghost" href="#order">Order This Week</a>
+  </div>
+<p>Members receive classic and specialty reserved loaves baked fresh every week in Liberty Hill.</p></section>
+
+<!-- MEMBERSHIP CALLOUT -->
+<section class="reserve-callout" aria-labelledby="reserve-callout-title">
+  <div class="reserve-callout-inner">
+    <div>
+      <h2 id="reserve-callout-title">Bread lovers can reserve Fridays.</h2>
+      <p>Loaf Reserve Membership keeps your loaf on the list for 4, 6, or 8 weeks. Memberships are paid by term, typically auto-renew, and can be canceled for any reason before the next term begins.</p>
+    </div>
+    <a class="btn-primary" href="#Pilgrim Membership">See Membership Plans</a>
+  </div>
+</section>
+
+<!-- ONE-TIME ORDER -->
+<section id="order" class="contact-section">
+  <form class="contact-form order-form" id="order-form">
+      <div class="order-group-title">The Pilgrimage Collection</div>
+      <div class="loaf-grid">
+      <label class="loaf-card" data-for="Fatima">
+        <div class="loaf-photo">
+          <img src="/images/boule-fatima.jpg" alt="Fatima — Fátima · Portugal" loading="lazy"/>
+          <span class="loaf-price">$12</span>
+          <div class="loaf-overlay">
+            <div class="loaf-place">Fátima · Portugal</div>
+            <h3 class="loaf-name">Fatima</h3>
+            <p class="loaf-story">Three ingredients, three days, nothing else.</p>
+          </div>
+        </div>
+        <div class="loaf-actions">
+          <span class="add-label">Add to order</span>
+          <div class="qty-stepper loaf-stepper">
+            <button type="button" class="qty-btn" data-action="dec" data-item="Fatima" aria-label="Decrease Fatima quantity">&minus;</button>
+            <span class="qty-value" id="qty-Fatima">0</span>
+            <button type="button" class="qty-btn" data-action="inc" data-item="Fatima" aria-label="Increase Fatima quantity">+</button>
+          </div>
+        </div>
+      </label>
+      <label class="loaf-card" data-for="Lourdes">
+        <div class="loaf-photo">
+          <img src="/images/boule-lourdes.jpg" alt="Lourdes — Lourdes · France" loading="lazy"/>
+          <span class="loaf-price">$15</span>
+          <div class="loaf-overlay">
+            <div class="loaf-place">Lourdes · France</div>
+            <h3 class="loaf-name">Lourdes</h3>
+            <p class="loaf-story">Roasted garlic, Gruyère, and thyme.</p>
+          </div>
+        </div>
+        <div class="loaf-actions">
+          <span class="add-label">Add to order</span>
+          <div class="qty-stepper loaf-stepper">
+            <button type="button" class="qty-btn" data-action="dec" data-item="Lourdes" aria-label="Decrease Lourdes quantity">&minus;</button>
+            <span class="qty-value" id="qty-Lourdes">0</span>
+            <button type="button" class="qty-btn" data-action="inc" data-item="Lourdes" aria-label="Increase Lourdes quantity">+</button>
+          </div>
+        </div>
+      </label>
+      <label class="loaf-card" data-for="Guadalupe">
+        <div class="loaf-photo">
+          <img src="/images/boule-guadalupe.jpg" alt="Guadalupe — Guadalupe · Mexico" loading="lazy"/>
+          <span class="loaf-price">$15</span>
+          <div class="loaf-overlay">
+            <div class="loaf-place">Guadalupe · Mexico</div>
+            <h3 class="loaf-name">Guadalupe</h3>
+            <p class="loaf-story">Sharp cheddar, roasted poblano, toasted pepitas.</p>
+          </div>
+        </div>
+        <div class="loaf-actions">
+          <span class="add-label">Add to order</span>
+          <div class="qty-stepper loaf-stepper">
+            <button type="button" class="qty-btn" data-action="dec" data-item="Guadalupe" aria-label="Decrease Guadalupe quantity">&minus;</button>
+            <span class="qty-value" id="qty-Guadalupe">0</span>
+            <button type="button" class="qty-btn" data-action="inc" data-item="Guadalupe" aria-label="Increase Guadalupe quantity">+</button>
+          </div>
+        </div>
+      </label>
+      <label class="loaf-card" data-for="Santiago">
+        <div class="loaf-photo">
+          <img src="/images/boule-santiago.jpg" alt="Santiago — Santiago · Spain" loading="lazy"/>
+          <span class="loaf-price">$15</span>
+          <div class="loaf-overlay">
+            <div class="loaf-place">Santiago · Spain</div>
+            <h3 class="loaf-name">Santiago</h3>
+            <p class="loaf-story">Smoked paprika, Manchego, green olive.</p>
+          </div>
+        </div>
+        <div class="loaf-actions">
+          <span class="add-label">Add to order</span>
+          <div class="qty-stepper loaf-stepper">
+            <button type="button" class="qty-btn" data-action="dec" data-item="Santiago" aria-label="Decrease Santiago quantity">&minus;</button>
+            <span class="qty-value" id="qty-Santiago">0</span>
+            <button type="button" class="qty-btn" data-action="inc" data-item="Santiago" aria-label="Increase Santiago quantity">+</button>
+          </div>
+        </div>
+      </label>
+      <label class="loaf-card" data-for="Kibeho">
+        <div class="loaf-photo">
+          <img src="/images/boule-kibeho.jpg" alt="Kibeho — Kibeho · Rwanda" loading="lazy"/>
+          <span class="loaf-price">$15</span>
+          <div class="loaf-overlay">
+            <div class="loaf-place">Kibeho · Rwanda</div>
+            <h3 class="loaf-name">Kibeho</h3>
+            <p class="loaf-story">Cinnamon and brown sugar through a slow crumb.</p>
+          </div>
+        </div>
+        <div class="loaf-actions">
+          <span class="add-label">Add to order</span>
+          <div class="qty-stepper loaf-stepper">
+            <button type="button" class="qty-btn" data-action="dec" data-item="Kibeho" aria-label="Decrease Kibeho quantity">&minus;</button>
+            <span class="qty-value" id="qty-Kibeho">0</span>
+            <button type="button" class="qty-btn" data-action="inc" data-item="Kibeho" aria-label="Increase Kibeho quantity">+</button>
+          </div>
+        </div>
+      </label>
+      </div>
+      <div class="order-group-title">Extras</div>
+      <div class="order-item">
+        <img class="oi-photo" src="/images/extra-pilgrims-dough.jpg" alt="Pilgrim s Dough" loading="lazy"/>
+        <div class="oi-info">
+          <span class="oi-name">Pilgrim's Dough</span>
+          <span class="oi-desc">Pizza dough, 1 large or 2 small</span>
+        </div>
+        <span class="oi-price">$10</span>
+        <div class="qty-stepper">
+          <button type="button" class="qty-btn" data-action="dec" data-item="Pilgrim_s_Dough" aria-label="Decrease Pilgrim's Dough quantity">&minus;</button>
+          <span class="qty-value" id="qty-Pilgrim_s_Dough">0</span>
+          <button type="button" class="qty-btn" data-action="inc" data-item="Pilgrim_s_Dough" aria-label="Increase Pilgrim's Dough quantity">+</button>
+        </div>
+      </div>
+      <div class="order-item">
+        <img class="oi-photo" src="/images/extra-mt-carmel-bowls.jpg" alt="Mt Carmel Bowl ind" loading="lazy"/>
+        <div class="oi-info">
+          <span class="oi-name">Mt. Carmel Bowl (ind)</span>
+          <span class="oi-desc">Individual sourdough bowl</span>
+        </div>
+        <span class="oi-price">$12</span>
+        <div class="qty-stepper">
+          <button type="button" class="qty-btn" data-action="dec" data-item="Mt_Carmel_Bowl_ind" aria-label="Decrease Mt. Carmel Bowl (ind) quantity">&minus;</button>
+          <span class="qty-value" id="qty-Mt_Carmel_Bowl_ind">0</span>
+          <button type="button" class="qty-btn" data-action="inc" data-item="Mt_Carmel_Bowl_ind" aria-label="Increase Mt. Carmel Bowl (ind) quantity">+</button>
+        </div>
+      </div>
+      <div class="order-item">
+        <img class="oi-photo" src="/images/extra-mt-carmel-bowls.jpg" alt="Mt Carmel Bowl duo" loading="lazy"/>
+        <div class="oi-info">
+          <span class="oi-name">Mt. Carmel Bowl (duo)</span>
+          <span class="oi-desc">Sourdough bowls, set of two</span>
+        </div>
+        <span class="oi-price">$20</span>
+        <div class="qty-stepper">
+          <button type="button" class="qty-btn" data-action="dec" data-item="Mt_Carmel_Bowl_duo" aria-label="Decrease Mt. Carmel Bowl (duo) quantity">&minus;</button>
+          <span class="qty-value" id="qty-Mt_Carmel_Bowl_duo">0</span>
+          <button type="button" class="qty-btn" data-action="inc" data-item="Mt_Carmel_Bowl_duo" aria-label="Increase Mt. Carmel Bowl (duo) quantity">+</button>
+        </div>
+      </div>
+      <div class="order-item">
+        <img class="oi-photo" src="/images/extra-honey-butter.jpg" alt="Pilgrim s Honey Butter" loading="lazy"/>
+        <div class="oi-info">
+          <span class="oi-name">Pilgrim's Honey Butter</span>
+          <span class="oi-desc">Whipped butter, raw honey, smoked sea salt</span>
+        </div>
+        <span class="oi-price">$5</span>
+        <div class="qty-stepper">
+          <button type="button" class="qty-btn" data-action="dec" data-item="Pilgrim_s_Honey_Butter" aria-label="Decrease Pilgrim's Honey Butter quantity">&minus;</button>
+          <span class="qty-value" id="qty-Pilgrim_s_Honey_Butter">0</span>
+          <button type="button" class="qty-btn" data-action="inc" data-item="Pilgrim_s_Honey_Butter" aria-label="Increase Pilgrim's Honey Butter quantity">+</button>
+        </div>
+      </div>
+      <div class="order-item">
+        <img class="oi-photo" src="/images/extra-crunch.jpg" alt="Pilgrim s Crunch" loading="lazy"/>
+        <div class="oi-info">
+          <span class="oi-name">Pilgrim's Crunch</span>
+          <span class="oi-desc">Garlic and herb croutons, 5 oz</span>
+        </div>
+        <span class="oi-price">$7</span>
+        <div class="qty-stepper">
+          <button type="button" class="qty-btn" data-action="dec" data-item="Pilgrim_s_Crunch" aria-label="Decrease Pilgrim's Crunch quantity">&minus;</button>
+          <span class="qty-value" id="qty-Pilgrim_s_Crunch">0</span>
+          <button type="button" class="qty-btn" data-action="inc" data-item="Pilgrim_s_Crunch" aria-label="Increase Pilgrim's Crunch quantity">+</button>
+        </div>
+      </div>
+
+    <div class="order-summary">
+      <div class="summary-row"><span>Subtotal</span><span id="summary-subtotal">$0.00</span></div>
+      <div class="summary-row"><span>Delivery</span><span id="summary-delivery">$0.00</span></div>
+      <div class="summary-row total"><span>Total</span><span id="summary-total">$0.00</span></div>
+    </div>
+
+    <div class="order-group-title">Pickup or Delivery</div>
+    <div class="form-row">
+      <label class="radio-row">
+        <input type="radio" name="fulfillment" value="pickup" checked>
+        <span>Curbside pickup at 112 Civita Road, Liberty Hill, TX. Fridays 9am to 12pm.</span>
+      </label>
+      <label class="radio-row">
+        <input type="radio" name="fulfillment" value="delivery">
+        <span>Delivery to the Santa Rita Ranch neighborhood (within 5 miles). Fridays 9am to 12pm. Adds $5.00.</span>
+      </label>
+      <p class="fulfillment-note">To keep your bread at its freshest, text us at <a href="sms:+15122991241">(512) 299-1241</a> when you're on your way for pickup, or to confirm your delivery window.</p>
+    </div>
+
+    <div class="form-row">
+      <label for="order-date">Pickup Date</label>
+      <input type="date" id="order-date" name="preferred_date" required>
+      <span class="date-hint">We bake on Fridays only. Orders close Wednesday at 6 PM.</span>
+      <span class="date-error" id="order-date-error"></span>
+    </div>
+
+    <div class="order-group-title">Your Information</div>
+    <div class="form-row">
+      <label for="order-name">Name</label>
+      <input type="text" id="order-name" name="name" required>
+    </div>
+    <div class="form-row">
+      <label for="order-email">Email</label>
+      <input type="email" id="order-email" name="email" required>
+    </div>
+    <div class="form-row">
+      <label for="order-phone">Phone</label>
+      <input type="tel" id="order-phone" name="phone">
+    </div>
+    <div class="form-row">
+      <label for="order-ig">Instagram Handle (optional)</label>
+      <input type="text" id="order-ig" name="ig_handle" placeholder="@yourname">
+    </div>
+    <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
+    <div class="form-row">
+      <label for="order-notes">Notes (optional)</label>
+      <textarea id="order-notes" name="notes" rows="3"></textarea>
+    </div>
+
+    <input type="hidden" name="source" value="website">
+    <div class="order-reassure">
+      <p><strong>No payment now.</strong> Place your order and we will email you a confirmation with a secure link to pay. If we ever cannot fill your order, you are refunded in full.</p>
+      <div class="pay-methods">
+        <span class="pay-methods-label">Pay by</span>
+        <span class="pay-chip">Cash App</span>
+        <span class="pay-chip">Venmo</span>
+        <span class="pay-chip">Square</span>
+      </div>
+    </div>
+    <button type="submit" class="btn-primary">Place Order</button>
+    <p id="order-status" class="form-status"></p>
+  </form>
+</section>
+
+<!-- Pilgrim Membership -->
+<section id="Pilgrim Membership" class="contact-section">
+  <form class="contact-form order-form" id="Pilgrim Membership-form">
+    <div class="section-label gold-label">Loaf Reserve Membership</div>
+    <h2 style="margin:0;">Never miss<br><em>a Friday.</em></h2>
+    <p style="font-size:1rem;color:var(--ink2);line-height:1.8;margin:0;">Choose your loaf and a membership term below, and a fresh boule will be reserved for you every Friday for the length of your plan.</p>
+
+    <div class="order-group-title">1 · Choose Your Loaf</div>
+    <div class="sub-loaf-tiers">
+      <label class="sub-loaf">
+        <input type="radio" name="subscription_loaf" value="Fatima Classic" data-kind="fatima" checked>
+        <div class="loaf-name">Fatima Classic</div>
+        <div class="loaf-desc">Our signature sourdough boule</div>
+      </label>
+      <label class="sub-loaf">
+        <input type="radio" name="subscription_loaf" value="Specialty" data-kind="specialty">
+        <div class="loaf-name">Specialty</div>
+        <div class="loaf-desc">Choose your favorite below</div>
+      </label>
+      <label class="sub-loaf">
+        <input type="radio" name="subscription_loaf" value="Baker's Choice" data-kind="specialty">
+        <div class="loaf-name">Baker's Choice</div>
+        <div class="loaf-desc">A specialty loaf, our pick each week</div>
+      </label>
+    </div>
+
+    <div class="form-row" id="specialty-picker" style="display:none;">
+      <label for="sub-specialty">Which specialty loaf?</label>
+      <select id="sub-specialty" name="subscription_specialty">
+        <option value="Kibeho">Kibeho — cinnamon swirl</option>
+        <option value="Guadalupe">Guadalupe — poblano, cheddar, pepitas</option>
+        <option value="Lourdes">Lourdes — Gruyère, garlic, thyme</option>
+        <option value="Santiago">Santiago — Manchego, paprika, olive</option>
+      </select>
+    </div>
+
+    <div class="order-group-title">2 · Choose Your Membership Term</div>
+    <div class="sub-tiers">
+      <label class="sub-tier">
+        <input type="radio" name="subscription_tier" value="4 weeks" required>
+        <div class="plan-weeks">4</div>
+        <div class="plan-label">Weeks</div>
+        <div class="plan-price" data-fatima="$44" data-specialty="$58">$44</div>
+      </label>
+      <label class="sub-tier">
+        <input type="radio" name="subscription_tier" value="6 weeks">
+        <div class="plan-weeks">6</div>
+        <div class="plan-label">Weeks</div>
+        <div class="plan-price" data-fatima="$60" data-specialty="$84">$60</div>
+      </label>
+      <label class="sub-tier">
+        <input type="radio" name="subscription_tier" value="8 weeks" checked>
+        <div class="plan-weeks">8</div>
+        <div class="plan-label">Weeks</div>
+        <div class="plan-price" data-fatima="$72" data-specialty="$104">$72</div>
+      </label>
+    </div>
+
+    <div class="form-row">
+      <label for="sub-date">First Pickup Date</label>
+      <input type="date" id="sub-date" name="preferred_date" required>
+      <span class="date-hint">Fridays only. Your membership begins with this week's pickup.</span>
+      <span class="date-error" id="sub-date-error"></span>
+    </div>
+
+    <div class="order-group-title">Your Information</div>
+    <div class="form-row">
+      <label for="sub-name">Name</label>
+      <input type="text" id="sub-name" name="name" required>
+    </div>
+    <div class="form-row">
+      <label for="sub-email">Email</label>
+      <input type="email" id="sub-email" name="email" required>
+    </div>
+    <div class="form-row">
+      <label for="sub-phone">Phone</label>
+      <input type="tel" id="sub-phone" name="phone">
+    </div>
+    <div class="form-row">
+      <label for="sub-ig">Instagram Handle (optional)</label>
+      <input type="text" id="sub-ig" name="ig_handle" placeholder="@yourname">
+    </div>
+    <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
+    <div class="form-row">
+      <label for="sub-notes">Notes (optional)</label>
+      <textarea id="sub-notes" name="notes" rows="3"></textarea>
+    </div>
+
+    <input type="hidden" name="source" value="website">
+    <input type="hidden" name="order_type" value="Pilgrim Membership">
+    <div class="order-reassure">
+      <p><strong>Membership terms.</strong> Loaf Reserve Membership is paid by term and is not handled as ad-hoc weekly refunds. Plans are typically set to auto-renew and can be canceled for any reason before the next term begins.</p>
+    </div>
+    <button type="submit" class="btn-primary">Join Loaf Reserve</button>
+    <p id="Pilgrim Membership-status" class="form-status"></p>
+  </form>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-brand">Fatima Bakery <strong>ATX</strong></div>
+    <p class="footer-tagline">Artisan sourdough baked slowly with care, named for sacred places around the world.</p>
+    <p style="font-family:var(--fc);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,238,216,.72);">Liberty Hill, Texas &middot; Est. 2026 &middot; Licensed Cottage Food Operation</p>
+  </div>
+  <div class="footer-col">
+    <h4>Explore</h4>
+    <a href="/story">My Story</a>
+    <a href="/collection">The Pilgrimage Collection</a>
+    <a href="/#events">Markets &amp; Events</a>
+    <a href="/#waitlist">Join the Waitlist</a>
+  </div>
+  <div class="footer-col">
+    <h4>Order</h4>
+    <a href="/collection">Browse the Menu</a>
+    <a href="/order">Order a Loaf</a>
+    <a href="/order#Pilgrim Membership">Loaf Reserve Membership</a>
+    <a href="/contact">Contact</a>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2026 Fatima Bakery ATX &middot; All rights reserved &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a></p>
+    <div class="footer-social">
+      <a href="https://instagram.com/fatimabakeryatx" aria-label="Instagram" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      </a>
+      <a href="https://www.facebook.com/profile.php?id=61590028629242" aria-label="Facebook" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.9 3.78-3.9 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.9h-2.34V22c4.78-.79 8.44-4.94 8.44-9.94z"/></svg>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Fatima Bakery — Order + Pilgrim Membership forms
+//
+// GOOGLE SITES VERSION — uses mode:'no-cors' fire-and-forget for both forms.
+//
+// WHY: Google Apps Script ContentService cannot set CORS headers, and Google
+// Sites iframes impose additional cross-origin restrictions. A credentialed
+// fetch that tries to read the response will be blocked before it reaches
+// Apps Script. The contact form already uses this pattern successfully.
+//
+// FLOW: User submits → optimistic "order received" message shown immediately →
+// Apps Script logs the order and emails confirmation. Orders are never
+// blocked for capacity; Lindsay tracks fill levels via her owner reports.
+// ─────────────────────────────────────────────────────────────────────────────
+(function(){
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6ahtqJ1pe7sLVk4BgcU48WIn34P1P1giY5lxh8pmEABxpQX3m0wI96lIhnjreiDO-/exec';
+  var DELIVERY_FEE = 5.00;
+  var MENU = {"Fatima":{"name":"Fatima","price":12,"type":"boule"},"Lourdes":{"name":"Lourdes","price":15,"type":"specialty"},"Guadalupe":{"name":"Guadalupe","price":15,"type":"specialty"},"Santiago":{"name":"Santiago","price":15,"type":"specialty"},"Kibeho":{"name":"Kibeho","price":15,"type":"specialty"},"Pilgrim_s_Dough":{"name":"Pilgrim's Dough","price":10,"type":"other"},"Mt_Carmel_Bowl_ind":{"name":"Mt. Carmel Bowl (ind)","price":12,"type":"other"},"Mt_Carmel_Bowl_duo":{"name":"Mt. Carmel Bowl (duo)","price":20,"type":"other"},"Pilgrim_s_Honey_Butter":{"name":"Pilgrim's Honey Butter","price":5,"type":"other"},"Pilgrim_s_Crunch":{"name":"Pilgrim's Crunch","price":7,"type":"other"}};
+
+  var qty = {};
+  Object.keys(MENU).forEach(function(k){ qty[k] = 0; });
+
+  function fmt(n){ return '$' + n.toFixed(2); }
+
+  function recalc(){
+    var subtotal = 0;
+    Object.keys(MENU).forEach(function(k){ subtotal += MENU[k].price * qty[k]; });
+    var delivery = 0;
+    var fulfillment = document.querySelector('input[name="fulfillment"]:checked');
+    if (fulfillment && fulfillment.value === 'delivery') delivery = DELIVERY_FEE;
+    var total = subtotal + delivery;
+    document.getElementById('summary-subtotal').textContent = fmt(subtotal);
+    document.getElementById('summary-delivery').textContent = fmt(delivery);
+    document.getElementById('summary-total').textContent    = fmt(total);
+    return { subtotal: subtotal, delivery: delivery, total: total };
+  }
+
+  // ── Quantity steppers ──
+  document.querySelectorAll('.qty-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var key = btn.dataset.item;
+      var current = qty[key] || 0;
+      if (btn.dataset.action === 'inc' && current < 8) current++;
+      if (btn.dataset.action === 'dec' && current > 0) current--;
+      qty[key] = current;
+      document.getElementById('qty-' + key).textContent = current;
+      // Highlight the loaf card when it's in the order
+      var card = document.querySelector('.loaf-card[data-for="' + key + '"]');
+      if (card) card.classList.toggle('selected', current > 0);
+      recalc();
+    });
+  });
+
+  document.querySelectorAll('input[name="fulfillment"]').forEach(function(r){
+    r.addEventListener('change', recalc);
+  });
+
+  recalc();
+
+  // ── Friday-only date validation ──
+  function isFriday(dateStr){
+    if (!dateStr) return false;
+    var parts = dateStr.split('-');
+    var d = new Date(parts[0], parts[1] - 1, parts[2]);
+    return d.getDay() === 5;
+  }
+
+  // Orders for a Friday close the Wednesday before at 6:00 PM (Central).
+  // Returns true if the cutoff for the chosen Friday has already passed.
+  function isPastCutoff(dateStr){
+    if (!dateStr) return false;
+    var parts  = dateStr.split('-');
+    var pickup = new Date(parts[0], parts[1] - 1, parts[2]);
+    var cutoff = new Date(pickup.getTime());
+    cutoff.setDate(cutoff.getDate() - 2);   // Wednesday before
+    cutoff.setHours(18, 0, 0, 0);            // 6 PM
+    return new Date() > cutoff;
+  }
+
+  var todayStr = new Date().toISOString().slice(0, 10);
+  ['order-date', 'sub-date'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.min = todayStr;
+  });
+
+  // ── Instant Friday validation on date pick ──
+  // The native date input can't restrict to Fridays only, so we
+  // validate the moment a date is chosen and give immediate feedback
+  // instead of waiting until the customer hits Place Order.
+  function wireFridayValidation(inputId, errorId){
+    var input = document.getElementById(inputId);
+    var error = document.getElementById(errorId);
+    if (!input) return;
+    input.addEventListener('change', function(){
+      var v = input.value;
+      if (!v){ if (error) error.textContent = ''; return; }
+      if (!isFriday(v)){
+        if (error) error.textContent = 'We bake on Fridays only — please pick a Friday.';
+        input.setCustomValidity('Please choose a Friday.');
+      } else if (isPastCutoff(v)){
+        if (error) error.textContent = 'Orders for that Friday closed Wednesday at 6 PM. Please choose the next Friday.';
+        input.setCustomValidity('That Friday is closed.');
+      } else {
+        if (error) error.textContent = '';
+        input.setCustomValidity('');
+      }
+    });
+  }
+  wireFridayValidation('order-date', 'order-date-error');
+  wireFridayValidation('sub-date',   'sub-date-error');
+
+  // ── Helper: fire-and-forget post (no-cors, same as contact form) ──
+  function sendPayload(payload, statusEl, successMsg, resetFn){
+    statusEl.textContent = 'Sending…';
+    statusEl.className = 'form-status';
+
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode:   'no-cors',           // required inside Google Sites iframe
+      body:   JSON.stringify(payload)
+    })
+    .then(function(){
+      // no-cors returns an opaque response — we can't read it,
+      // but reaching here means the network request was sent.
+      statusEl.textContent = successMsg;
+      statusEl.className = 'form-status success';
+      if (resetFn) resetFn();
+    })
+    .catch(function(){
+      statusEl.textContent = 'Something went wrong sending your order. Please DM us on Instagram @fatimabakeryatx or try again.';
+      statusEl.className = 'form-status error';
+    });
+  }
+
+  // ── ONE-TIME ORDER FORM ──
+  var orderForm      = document.getElementById('order-form');
+  var orderStatus    = document.getElementById('order-status');
+  var orderDateError = document.getElementById('order-date-error');
+
+  orderForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    if (orderForm._gotcha && orderForm._gotcha.value) return;  // bot honeypot
+    orderDateError.textContent = '';
+
+    var dateVal = orderForm.preferred_date.value;
+    if (!isFriday(dateVal)){
+      orderDateError.textContent = 'Please choose a Friday. We only bake on Fridays.';
+      return;
+    }
+    if (isPastCutoff(dateVal)){
+      orderDateError.textContent = 'Orders for that Friday closed Wednesday at 6 PM. Please choose the next Friday.';
+      return;
+    }
+
+    var totals   = recalc();
+    var itemKeys = Object.keys(MENU).filter(function(k){ return qty[k] > 0; });
+    if (itemKeys.length === 0){
+      orderStatus.textContent = 'Please choose at least one item.';
+      orderStatus.className = 'form-status error';
+      return;
+    }
+
+    var orderDesc      = itemKeys.map(function(k){ return MENU[k].name + ' x' + qty[k]; }).join('; ');
+    var bouleCount     = 0, specialtyCount = 0;
+    itemKeys.forEach(function(k){
+      if (MENU[k].type === 'boule')    bouleCount     += qty[k];
+      if (MENU[k].type === 'specialty') specialtyCount += qty[k];
+    });
+
+    var fulfillment   = document.querySelector('input[name="fulfillment"]:checked').value;
+    var preferredTime = fulfillment === 'delivery'
+      ? 'Delivery — Santa Rita Ranch, Fridays 9am to 12pm'
+      : 'Curbside pickup — Fridays 9am to 12pm';
+
+    var payload = {
+      name:            orderForm.name.value,
+      phone:           orderForm.phone.value,
+      ig_handle:       orderForm.ig_handle.value,
+      email:           orderForm.email.value,
+      order:           orderDesc,
+      boule_count:     bouleCount,
+      specialty_count: specialtyCount,
+      subtotal:        fmt(totals.subtotal),
+      delivery_fee:    fmt(totals.delivery),
+      total:           fmt(totals.total),
+      preferred_date:  dateVal,
+      preferred_time:  preferredTime,
+      source:          'website',
+      notes:           orderForm.notes.value,
+      _gotcha:         (orderForm._gotcha ? orderForm._gotcha.value : '')
+    };
+
+    sendPayload(
+      payload,
+      orderStatus,
+      'Your order is in! Check your email shortly for confirmation and payment details.',
+      function(){
+        orderForm.reset();
+        Object.keys(qty).forEach(function(k){
+          qty[k] = 0;
+          document.getElementById('qty-' + k).textContent = '0';
+          var card = document.querySelector('.loaf-card[data-for="' + k + '"]');
+          if (card) card.classList.remove('selected');
+        });
+        recalc();
+      }
+    );
+  });
+
+  // ── Pilgrim Membership FORM ──
+  var subForm      = document.getElementById('Pilgrim Membership-form');
+  var subStatus    = document.getElementById('Pilgrim Membership-status');
+  var subDateError = document.getElementById('sub-date-error');
+
+  // ── Pilgrim Membership loaf-type: toggle specialty dropdown + swap prices ──
+  var specialtyPicker = document.getElementById('specialty-picker');
+  function updateSubLoaf(){
+    var chosen = document.querySelector('input[name="subscription_loaf"]:checked');
+    var kind = chosen ? chosen.getAttribute('data-kind') : 'fatima';
+    // Show the specialty dropdown only for the "Specialty" option
+    specialtyPicker.style.display = (chosen && chosen.value === 'Specialty') ? '' : 'none';
+    // Swap each plan price to the matching data attribute
+    document.querySelectorAll('#Pilgrim Membership-form .plan-price').forEach(function(el){
+      var val = (kind === 'specialty') ? el.getAttribute('data-specialty') : el.getAttribute('data-fatima');
+      if (val) el.textContent = val;
+    });
+  }
+  document.querySelectorAll('input[name="subscription_loaf"]').forEach(function(r){
+    r.addEventListener('change', updateSubLoaf);
+  });
+  updateSubLoaf();  // set initial state on load
+
+  subForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    if (subForm._gotcha && subForm._gotcha.value) return;  // bot honeypot
+    subDateError.textContent = '';
+
+    var dateVal = subForm.preferred_date.value;
+    if (!isFriday(dateVal)){
+      subDateError.textContent = 'Please choose a Friday for your first pickup.';
+      return;
+    }
+    if (isPastCutoff(dateVal)){
+      subDateError.textContent = 'Orders for that Friday closed Wednesday at 6 PM. Please choose the next Friday.';
+      return;
+    }
+
+    var tierEl = document.querySelector('input[name="subscription_tier"]:checked');
+    if (!tierEl){
+      subStatus.textContent = 'Please choose a membership term.';
+      subStatus.className = 'form-status error';
+      return;
+    }
+
+    // Resolve the loaf choice into a clear label for the order + backend.
+    var loafEl = document.querySelector('input[name="subscription_loaf"]:checked');
+    var loafChoice = loafEl ? loafEl.value : 'Fatima Classic';
+    var loafKind   = loafEl ? loafEl.getAttribute('data-kind') : 'fatima';
+    var specialtyPick = '';
+    var loafLabel = loafChoice;
+    if (loafChoice === 'Specialty') {
+      specialtyPick = subForm.subscription_specialty ? subForm.subscription_specialty.value : '';
+      loafLabel = 'Specialty — ' + specialtyPick;
+    }
+
+    var payload = {
+      order_type:            'Pilgrim Membership',
+      subscription_tier:     tierEl.value,
+      subscription_loaf:     loafChoice,          // "Fatima Classic" | "Specialty" | "Baker's Choice"
+      subscription_specialty: specialtyPick,      // e.g. "Guadalupe" (only when Specialty)
+      subscription_kind:     loafKind,            // "fatima" | "specialty" (drives pricing server-side)
+      subscription_label:    loafLabel + ' · ' + tierEl.value,   // human-readable summary
+      name:              subForm.name.value,
+      phone:             subForm.phone.value,
+      ig_handle:         subForm.ig_handle.value,
+      email:             subForm.email.value,
+      preferred_date:    dateVal,
+      source:            'website',
+      notes:             subForm.notes.value,
+      _gotcha:           (subForm._gotcha ? subForm._gotcha.value : '')
+    };
+
+    sendPayload(
+      payload,
+      subStatus,
+      'Loaf Reserve request received! Check your email for payment details to get started.',
+      function(){
+        subForm.reset();
+        // restore hidden field wiped by reset()
+        subForm.querySelector('[name="order_type"]').value = 'Pilgrim Membership';
+      }
+    );
+  });
+
+})();
+</script>
+
+<script>
+(function(){
+  var btn=document.getElementById('sh-hamburger');
+  var drawer=document.getElementById('sh-drawer');
+  if(!btn||!drawer)return;
+  btn.addEventListener('click',function(){
+    var open=drawer.classList.toggle('open');
+    btn.classList.toggle('open',open);
+    btn.setAttribute('aria-expanded',open);
+  });
+  drawer.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click',function(){
+      drawer.classList.remove('open');btn.classList.remove('open');
+      btn.setAttribute('aria-expanded','false');
+    });
+  });
+  document.addEventListener('click',function(e){
+    if(!btn.contains(e.target)&&!drawer.contains(e.target)){
+      drawer.classList.remove('open');btn.classList.remove('open');
+      btn.setAttribute('aria-expanded','false');
+    }
+  });
+})();
+</script>
+</body>
+</html>
