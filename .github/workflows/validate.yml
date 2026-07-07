@@ -1,0 +1,65 @@
+name: Validate Fatima Bakery Site
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches:
+      - "week*"
+      - "update-*"
+      - "fix-*"
+      - "add-*"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Check for forbidden secrets
+        run: |
+          if grep -RniE "SQUARE_ACCESS_TOKEN|SQUARE_WEBHOOK_SIGNATURE_KEY|sk_live|EAAA|client_secret|password|api_key|private_key" . \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            --exclude="*.md" \
+            --exclude="validate-site.sh" \
+            --exclude="validate.yml"; then
+            echo "Potential secret found. Stop and review."
+            exit 1
+          fi
+
+      - name: Check required public Apps Script endpoint
+        run: |
+          grep -R "https://script.google.com/macros/s/AKfycby6ahtqJ1pe7sLVk4BgcU48WIn34P1P1giY5lxh8pmEABxpQX3m0wI96lIhnjreiDO-/exec" order contact index.html
+
+      - name: Check customer-facing Loaf Reserve terminology
+        run: |
+          ! grep -Rni "Pilgrim Reserve\|Piligrim" \
+            index.html \
+            order \
+            contact \
+            collection \
+            story \
+            privacy \
+            terms \
+            --include="*.html"
+
+      - name: Check newsletter CTA
+        run: |
+          grep -R "Join the Fatima Bakery newsletter list" \
+            index.html \
+            order \
+            contact \
+            collection \
+            story \
+            privacy \
+            terms \
+            --include="*.html"
+
+      - name: Check Wrangler config
+        run: |
+          test -f wrangler.jsonc
+          grep -q '"name": "fatima-bakery"' wrangler.jsonc
+          grep -q '"assets"' wrangler.jsonc
