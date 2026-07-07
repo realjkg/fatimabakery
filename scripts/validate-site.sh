@@ -76,7 +76,7 @@ for file in "${PAGE_HTML_FILES[@]}"; do
     [ -z "$ref" ] && continue
 
     case "$ref" in
-      http://*|https://*|mailto:*|tel:*|javascript:*|data:*)
+      http://*|https://*|mailto:*|tel:*|sms:*|javascript:*|data:*)
         continue
         ;;
     esac
