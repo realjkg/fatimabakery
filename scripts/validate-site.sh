@@ -70,7 +70,7 @@ grep -q '"assets"' wrangler.jsonc || {
 echo "Checking local HTML href/src references..."
 is_valid_local_path() {
   local target="$1"
-  [ -f "$target" ] || [ -d "$target" ] || [ -f "$target/index.html" ] || [ -f "${target}.html" ] || [ -f "${target}.HTML" ] || [ -f "${target}.htm" ] || [ -f "${target}.HTM" ]
+  [ -f "$target" ] || [ -d "$target" ] || [ -f "$target/index.html" ] || [ -f "${target}.html" ]
 }
 
 broken_refs=0
