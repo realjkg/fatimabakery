@@ -99,7 +99,7 @@ for file in "${PAGE_HTML_FILES[@]}"; do
     echo "Broken local reference in $file: $ref"
     broken_refs=1
   done < <(
-    perl -nE 'while (/(?:href|src)\s*=\s*(["\x27])(.*?)\1/g) { say $2 }' "$file" \
+    perl -nE "while (/(?:href|src)\s*=\s*([\"'])(.*?)\\1/g) { say \$2 }" "$file" \
       | sort -u
   )
 done
