@@ -1,0 +1,247 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica-Bold;\f1\froman\fcharset0 Times-Roman;\f2\fswiss\fcharset0 Helvetica;
+\f3\fswiss\fcharset0 Helvetica-BoldOblique;\f4\fswiss\fcharset0 Helvetica-Oblique;\f5\froman\fcharset0 Times-Bold;
+\f6\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red109\green109\blue109;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;\cssrgb\c50196\c50196\c50196;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \expnd0\expndtw0\kerning0
+For Front-end Updates\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\b0\fs24 \cf0 \outl0\strokewidth0 \strokec2 For future Fatima Bakery site updates, use this simple workflow:\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 1. Always start from the latest 
+\fs39 \strokec2 main
+\fs36 \strokec2 \
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f2\b0\fs24 \cf0 From local repo folder:
+\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 cd 
+\fs24 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 ~Documents/GitHub/fatimabakery
+\fs26 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \
+git checkout main\
+git pull origin main\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\fs24 \cf0 This makes sure to have latest live version.\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 2. Create a new branch for each update\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f2\b0\fs24 \cf0 Use a descriptive branch name:\
+\pard\pardeftab720\partightenfactor0
+
+\fs26 \cf0 \
+git checkout -b update-market-date\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\fs24 \cf0 or:\
+\pard\pardeftab720\partightenfactor0
+
+\fs26 \cf0 \
+git checkout -b update-menu-july\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\fs24 \cf0 Examples:
+\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 update-market-date\
+update-loaf-reserve-copy\
+update-menu-pricing\
+update-local-seo\
+fix-order-form\
+\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 3. Edit the files locally\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f2\b0\fs24 \cf0 For the current repo, you\'92ll usually edit:
+\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 index.html\
+order/index.html\
+contact/index.html\
+collection/index.html\
+story/index.html\
+README.md\
+wrangler.jsonc\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\fs24 \cf0 For images:
+\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 images/\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\fs24 \cf0 Avoid editing anything backend-secret related in this repo.\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 4. Check what changed
+\f2\b0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 git status\
+git diff\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\fs24 \cf0 Search your site text when needed:
+\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 grep -R "Pilgrim" .\
+grep -R "Loaf Reserve" .\
+grep -R "newsletter" .\
+grep -R "August 6" .\
+\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 5. Commit the update
+\f2\b0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 git add .\
+git commit -m "Update market date and Loaf Reserve copy"\
+\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 6. Push the branch\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f2\b0\fs24 \cf0 Since you\'92re using SSH now, make sure the key is loaded first:\
+\pard\pardeftab720\partightenfactor0
+
+\fs26 \cf0 \
+eval "$(ssh-agent -s)"\
+ssh-add ~/.ssh/ssh_key\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\fs24 \cf0 Then push:
+\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 git push -u origin update-market-date\
+\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 7. Open a Pull Request\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f2\b0\fs24 \cf0 Go to GitHub:\
+\pard\pardeftab720\partightenfactor0
+
+\fs26 \cf0 \
+realjkg/fatimabakery \uc0\u8594  Pull requests \u8594  New pull request\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\fs24 \cf0 Set:\
+\pard\pardeftab720\partightenfactor0
+
+\fs26 \cf0 \
+base: main\
+compare: your-update-branch\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\fs24 \cf0 Review the changes, then merge into 
+\fs26 main
+\fs24 .\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 8. Cloudflare deploys automatically\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f2\b0\fs24 \cf0 Because Cloudflare is connected to 
+\fs26 main
+\fs24 , once you merge into 
+\fs26 main
+\fs24 , Cloudflare should build/deploy automatically.\
+Check:\
+\pard\pardeftab720\partightenfactor0
+
+\fs26 \cf0 \
+Cloudflare \uc0\u8594  Workers & Pages \u8594  fatima-bakery \u8594  Deployments\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\fs24 \cf0 You want to see the latest build marked successful.\
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \strokec2 The repeatable command pattern\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f2\b0\fs24 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 cd ~Documents/GitHub/fatimabakery\
+\
+git checkout main\
+git pull origin main\
+\
+git checkout -b 
+\f3\i\b update-description-here
+\f2\i0\b0 \
+\
+# edit files\
+\
+git status\
+git diff\
+\
+git add .\
+git commit -m 
+\f4\i "Describe the update"
+\f2\i0 \
+\
+eval "$(ssh-agent -s)"\
+ssh-add ~/.ssh/ssh_key\
+\
+git push -u origin 
+\f3\i\b update-description-here\
+\
+
+\f2\i0\b0 For Back-end updates:\
+\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 When to update Apps Script separately
+\f5 \
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f2\b0\fs24 \cf0 Cloudflare/GitHub updates are for the 
+\f0\b front end
+\f2\b0  only.\
+Use Google Apps Script separately when changing:\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls1\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Order routing\
+\ls1\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Email confirmations\
+\ls1\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Square webhook behavior\
+\ls1\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Sheet writing\
+\ls1\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Payment confirmation logic\
+\ls1\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Spam/bot filtering\
+\ls1\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Menu item backend keys
+\f6\fs26 \
+}
