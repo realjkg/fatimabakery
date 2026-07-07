@@ -68,7 +68,7 @@ grep -q '"assets"' wrangler.jsonc || {
 }
 
 echo "Checking local HTML href/src references..."
-is_valid_local_ref() {
+is_valid_local_path() {
   local target="$1"
   [ -f "$target" ] || [ -d "$target" ] || [ -f "$target/index.html" ] || [ -f "${target}.html" ]
 }
@@ -92,15 +92,14 @@ for file in "${PAGE_HTML_FILES[@]}"; do
       target="$(dirname "$file")/$ref"
     fi
 
-    if is_valid_local_ref "$target"; then
+    if is_valid_local_path "$target"; then
       continue
     fi
 
     echo "Broken local reference in $file: $ref"
     broken_refs=1
   done < <(
-    grep -hoE "(href|src)=[\"'][^\"']+[\"']" "$file" \
-      | sed -E "s/^(href|src)=[\"'](.*)[\"']$/\2/" \
+    perl -nE 'while (/(?:href|src)\s*=\s*(["\x27])(.*?)\1/g) { say $2 }' "$file" \
       | sort -u
   )
 done
