@@ -1591,7 +1591,7 @@ footer{
     // Show the specialty dropdown only for the "Specialty" option
     specialtyPicker.style.display = (chosen && chosen.value === 'Specialty') ? '' : 'none';
     // Swap each plan price to the matching data attribute
-    document.querySelectorAll('#Pilgrim Membership-form .plan-price').forEach(function(el){
+    subForm.querySelectorAll('.plan-price').forEach(function(el){
       var val = (kind === 'specialty') ? el.getAttribute('data-specialty') : el.getAttribute('data-fatima');
       if (val) el.textContent = val;
     });
