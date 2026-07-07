@@ -44,9 +44,9 @@ if grep -Rni "Pilgrim Reserve\|Piligrim" \
   exit 1
 fi
 
-echo "Checking newsletter CTA on homepage..."
-grep -F "$NEWSLETTER_CTA" index.html >/dev/null || {
-  echo "Newsletter CTA not found in index.html."
+echo "Checking newsletter CTA in customer-facing HTML..."
+grep -R "$NEWSLETTER_CTA" "${CUSTOMER_HTML_PATHS[@]}" --include="*.html" >/dev/null || {
+  echo "Newsletter CTA not found in customer-facing HTML."
   exit 1
 }
 
