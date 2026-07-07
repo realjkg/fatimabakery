@@ -1,2 +1,3 @@
 .DS_Store
-.DS_Store
+# Locally generated weekly maintenance report output
+reports/weekly/latest.md
