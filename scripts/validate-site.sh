@@ -29,7 +29,7 @@ for file in "${FORM_ENDPOINT_FILES[@]}"; do
 done
 
 echo "Checking form pages do not contain mismatched Apps Script endpoints..."
-mismatched_endpoints="$(grep -RhoE "https://script.google.com/macros/s/[^\"' ]+/exec" "${FORM_ENDPOINT_FILES[@]}" | sort -u | grep -Fvx "$ENDPOINT" || true)"
+mismatched_endpoints="$(grep -RhoE "https://script.google.com/macros/s/[A-Za-z0-9_-]+/exec" "${FORM_ENDPOINT_FILES[@]}" | sort -u | grep -Fvx "$ENDPOINT" || true)"
 if [ -n "$mismatched_endpoints" ]; then
   echo "Unexpected Apps Script endpoint(s) found:"
   echo "$mismatched_endpoints"
@@ -68,6 +68,11 @@ grep -q '"assets"' wrangler.jsonc || {
 }
 
 echo "Checking local HTML href/src references..."
+is_valid_local_ref() {
+  local target="$1"
+  [ -f "$target" ] || [ -d "$target" ] || [ -f "$target/index.html" ] || [ -f "${target}.html" ]
+}
+
 broken_refs=0
 for file in "${PAGE_HTML_FILES[@]}"; do
   while IFS= read -r ref; do
@@ -87,7 +92,7 @@ for file in "${PAGE_HTML_FILES[@]}"; do
       target="$(dirname "$file")/$ref"
     fi
 
-    if [ -f "$target" ] || [ -d "$target" ] || [ -f "$target/index.html" ] || [ -f "${target}.html" ]; then
+    if is_valid_local_ref "$target"; then
       continue
     fi
 
