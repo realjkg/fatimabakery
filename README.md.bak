@@ -85,6 +85,7 @@ Before committing a site update, run:
 ```bash
 ./scripts/validate-site.sh
 
+
 ## Weekly Maintenance Agent
 
 This repository includes a mostly automated weekly maintenance workflow.
@@ -114,7 +115,7 @@ Key files:
 
 To run locally:
 
-    ./scripts/validate-site.sh
-    ./scripts/create-maintenance-report.sh
-    cat reports/weekly/latest.md
-
+```bash
+./scripts/validate-site.sh
+./scripts/create-maintenance-report.sh
+cat reports/weekly/latest.md

@@ -1,0 +1,44 @@
+name: Weekly Fatima Bakery Maintenance
+
+on:
+  schedule:
+    - cron: "0 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+jobs:
+  weekly-maintenance:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Ensure scripts are executable
+        run: |
+          chmod +x scripts/*.sh || true
+
+      - name: Run site validation
+        run: |
+          ./scripts/validate-site.sh
+
+      - name: Create weekly maintenance report
+        run: |
+          ./scripts/create-maintenance-report.sh
+
+      - name: Upload weekly report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-maintenance-report
+          path: reports/weekly/latest.md
+
+      - name: Create GitHub issue from weekly report
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "Weekly Fatima Bakery Maintenance Report"
+          content-filepath: reports/weekly/latest.md
+          labels: maintenance, weekly-review
