@@ -244,7 +244,9 @@ var CUTOFF_TZ = prop_("CUTOFF_TZ", "America/Chicago");
 
 // ── PICKUP & DELIVERY ────────────────────────────────────────
 
-var PICKUP_ADDRESS = prop_("PICKUP_ADDRESS", "112 Civita Road, Liberty Hill, TX 78642");
+var PICKUP_ADDRESS = prop_("PICKUP_ADDRESS", "Liberty Hill, TX");
+var PUBLIC_PICKUP_AREA = prop_("PUBLIC_PICKUP_AREA", "Liberty Hill, TX");
+var CONTACT_PHONE_SMS = prop_("CONTACT_PHONE_SMS", CONTACT_PHONE);
 var PICKUP_HOURS = prop_("PICKUP_HOURS", "Fridays 9am–12pm");
 var DELIVERY_AREA = prop_("DELIVERY_AREA", "Santa Rita Ranch neighborhood");
 var DELIVERY_HOURS = prop_("DELIVERY_HOURS", "Fridays 9am–12pm");
@@ -1440,7 +1442,7 @@ function buildBaseEmailHTML(title, contentHTML) {
     '<div class="footer">' +
     '<p><a href="https://instagram.com/fatimabakeryatx">' + INSTAGRAM_HANDLE + '</a>' +
     ' &nbsp;&bull;&nbsp; <a href="mailto:' + OWNER_EMAIL + '">' + OWNER_EMAIL + '</a></p>' +
-    '<p>112 Civita Road, Liberty Hill TX 78642</p>' +
+    '<p>' + PUBLIC_PICKUP_AREA + '</p>' +
     '</div></div></body></html>';
 }
 
@@ -1490,7 +1492,7 @@ function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLi
     "<p><strong>Members receive classic and specialty reserved loaves baked fresh every week in Liberty Hill.</strong></p>" + payHTML +
     "<p style='font-size:13px;color:#3a3a3a;border-top:1px solid #e5e0d8;padding-top:14px'>" +
     "🥖 <strong>On " + (isDelivery ? "delivery" : "pickup") + " day:</strong> please text us at " +
-    "<a href='sms:+15122991241' style='color:#b5963e'>" + CONTACT_PHONE + "</a> when you're on your way" +
+    "<a href='sms:" + CONTACT_PHONE_SMS + "' style='color:#b5963e'>" + CONTACT_PHONE + "</a> when you're on your way" +
     (isDelivery ? " so we can confirm your delivery window" : "") +
     " — it helps us hand you the freshest possible loaf.</p>";
 
@@ -2817,3 +2819,52 @@ function testScriptProperties_v813() {
   Logger.log("SQUARE_WEBHOOK_NOTIFICATION_URL = " + SQUARE_WEBHOOK_NOTIFICATION_URL);
   Logger.log("DEBUG_LOG = " + DEBUG_LOG);
 }
+
+
+/**
+ * Payment queue diagnostics.
+ * Safe to run manually from Apps Script editor.
+ */
+function listPaymentQueues() {
+  var props = PropertiesService.getScriptProperties();
+  var all = props.getProperties();
+
+  var keys = Object.keys(all).filter(function(k) {
+    return k.indexOf("sqq_") === 0 ||
+           k.indexOf("failed_customer_email_") === 0 ||
+           k.indexOf("failed_owner_email_") === 0 ||
+           k.indexOf("failed_payment_email_") === 0;
+  }).sort();
+
+  Logger.log("Queued/stale payment-email keys: " + keys.length);
+
+  keys.forEach(function(k) {
+    var value = all[k] || "";
+    Logger.log(k + " = " + value.substring(0, 1000));
+  });
+
+  return keys;
+}
+
+function retryPaymentQueueNow() {
+  Logger.log("Retrying Square payment queue now...");
+  processSquareQueue();
+  Logger.log("Done retrying Square payment queue.");
+}
+
+function clearSquareQueueOnlyAfterReview() {
+  var props = PropertiesService.getScriptProperties();
+  var all = props.getProperties();
+
+  var keys = Object.keys(all).filter(function(k) {
+    return k.indexOf("sqq_") === 0;
+  });
+
+  keys.forEach(function(k) {
+    props.deleteProperty(k);
+    Logger.log("Deleted stale Square queue key: " + k);
+  });
+
+  Logger.log("Deleted " + keys.length + " Square queue keys.");
+}
+
