@@ -246,7 +246,7 @@ var CUTOFF_TZ = prop_("CUTOFF_TZ", "America/Chicago");
 
 var PICKUP_ADDRESS = prop_("PICKUP_ADDRESS", "Liberty Hill, TX");
 var PUBLIC_PICKUP_AREA = prop_("PUBLIC_PICKUP_AREA", "Liberty Hill, TX");
-var CONTACT_PHONE_SMS = prop_("CONTACT_PHONE_SMS", CONTACT_PHONE);
+var CONTACT_PHONE_SMS = propAny_(["CONTACT_PHONE_SMS", "CONTACT_PHONE"], "");
 var PICKUP_HOURS = prop_("PICKUP_HOURS", "Fridays 9am–12pm");
 var DELIVERY_AREA = prop_("DELIVERY_AREA", "Santa Rita Ranch neighborhood");
 var DELIVERY_HOURS = prop_("DELIVERY_HOURS", "Fridays 9am–12pm");
