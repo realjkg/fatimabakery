@@ -148,6 +148,7 @@ var OWNER_EMAIL_BACKUP = propAny_(
 );
 
 var EMAIL_AUDIT_BCC = prop_("EMAIL_AUDIT_BCC", "");
+var EMAIL_LOG_MASK_PII = boolProp_("EMAIL_LOG_MASK_PII", true);
 
 var ORDER_FORM_URL = propAny_(
   ["ORDER_FORM_URL", "PUBLIC_ORDER_URL"],
@@ -351,6 +352,33 @@ function sendTrackedEmail(mail) {
   }
 }
 
+
+function maskEmail_(email) {
+  email = String(email || "").trim();
+  if (!email || email.indexOf("@") === -1) return email;
+
+  var parts = email.split("@");
+  var local = parts[0] || "";
+  var domain = parts[1] || "";
+
+  if (!local || !domain) return "***";
+
+  var visible = local.substring(0, 1);
+  return visible + "***@" + domain;
+}
+
+function maskEmails_(value) {
+  value = String(value || "");
+  return value.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, function(match) {
+    return maskEmail_(match);
+  });
+}
+
+function maskEmailLogValue_(value) {
+  if (!EMAIL_LOG_MASK_PII) return value || "";
+  return maskEmails_(value || "");
+}
+
 function logEmailEvent_(orderId, emailType, to, subject, status, error) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -377,10 +405,10 @@ function logEmailEvent_(orderId, emailType, to, subject, status, error) {
       new Date(),
       orderId || "",
       emailType || "",
-      to || "",
-      subject || "",
+      maskEmailLogValue_(to),
+      maskEmailLogValue_(subject),
       status || "",
-      error || ""
+      maskEmailLogValue_(error)
     ]);
   } catch (logErr) {
     Logger.log("Email Log write failed: " + logErr);
