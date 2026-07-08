@@ -83,15 +83,24 @@
 // ============================================================
  
 // ============================================================
-//  Fatima Bakery ATX — Google Apps Script v8.1.3
+//  Fatima Bakery ATX — Google Apps Script v8.2.1
 //  Production config loaded from Script Properties
 //  Do not hardcode secrets in this file.
 // ============================================================
 
 // ── SCRIPT PROPERTY HELPERS ──────────────────────────────────
 
+var _scriptProps_ = null;
+
+function scriptPropsSnapshot_() {
+  if (_scriptProps_ === null) {
+    _scriptProps_ = PropertiesService.getScriptProperties().getProperties();
+  }
+  return _scriptProps_;
+}
+
 function prop_(name, fallback) {
-  var value = PropertiesService.getScriptProperties().getProperty(name);
+  var value = scriptPropsSnapshot_()[name];
 
   if (value === null || value === undefined || value === "") {
     if (fallback !== undefined) return fallback;
@@ -102,10 +111,10 @@ function prop_(name, fallback) {
 }
 
 function propAny_(names, fallback) {
-  var props = PropertiesService.getScriptProperties();
+  var props = scriptPropsSnapshot_();
 
   for (var i = 0; i < names.length; i++) {
-    var value = props.getProperty(names[i]);
+    var value = props[names[i]];
     if (value !== null && value !== undefined && value !== "") {
       return value;
     }
@@ -421,34 +430,25 @@ function logEmailEvent_(orderId, emailType, to, subject, status, error) {
 //  1. RECEIVE FORM SUBMISSION — entry point
 // ============================================================
 function doPost(e) {
-  // ── Inbound request log (runs BEFORE any logic can fail) ──
-  // This is the single most useful diagnostic: if an order is
-  // failing, this proves whether it even ARRIVED. Logs to a
-  // "Debug Log" sheet tab. Disable by setting DEBUG_LOG = false.
-  logInbound(e);
-
-  // ── Square webhook? Detect and route BEFORE order-form parse. ──
-  // Square posts payment events with an HMAC signature header and
-  // a payload shaped completely differently from our order form.
-  // We detect it by the signature header + event envelope, verify
-  // the signature, then handle it separately. If it is not a valid
-  // Square event we fall through to normal order handling.
+  // ── Square webhook? Detect and route BEFORE any Sheets logging. ──
+  // Keep this path tiny. No logInbound, no SpreadsheetApp, no trigger creation.
   try {
-    var sqSig = (e && e.parameter && e.parameter.__nohdr) ? null : squareGetSignature(e);
-    var looksLikeSquare = false;
-    if (e && e.postData && e.postData.contents) {
-      // cheap sniff: Square events carry "type" + "event_id" + "data"
-      looksLikeSquare = /"event_id"\s*:/.test(e.postData.contents) &&
-                        /"type"\s*:/.test(e.postData.contents) &&
-                        /"data"\s*:/.test(e.postData.contents);
-    }
-    if (looksLikeSquare && sqSig) {
-      return handleSquareWebhook(e, sqSig);
+    var rawSquareBody = e && e.postData && e.postData.contents ? e.postData.contents : "";
+    var looksLikeSquare =
+      rawSquareBody &&
+      /"event_id"\s*:/.test(rawSquareBody) &&
+      /"type"\s*:/.test(rawSquareBody) &&
+      /"data"\s*:/.test(rawSquareBody);
+
+    if (looksLikeSquare) {
+      return handleSquareWebhook(e, "api-verify");
     }
   } catch (sqErr) {
     Logger.log("Square pre-route error: " + sqErr);
-    // fall through to normal handling
   }
+
+  // Non-Square form logging happens only after Square has had a chance to fast-ACK.
+  logInbound(e);
 
   try {
     var data = JSON.parse(e.postData.contents);
@@ -487,17 +487,17 @@ function normalizeOrderType(data) {
 //  SQUARE WEBHOOK — auto-confirm payments  (v8)
 // ============================================================
 //  Flow:
-//    1. doPost detects a Square event + signature header
-//    2. squareVerifySignature() confirms it is really from Square
-//       (HMAC-SHA256 of notificationURL + rawBody, base64,
-//        compared to the x-square-hmacsha256-signature header)
-//    3. On payment.updated / payment.created with status COMPLETED,
-//       we read the Square order_id, fetch that order, and pull our
-//       own FB-xxxxx out of its description field
-//    4. markOrderPaid() flips the sheet row Status to "Confirmed"
+//    1. doPost detects a Square event envelope before any Sheets logging.
+//    2. handleSquareWebhook queues the raw event and returns 200 quickly.
+//    3. processSquareQueue runs later from a recurring trigger.
+//    4. The queue processor re-fetches the payment from Square using
+//       our Square access token before trusting the event.
+//    5. markOrderPaid() flips the sheet row Status to "Confirmed".
 //
-//  Security: without step 2 anyone could POST a fake "paid" event
-//  to the public /exec URL. Signature verification is mandatory.
+//  Security:
+//    Apps Script web apps do not expose request headers, so direct
+//    Square HMAC header verification is not available here. We verify
+//    by API re-fetch from Square before confirming any payment.
 // ------------------------------------------------------------
 
 // Pull the Square signature header across the header-name variants
@@ -570,7 +570,7 @@ function handleSquareWebhook(e, sigSentinel) {
       var props = PropertiesService.getScriptProperties();
       var key   = "sqq_" + (evt.event_id || new Date().getTime());
       props.setProperty(key, raw);        // queue it
-      ensureSquareQueueTrigger();          // make sure a processor runs soon
+      // Do not create/list triggers here. Webhook path must ACK fast.
     }
   } catch (err) {
     Logger.log("Square ack-queue error: " + err);
@@ -580,15 +580,20 @@ function handleSquareWebhook(e, sigSentinel) {
   return jsonResponse({ status: "square_received" });
 }
 
-// Ensure a one-shot trigger exists to drain the queue ~1 min out.
-// We keep at most one pending processor to avoid pile-ups.
+// Ensure a recurring trigger exists to drain the Square queue.
+// Install this manually; never create/list triggers from the webhook request path.
+function installSquareQueueTrigger() {
+  ensureSquareQueueTrigger();
+  Logger.log("Square queue trigger installed or already present.");
+}
+
 function ensureSquareQueueTrigger() {
   var triggers = ScriptApp.getProjectTriggers();
   for (var i = 0; i < triggers.length; i++) {
     if (triggers[i].getHandlerFunction() === "processSquareQueue") return; // already scheduled
   }
   ScriptApp.newTrigger("processSquareQueue")
-    .timeBased().after(60 * 1000)  // ~1 minute
+    .timeBased().everyMinutes(1)
     .create();
 }
 
@@ -646,13 +651,9 @@ function processSquareQueue() {
     if (handled) props.deleteProperty(key);
   });
 
-  // Clean up: remove this one-shot trigger so we don't accumulate.
-  var triggers = ScriptApp.getProjectTriggers();
-  for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === "processSquareQueue") {
-      ScriptApp.deleteTrigger(triggers[i]);
-    }
-  }
+
+  // Recurring Square queue trigger remains installed.
+  // Do not delete processSquareQueue triggers here.
 }
 
 // Given a verified Square payment, find our FB-xxxxx. Our
