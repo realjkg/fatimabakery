@@ -427,11 +427,18 @@ function handleSquareWebhook(e) {
   // rely on the installed "processSquareQueue" time trigger to
   // handle verification + sheet update asynchronously.
   //
+  // SECURITY: No signature check here because Apps Script cannot
+  // read HTTP headers. Verification happens in processSquareQueue()
+  // via squareVerifyByRefetch() — the payment ID is re-fetched
+  // from Square using our secret token. A forged event will fail
+  // because the payment won't exist under our account. This is
+  // stronger than HMAC for this platform (see lines 391-423).
+  //
   // IMPORTANT: Do NOT call ensureSquareQueueTrigger() here — it
   // calls ScriptApp.getProjectTriggers() which is too slow for
   // the webhook response window. Instead, install a recurring
   // trigger via installTriggers() that runs processSquareQueue
-  // every 2 minutes.
+  // every 2 minutes (minimum Apps Script allows).
   try {
     var raw = e.postData.contents;
     var evt = JSON.parse(raw);
