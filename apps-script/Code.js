@@ -1082,6 +1082,9 @@ function handleSubscription(data, ss) {
                      ? ("Specialty — " + specialty)
                      : loafChoice;
 
+  // Normalize phone before writing to sheet/email.
+  data.phone = formatPhone_(data.phone || data.Phone || "");
+
   // Calculate end date
   var startDate = data.preferred_date || "";
   var endDate   = "";
@@ -1093,21 +1096,60 @@ function handleSubscription(data, ss) {
   }
 
   sheet.appendRow([
-    new Date(), data.name||"", data.phone||"", data.ig_handle||"",
+    new Date(), data.name||"", formatPhone_(data.phone||""), data.ig_handle||"",
     data.email||"", (loafLabel + " · " + tier), "$"+subInfo.price, startDate, endDate,
     "Pending Payment", data.notes||"", data.source||"", subId
   ]);
 
-  var squareLink = createSquarePaymentLink(
-    subInfo.price * 100, subId, data.name, "Pilgrim Membership — " + loafLabel + " · " + tier
-  );
+  var squareLink = null;
   var totalFmt = "$" + Number(subInfo.price || 0).toFixed(2);
   var cashLink = createCashAppLink(totalFmt);
   var venmoLink = createVenmoLink(totalFmt, subId);
+  var emailFailures = [];
 
-  if (data.email) sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel, cashLink, venmoLink);
-  sendOwnerSubscriptionAlert(data, tier, subInfo, subId, squareLink, loafLabel, cashLink, venmoLink);
-  return jsonResponse({ status: "success", subId: subId });
+  try {
+    squareLink = createSquarePaymentLink(
+      subInfo.price * 100,
+      subId,
+      data.name,
+      "Pilgrim Membership — " + loafLabel + " · " + tier
+    );
+  } catch (squareErr) {
+    Logger.log("Subscription Square link failed for " + subId + ": " + squareErr);
+    PropertiesService.getScriptProperties().setProperty(
+      "failed_subscription_square_link_" + subId,
+      JSON.stringify({
+        subId: subId,
+        ts: new Date().toISOString(),
+        error: squareErr.toString()
+      })
+    );
+  }
+
+  if (data.email) {
+    try {
+      sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel, cashLink, venmoLink);
+    } catch (customerMailErr) {
+      Logger.log("Subscription customer email failed for " + subId + ": " + customerMailErr);
+      emailFailures.push("customer");
+      recordSubscriptionEmailFailure_(subId, "customer", data, customerMailErr);
+    }
+  }
+
+  try {
+    sendOwnerSubscriptionAlert(data, tier, subInfo, subId, squareLink, loafLabel, cashLink, venmoLink);
+  } catch (ownerMailErr) {
+    Logger.log("Subscription owner alert failed for " + subId + ": " + ownerMailErr);
+    emailFailures.push("owner");
+    recordSubscriptionEmailFailure_(subId, "owner", data, ownerMailErr);
+  }
+
+  return jsonResponse({
+    status: "success",
+    subId: subId,
+    emailStatus: emailFailures.length ? "failed" : "sent",
+    emailFailures: emailFailures
+  });
 }
 
 function normalizeSubscriptionTier(data) {
@@ -3090,5 +3132,113 @@ function installSquareWorkerPullTrigger() {
 
 function testSquareWorkerPull() {
   pullSquareEventsFromWorker();
+}
+
+
+
+function formatPhone_(value) {
+  var digits = String(value || "").replace(/\D/g, "");
+
+  if (digits.length === 11 && digits.charAt(0) === "1") {
+    digits = digits.slice(1);
+  }
+
+  if (digits.length !== 10) return value || "";
+
+  return digits.slice(0, 3) + "-" + digits.slice(3, 6) + "-" + digits.slice(6);
+}
+
+
+function recordSubscriptionEmailFailure_(subId, kind, data, err) {
+  try {
+    PropertiesService.getScriptProperties().setProperty(
+      "failed_subscription_" + kind + "_email_" + subId,
+      JSON.stringify({
+        subId: subId,
+        kind: kind,
+        ts: new Date().toISOString(),
+        email: data && data.email ? data.email : "",
+        name: data && data.name ? data.name : "",
+        error: err ? err.toString() : ""
+      })
+    );
+  } catch (logErr) {
+    Logger.log("Failed to record subscription email failure: " + logErr);
+  }
+}
+
+function resendSelectedSubscriptionNotice() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getActiveSheet();
+
+  if (!sheet || sheet.getName() !== "Subscriptions") {
+    throw new Error("Open the Subscriptions sheet and select the row to resend.");
+  }
+
+  var row = sheet.getActiveRange().getRow();
+
+  if (row <= 1) {
+    throw new Error("Select a subscription data row, not the header.");
+  }
+
+  return resendSubscriptionNoticeFromRow_(sheet, row);
+}
+
+function resendSubscriptionNoticeFromRow_(sheet, row) {
+  var values = sheet.getRange(row, 1, 1, 13).getValues()[0];
+
+  var tierText = String(values[5] || "");
+  var tierMatch = tierText.match(/(4|6|8)\s*weeks/i);
+  var tier = tierMatch ? tierMatch[1] + " weeks" : "4 weeks";
+
+  var loafLabel = tierText
+    .replace(/·\s*(4|6|8)\s*weeks/i, "")
+    .trim() || "Fatima Classic";
+
+  var price = Number(String(values[6] || "").replace(/[^0-9.]/g, "")) || 0;
+  var subId = String(values[12] || "").trim();
+
+  if (!subId) throw new Error("Selected row has no Sub ID.");
+
+  var data = {
+    name: values[1] || "",
+    phone: formatPhone_(values[2] || ""),
+    ig_handle: values[3] || "",
+    email: values[4] || "",
+    preferred_date: values[7] || "",
+    notes: values[10] || "",
+    source: "manual_resend"
+  };
+
+  var subInfo = {
+    price: price,
+    desc: "Reserved weekly loaf membership."
+  };
+
+  var totalFmt = "$" + Number(price || 0).toFixed(2);
+  var squareLink = null;
+
+  try {
+    squareLink = createSquarePaymentLink(
+      price * 100,
+      subId,
+      data.name,
+      "Pilgrim Membership — " + loafLabel + " · " + tier
+    );
+  } catch (squareErr) {
+    Logger.log("Manual resend Square link failed for " + subId + ": " + squareErr);
+  }
+
+  var cashLink = createCashAppLink(totalFmt);
+  var venmoLink = createVenmoLink(totalFmt, subId);
+
+  if (data.email) {
+    sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel, cashLink, venmoLink);
+  }
+
+  sendOwnerSubscriptionAlert(data, tier, subInfo, subId, squareLink, loafLabel, cashLink, venmoLink);
+
+  Logger.log("Resent subscription notice for " + subId + " row " + row);
+  return subId;
 }
 
