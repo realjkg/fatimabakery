@@ -1141,5 +1141,37 @@ footer{
   });
 })();
 </script>
+
+<script id="phone-format-mask">
+(function () {
+  function formatUSPhone(value) {
+    var digits = String(value || "").replace(/\D/g, "");
+
+    if (digits.length === 11 && digits.charAt(0) === "1") {
+      digits = digits.slice(1);
+    }
+
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return digits.slice(0, 3) + "-" + digits.slice(3);
+
+    return digits.slice(0, 3) + "-" + digits.slice(3, 6) + "-" + digits.slice(6, 10);
+  }
+
+  document.querySelectorAll('input[type="tel"], input[name*="phone" i], input[id*="phone" i]').forEach(function(input) {
+    input.setAttribute("inputmode", "tel");
+    input.setAttribute("autocomplete", "tel");
+    input.setAttribute("placeholder", "650-555-1212");
+
+    input.addEventListener("input", function() {
+      input.value = formatUSPhone(input.value);
+    });
+
+    input.addEventListener("blur", function() {
+      input.value = formatUSPhone(input.value);
+    });
+  });
+})();
+</script>
+
 </body>
 </html>

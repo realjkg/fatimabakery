@@ -1,0 +1,24 @@
+{
+  "name": "fatima-square-webhook",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-08",
+  "observability": {
+    "enabled": true
+  },
+  "routes": [
+    {
+      "pattern": "fatimabakery.com/api/square*",
+      "zone_name": "fatimabakery.com"
+    }
+  ],
+  "vars": {
+    "SQUARE_WEBHOOK_NOTIFICATION_URL": "https://fatimabakery.com/api/square-webhook"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fatima_square_events",
+      "database_id": "d9c6bfa8-3afe-4081-b569-786223e7b0e8"
+    }
+  ]
+}

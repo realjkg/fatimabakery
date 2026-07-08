@@ -6,3 +6,7 @@ apps-script/.clasp.json
 
 # Locally generated weekly maintenance report output
 reports/weekly/latest.md
+
+# Wrangler local cache/state
+.wrangler/
+**/.wrangler/

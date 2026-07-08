@@ -101,7 +101,7 @@
 // ============================================================
  
 // ============================================================
-//  Fatima Bakery ATX — Google Apps Script v8.1.3
+//  Fatima Bakery ATX — Google Apps Script v8.2.1
 //  Production config loaded from Script Properties
 //  Do not hardcode secrets in this file.
 // ============================================================
@@ -121,8 +121,21 @@
 // scales with the number of CONFIG constants.
 var _scriptProps_ = PropertiesService.getScriptProperties().getProperties();
 
+var _scriptProps_ = null;
+
+function scriptPropsSnapshot_() {
+  if (_scriptProps_ === null) {
+    _scriptProps_ = PropertiesService.getScriptProperties().getProperties();
+  }
+  return _scriptProps_;
+}
+
 function prop_(name, fallback) {
+<<<<<<< HEAD
+  var value = scriptPropsSnapshot_()[name];
+=======
   var value = _scriptProps_[name];
+>>>>>>> origin/main
 
   if (value === null || value === undefined || value === "") {
     if (fallback !== undefined) return fallback;
@@ -133,8 +146,15 @@ function prop_(name, fallback) {
 }
 
 function propAny_(names, fallback) {
+<<<<<<< HEAD
+  var props = scriptPropsSnapshot_();
+
+  for (var i = 0; i < names.length; i++) {
+    var value = props[names[i]];
+=======
   for (var i = 0; i < names.length; i++) {
     var value = _scriptProps_[names[i]];
+>>>>>>> origin/main
     if (value !== null && value !== undefined && value !== "") {
       return value;
     }
@@ -175,6 +195,9 @@ var OWNER_EMAIL_BACKUP = propAny_(
   ["OWNER_EMAIL_BACKUP", "BACKUP_EMAIL"],
   ""
 );
+
+var EMAIL_AUDIT_BCC = prop_("EMAIL_AUDIT_BCC", "");
+var EMAIL_LOG_MASK_PII = boolProp_("EMAIL_LOG_MASK_PII", true);
 
 var ORDER_FORM_URL = propAny_(
   ["ORDER_FORM_URL", "PUBLIC_ORDER_URL"],
@@ -273,7 +296,9 @@ var CUTOFF_TZ = prop_("CUTOFF_TZ", "America/Chicago");
 
 // ── PICKUP & DELIVERY ────────────────────────────────────────
 
-var PICKUP_ADDRESS = prop_("PICKUP_ADDRESS", "112 Civita Road, Liberty Hill, TX 78642");
+var PICKUP_ADDRESS = prop_("PICKUP_ADDRESS", "Liberty Hill, TX");
+var PUBLIC_PICKUP_AREA = prop_("PUBLIC_PICKUP_AREA", "Liberty Hill, TX");
+var CONTACT_PHONE_SMS = propAny_(["CONTACT_PHONE_SMS", "CONTACT_PHONE"], "");
 var PICKUP_HOURS = prop_("PICKUP_HOURS", "Fridays 9am–12pm");
 var DELIVERY_AREA = prop_("DELIVERY_AREA", "Santa Rita Ranch neighborhood");
 var DELIVERY_HOURS = prop_("DELIVERY_HOURS", "Fridays 9am–12pm");
@@ -314,13 +339,151 @@ var SUBSCRIPTIONS = {
 
 // ── DEBUGGING ────────────────────────────────────────────────
 
+
 var DEBUG_LOG = boolProp_("DEBUG_LOG", true);
+
+function sendTrackedEmail(mail) {
+  mail = mail || {};
+
+  var to = String(mail.to || "");
+  var subject = String(mail.subject || "");
+  var body = String(mail.body || "");
+  var htmlBody = String(mail.htmlBody || "");
+
+  var haystack = [subject, body, htmlBody].join(" ");
+  var idMatch = haystack.match(/(FBS|FB)-\d+/);
+  var orderId = idMatch ? idMatch[0] : "";
+
+  var emailType = "general";
+  var subjLower = subject.toLowerCase();
+
+  if (subjLower.indexOf("payment received") > -1 ||
+      subjLower.indexOf("order confirmed") > -1 ||
+      subjLower.indexOf("confirmed") > -1) {
+    emailType = "payment_confirmed";
+  } else if (subjLower.indexOf("order received") > -1 ||
+             subjLower.indexOf("payment required") > -1 ||
+             subjLower.indexOf("received") > -1) {
+    emailType = "order_received";
+  } else if (subjLower.indexOf("subscription") > -1 ||
+             subjLower.indexOf("membership") > -1 ||
+             subjLower.indexOf("loaf reserve") > -1) {
+    emailType = "subscription";
+  } else if (subjLower.indexOf("waitlist") > -1 ||
+             subjLower.indexOf("spot just opened") > -1) {
+    emailType = "waitlist";
+  } else if (to.indexOf(OWNER_EMAIL) > -1) {
+    emailType = "owner_alert";
+  }
+
+  logEmailEvent_(orderId, emailType, to, subject, "ATTEMPTED", "");
+
+  try {
+    var audit = String(EMAIL_AUDIT_BCC || "").trim();
+
+    if (audit && to.toLowerCase().indexOf(audit.toLowerCase()) === -1) {
+      if (mail.bcc) {
+        if (String(mail.bcc).toLowerCase().indexOf(audit.toLowerCase()) === -1) {
+          mail.bcc = mail.bcc + "," + audit;
+        }
+      } else {
+        mail.bcc = audit;
+      }
+    }
+
+    MailApp.sendEmail(mail);
+
+    logEmailEvent_(orderId, emailType, to, subject, "SENT_ACCEPTED", "");
+    return true;
+  } catch (err) {
+    logEmailEvent_(orderId, emailType, to, subject, "FAILED", String(err));
+    throw err;
+  }
+}
+
+
+function maskEmail_(email) {
+  email = String(email || "").trim();
+  if (!email || email.indexOf("@") === -1) return email;
+
+  var parts = email.split("@");
+  var local = parts[0] || "";
+  var domain = parts[1] || "";
+
+  if (!local || !domain) return "***";
+
+  var visible = local.substring(0, 1);
+  return visible + "***@" + domain;
+}
+
+function maskEmails_(value) {
+  value = String(value || "");
+  return value.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, function(match) {
+    return maskEmail_(match);
+  });
+}
+
+function maskEmailLogValue_(value) {
+  if (!EMAIL_LOG_MASK_PII) return value || "";
+  return maskEmails_(value || "");
+}
+
+function logEmailEvent_(orderId, emailType, to, subject, status, error) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sh = ss.getSheetByName("Email Log") || ss.insertSheet("Email Log");
+
+    if (sh.getLastRow() === 0) {
+      sh.appendRow([
+        "Timestamp",
+        "Order ID",
+        "Email Type",
+        "Recipient",
+        "Subject",
+        "Status",
+        "Error"
+      ]);
+      sh.getRange("1:1")
+        .setBackground("#4a5e3a")
+        .setFontColor("#e8dfc8")
+        .setFontWeight("bold");
+      sh.setFrozenRows(1);
+    }
+
+    sh.appendRow([
+      new Date(),
+      orderId || "",
+      emailType || "",
+      maskEmailLogValue_(to),
+      maskEmailLogValue_(subject),
+      status || "",
+      maskEmailLogValue_(error)
+    ]);
+  } catch (logErr) {
+    Logger.log("Email Log write failed: " + logErr);
+  }
+}
+
 
 
 // ============================================================
 //  1. RECEIVE FORM SUBMISSION — entry point
 // ============================================================
 function doPost(e) {
+<<<<<<< HEAD
+  // ── Square webhook? Detect and route BEFORE any Sheets logging. ──
+  // Keep this path tiny. No logInbound, no SpreadsheetApp, no trigger creation.
+  try {
+    var rawSquareBody = e && e.postData && e.postData.contents ? e.postData.contents : "";
+    var looksLikeSquare =
+      rawSquareBody &&
+      /"event_id"\s*:/.test(rawSquareBody) &&
+      /"type"\s*:/.test(rawSquareBody) &&
+      /"data"\s*:/.test(rawSquareBody);
+
+    if (looksLikeSquare) {
+      return handleSquareWebhook(e, "api-verify");
+=======
   // ── Square webhook FAST PATH ──────────────────────────────────
   // Square times out (504) if we don't respond within ~5s. We MUST
   // detect Square events and return 200 BEFORE any slow calls
@@ -336,15 +499,19 @@ function doPost(e) {
     }
     if (looksLikeSquare) {
       return handleSquareWebhook(e);
+>>>>>>> origin/main
     }
   } catch (sqErr) {
     Logger.log("Square pre-route error: " + sqErr);
-    // fall through to normal handling
   }
 
+<<<<<<< HEAD
+  // Non-Square form logging happens only after Square has had a chance to fast-ACK.
+=======
   // ── Inbound request log (non-Square requests only) ────────────
   // Logs to a "Debug Log" sheet tab. Disable by setting
   // DEBUG_LOG = false in Script Properties.
+>>>>>>> origin/main
   logInbound(e);
 
   try {
@@ -387,17 +554,17 @@ function normalizeOrderType(data) {
 //  SQUARE WEBHOOK — auto-confirm payments  (v8)
 // ============================================================
 //  Flow:
-//    1. doPost detects a Square event + signature header
-//    2. squareVerifySignature() confirms it is really from Square
-//       (HMAC-SHA256 of notificationURL + rawBody, base64,
-//        compared to the x-square-hmacsha256-signature header)
-//    3. On payment.updated / payment.created with status COMPLETED,
-//       we read the Square order_id, fetch that order, and pull our
-//       own FB-xxxxx out of its description field
-//    4. markOrderPaid() flips the sheet row Status to "Confirmed"
+//    1. doPost detects a Square event envelope before any Sheets logging.
+//    2. handleSquareWebhook queues the raw event and returns 200 quickly.
+//    3. processSquareQueue runs later from a recurring trigger.
+//    4. The queue processor re-fetches the payment from Square using
+//       our Square access token before trusting the event.
+//    5. markOrderPaid() flips the sheet row Status to "Confirmed".
 //
-//  Security: without step 2 anyone could POST a fake "paid" event
-//  to the public /exec URL. Signature verification is mandatory.
+//  Security:
+//    Apps Script web apps do not expose request headers, so direct
+//    Square HMAC header verification is not available here. We verify
+//    by API re-fetch from Square before confirming any payment.
 // ------------------------------------------------------------
 
 // Pull the Square signature header across the header-name variants
@@ -481,7 +648,12 @@ function handleSquareWebhook(e) {
     if (type.indexOf("payment") === 0) {
       var props = PropertiesService.getScriptProperties();
       var key   = "sqq_" + (evt.event_id || new Date().getTime());
+<<<<<<< HEAD
+      props.setProperty(key, raw);        // queue it
+      // Do not create/list triggers here. Webhook path must ACK fast.
+=======
       props.setProperty(key, raw);        // queue it (fast)
+>>>>>>> origin/main
     }
   } catch (err) {
     Logger.log("Square ack-queue error: " + err);
@@ -493,17 +665,27 @@ function handleSquareWebhook(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+<<<<<<< HEAD
+// Ensure a recurring trigger exists to drain the Square queue.
+// Install this manually; never create/list triggers from the webhook request path.
+function installSquareQueueTrigger() {
+  ensureSquareQueueTrigger();
+  Logger.log("Square queue trigger installed or already present.");
+}
+
+=======
 // Legacy one-shot trigger creator. No longer called from the webhook
 // inline path (it was too slow). Kept for manual use / backwards compat.
 // The preferred approach is a recurring 2-minute trigger installed by
 // installTriggers() — see installSquareQueueTrigger().
+>>>>>>> origin/main
 function ensureSquareQueueTrigger() {
   var triggers = ScriptApp.getProjectTriggers();
   for (var i = 0; i < triggers.length; i++) {
     if (triggers[i].getHandlerFunction() === "processSquareQueue") return; // already scheduled
   }
   ScriptApp.newTrigger("processSquareQueue")
-    .timeBased().after(60 * 1000)  // ~1 minute
+    .timeBased().everyMinutes(1)
     .create();
 }
 
@@ -551,7 +733,7 @@ function processSquareQueue() {
                 markOrderPaid(fatimaId, payment.id, eventAmt);
               }
             } else {
-              try { MailApp.sendEmail({ to: OWNER_EMAIL,
+              try { sendTrackedEmail({ to: OWNER_EMAIL,
                 subject: "Square payment received — needs manual match",
                 body: "Verified Square payment " + payment.id + " ($" +
                       (eventAmt/100).toFixed(2) + ") had no matchable FB order id." });
@@ -578,9 +760,15 @@ function processSquareQueue() {
     if (handled) props.deleteProperty(key);
   });
 
+<<<<<<< HEAD
+
+  // Recurring Square queue trigger remains installed.
+  // Do not delete processSquareQueue triggers here.
+=======
   // NOTE: This is now a recurring trigger (every 2 min) installed by
   // installTriggers(). No need to self-delete. If no events are queued,
   // it simply exits quickly.
+>>>>>>> origin/main
 }
 
 // Given a verified Square payment, find our FB-xxxxx. Our
@@ -744,7 +932,7 @@ function _alertSchemaDrift(itemsRaw, clientTotal) {
     var menuKeys = [];
     try { menuKeys = Object.keys(MENU); } catch (e) {}
 
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: OWNER_EMAIL,
       subject: "URGENT: Fatima order pricing is BROKEN (server priced a real order at $0)",
       body:
@@ -1009,6 +1197,9 @@ function handleSubscription(data, ss) {
                      ? ("Specialty — " + specialty)
                      : loafChoice;
 
+  // Normalize phone before writing to sheet/email.
+  data.phone = formatPhone_(data.phone || data.Phone || "");
+
   // Calculate end date
   var startDate = data.preferred_date || "";
   var endDate   = "";
@@ -1020,21 +1211,60 @@ function handleSubscription(data, ss) {
   }
 
   sheet.appendRow([
-    new Date(), data.name||"", data.phone||"", data.ig_handle||"",
+    new Date(), data.name||"", formatPhone_(data.phone||""), data.ig_handle||"",
     data.email||"", (loafLabel + " · " + tier), "$"+subInfo.price, startDate, endDate,
     "Pending Payment", data.notes||"", data.source||"", subId
   ]);
 
-  var squareLink = createSquarePaymentLink(
-    subInfo.price * 100, subId, data.name, "Pilgrim Membership — " + loafLabel + " · " + tier
-  );
+  var squareLink = null;
   var totalFmt = "$" + Number(subInfo.price || 0).toFixed(2);
   var cashLink = createCashAppLink(totalFmt);
   var venmoLink = createVenmoLink(totalFmt, subId);
+  var emailFailures = [];
 
-  if (data.email) sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel, cashLink, venmoLink);
-  sendOwnerSubscriptionAlert(data, tier, subInfo, subId, squareLink, loafLabel, cashLink, venmoLink);
-  return jsonResponse({ status: "success", subId: subId });
+  try {
+    squareLink = createSquarePaymentLink(
+      subInfo.price * 100,
+      subId,
+      data.name,
+      "Pilgrim Membership — " + loafLabel + " · " + tier
+    );
+  } catch (squareErr) {
+    Logger.log("Subscription Square link failed for " + subId + ": " + squareErr);
+    PropertiesService.getScriptProperties().setProperty(
+      "failed_subscription_square_link_" + subId,
+      JSON.stringify({
+        subId: subId,
+        ts: new Date().toISOString(),
+        error: squareErr.toString()
+      })
+    );
+  }
+
+  if (data.email) {
+    try {
+      sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel, cashLink, venmoLink);
+    } catch (customerMailErr) {
+      Logger.log("Subscription customer email failed for " + subId + ": " + customerMailErr);
+      emailFailures.push("customer");
+      recordSubscriptionEmailFailure_(subId, "customer", data, customerMailErr);
+    }
+  }
+
+  try {
+    sendOwnerSubscriptionAlert(data, tier, subInfo, subId, squareLink, loafLabel, cashLink, venmoLink);
+  } catch (ownerMailErr) {
+    Logger.log("Subscription owner alert failed for " + subId + ": " + ownerMailErr);
+    emailFailures.push("owner");
+    recordSubscriptionEmailFailure_(subId, "owner", data, ownerMailErr);
+  }
+
+  return jsonResponse({
+    status: "success",
+    subId: subId,
+    emailStatus: emailFailures.length ? "failed" : "sent",
+    emailFailures: emailFailures
+  });
 }
 
 function normalizeSubscriptionTier(data) {
@@ -1096,7 +1326,7 @@ function sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel
     (venmoLink ? "Venmo: " + venmoLink + "\n" : "") +
     "\nCash App is preferred. Square confirms automatically. Cash App and Venmo are confirmed manually.\n\n" +
     "Fatima Bakery ATX";
-  MailApp.sendEmail({ to: data.email, subject: subject, body: text,
+  sendTrackedEmail({ to: data.email, subject: subject, body: text,
     htmlBody: html, name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL });
 }
 
@@ -1109,7 +1339,7 @@ function sendOwnerSubscriptionAlert(data, tier, subInfo, subId, squareLink, loaf
   tier = tier || "";
   subId = subId || "FBS-MANUAL-TEST";
   loafLabel = loafLabel || "Fatima Classic";
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "🌿 New Pilgrim Membership — " + (data.name||"") + " | " + loafLabel + " · " + tier,
     body:
@@ -1155,7 +1385,7 @@ function sendSubscriptionActiveEmail(data) {
     "\n\nYour Fatima boule will be ready every Friday for the length of your membership." +
     "\nNothing else due until renewal.\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "✅ Membership active — " + (data.subId||""),
     body: textBody, htmlBody: buildBaseEmailHTML("Membership Active ✅", contentHTML),
@@ -1245,7 +1475,7 @@ function handleContact(data, ss) {
 
   // Notify the owner — replyTo is the sender, so a direct reply
   // from the inbox goes straight back to them.
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL,
     bcc: OWNER_EMAIL_BACKUP || undefined,
     replyTo: email,
@@ -1404,7 +1634,7 @@ function sendRefundEmail(data) {
     methodNote + "\n\n" +
     "Questions: DM " + INSTAGRAM_HANDLE + " or " + OWNER_EMAIL + "\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "💸 Refund issued — " + (data.orderId||""),
     body: textBody, htmlBody: buildBaseEmailHTML("Refund Issued", contentHTML),
@@ -1497,7 +1727,7 @@ function buildBaseEmailHTML(title, contentHTML) {
     '<div class="footer">' +
     '<p><a href="https://instagram.com/fatimabakeryatx">' + INSTAGRAM_HANDLE + '</a>' +
     ' &nbsp;&bull;&nbsp; <a href="mailto:' + OWNER_EMAIL + '">' + OWNER_EMAIL + '</a></p>' +
-    '<p>112 Civita Road, Liberty Hill TX 78642</p>' +
+    '<p>' + PUBLIC_PICKUP_AREA + '</p>' +
     '</div></div></body></html>';
 }
 
@@ -1547,7 +1777,7 @@ function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLi
     "<p><strong>Members receive classic and specialty reserved loaves baked fresh every week in Liberty Hill.</strong></p>" + payHTML +
     "<p style='font-size:13px;color:#3a3a3a;border-top:1px solid #e5e0d8;padding-top:14px'>" +
     "🥖 <strong>On " + (isDelivery ? "delivery" : "pickup") + " day:</strong> please text us at " +
-    "<a href='sms:+15122991241' style='color:#b5963e'>" + CONTACT_PHONE + "</a> when you're on your way" +
+    "<a href='sms:" + CONTACT_PHONE_SMS + "' style='color:#b5963e'>" + CONTACT_PHONE + "</a> when you're on your way" +
     (isDelivery ? " so we can confirm your delivery window" : "") +
     " — it helps us hand you the freshest possible loaf.</p>";
 
@@ -1565,7 +1795,7 @@ function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLi
     " when you're on your way" + (isDelivery ? " to confirm your delivery window" : "") + ".\n\n" +
     "Questions: DM " + INSTAGRAM_HANDLE + " or " + OWNER_EMAIL + "\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email,
     subject: "🧁 Order received — payment required — " + orderId,
     body: textBody, htmlBody: buildBaseEmailHTML("Order Received", contentHTML),
@@ -1599,7 +1829,7 @@ function sendPaymentConfirmedEmail(data) {
     " " + (data.preferred_time||"Friday") +
     "\n\nNothing due at pickup. See you Friday!\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "✅ Payment received — order confirmed! " + data.orderId,
     body: textBody, htmlBody: buildBaseEmailHTML("Order Confirmed ✅", contentHTML),
@@ -1608,7 +1838,7 @@ function sendPaymentConfirmedEmail(data) {
 }
 
 function sendOwnerPaymentAlert(data) {
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "💳 Payment received — " + data.name + " | " + data.total,
     body: "Order confirmed via payment.\n\nOrder ID: " + data.orderId +
@@ -1625,7 +1855,7 @@ function sendOwnerNewOrderAlert(data, rowNum, orderId, bouleCount, specialtyCoun
   if ((specialtyCount||0) >= SPECIALTY_LIMIT) warns += "⚠️  Specialty count at daily limit\n";
   if ((specialtyCount||0) > 0)                warns += "📅  Specialty — confirm 2-day advance\n";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "🧁 New order #" + rowNum + " — " + (data.name||"") + " | " + (data.total||""),
     body:
@@ -1671,7 +1901,7 @@ function sendPickupNotification(data) {
     "\nWindow: " + (data.preferred_time||"Friday") +
     "\n\nNothing due — payment collected upfront.\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email,
     subject: "🌿 Your order is ready — " + data.orderId,
     body: textBody, htmlBody: buildBaseEmailHTML("Order Ready 🌿", contentHTML),
@@ -1696,7 +1926,7 @@ function sendReviewRequest(data) {
     (GOOGLE_REVIEW_URL ? "Google review: " + GOOGLE_REVIEW_URL + "\n\n" : "") +
     "Or tag us " + INSTAGRAM_HANDLE + " on Instagram.\n\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email,
     subject: "How was your Fatima Bakery order?",
     body: textBody, htmlBody: buildBaseEmailHTML("How was your order?", contentHTML),
@@ -1710,7 +1940,7 @@ function sendCapacityEmail(data, msg) {
   var html = buildBaseEmailHTML("Date Unavailable",
     "<p>Hi " + (data.name||"there") + ",</p><p>" + msg + "</p>" +
     "<p>Please choose a different Friday or DM us to check availability.</p>");
-  MailApp.sendEmail({ to: data.email, subject: "Fatima Bakery — date unavailable",
+  sendTrackedEmail({ to: data.email, subject: "Fatima Bakery — date unavailable",
     body: msg + "\n\nPlease choose a different Friday or DM " + INSTAGRAM_HANDLE,
     htmlBody: html, name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL });
 }
@@ -1720,7 +1950,7 @@ function sendAdvanceNoticeEmail(data, msg) {
   var html = buildBaseEmailHTML("Advance Notice Required",
     "<p>Hi " + (data.name||"there") + ",</p><p>" + msg + "</p>" +
     "<p>Please reorder for a Friday at least 2 days out.</p>");
-  MailApp.sendEmail({ to: data.email, subject: "Fatima Bakery — advance notice required",
+  sendTrackedEmail({ to: data.email, subject: "Fatima Bakery — advance notice required",
     body: msg + "\n\nPlease reorder for a Friday at least 2 days out.",
     htmlBody: html, name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL });
 }
@@ -1842,7 +2072,7 @@ function unpaidOrderTimeoutAgent() {
   });
   body += "\nCapacity for those pickup dates has been freed. Follow up with customers if needed.";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL,
     subject: "⏱ " + cancelled.length + " unpaid order(s) auto-cancelled",
     body: body,
@@ -1881,7 +2111,7 @@ function capacityGuardAgent() {
   if (combined >= COMBINED_LIMIT)           alerts.push("🔴 Combined: AT LIMIT (" + combined + "/" + COMBINED_LIMIT + ")");
 
   if (alerts.length > 0) {
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: OWNER_EMAIL, bcc: OWNER_EMAIL_BACKUP || undefined,
       subject: "⚠️  Capacity Alert — Friday " + fridayStr,
       body:
@@ -1952,7 +2182,7 @@ function orphanCheckerAgent() {
       "<p style='font-size:12px;margin-top:12px;color:#666'>Orders not paid within 24 hours may be released.</p>" +
       "</div>");
 
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: email,
       subject: "Reminder: complete your Fatima Bakery order — " + orderId,
       body: "Hi " + name + ", your order is still awaiting payment.\n\n" +
@@ -2000,7 +2230,7 @@ function waitlistAgent(pickupDate) {
       "<p style='font-size:12px;margin-top:10px;color:#666'>Spots fill quickly — first come, first served.</p>" +
       "</div>");
 
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: email,
       subject: "🧁 A spot just opened at Fatima Bakery!",
       body: "Hi " + name + ", a spot opened up. Order now: " + (ORDER_FORM_URL||"[order form URL]"),
@@ -2083,7 +2313,7 @@ function subscriptionRenewalAgent() {
       (s8 ? "8 weeks ($72): " + s8 + "\n" : "") +
       "\nNo action needed if not renewing.\nFatima Bakery ATX";
 
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: email,
       subject: "🌿 Your Pilgrim Membership is ending soon — renew?",
       body: textBody, htmlBody: buildBaseEmailHTML("Renew Your Pilgrim Membership 🌿", contentHTML),
@@ -2207,7 +2437,7 @@ function fridayBakeSheetAgent() {
     "<th style='background:#4a5e3a;color:#e8dfc8;padding:8px'>Window</th></tr>" +
     orderRows + "</table>";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL,
     subject: "🧁 Friday Bake Sheet — " + orders.length + " orders | $" + totalRev.toFixed(2),
     body: body,
@@ -2277,7 +2507,7 @@ function sendWeeklyDrop() {
   // If fully sold out, notify Lindsay and skip
   if (combinedLeft === 0) {
     Logger.log("Weekly drop skipped \u2014 Friday " + fridayStr + " fully sold out.");
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: OWNER_EMAIL,
       subject: "Weekly drop skipped \u2014 Friday sold out",
       body: "This Friday (" + fridayStr + ") is fully booked. No availability email was sent.",
@@ -2364,7 +2594,7 @@ function sendWeeklyDrop() {
       "\n\nOrder: "  + (ORDER_FORM_URL||"[order form URL]") +
       "\n\nFatima Bakery ATX\n---\nReply STOP to unsubscribe.";
 
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: email,
       subject: "This Friday at Fatima Bakery \u2014 Liberty Hill",
       body: textBody,
@@ -2839,7 +3069,7 @@ function sendCutoffPassedEmail(data, msg, pickupDate) {
     "Please head back and choose the next available Friday. We would love to bake for you.</p>" +
     "<p><a href='" + ORDER_FORM_URL + "'>Place your order for next Friday</a></p>");
   try {
-    MailApp.sendEmail({ to: data.email, subject: "Fatima Bakery — order window closed",
+    sendTrackedEmail({ to: data.email, subject: "Fatima Bakery — order window closed",
       body: msg + "\n\nPlease choose the next available Friday: " + ORDER_FORM_URL,
       htmlBody: html, name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL });
   } catch (e) { Logger.log("sendCutoffPassedEmail error: " + e); }
@@ -2879,3 +3109,256 @@ function testScriptProperties_v813() {
   Logger.log("SQUARE_WEBHOOK_NOTIFICATION_URL = " + SQUARE_WEBHOOK_NOTIFICATION_URL);
   Logger.log("DEBUG_LOG = " + DEBUG_LOG);
 }
+
+
+/**
+ * Payment queue diagnostics.
+ * Safe to run manually from Apps Script editor.
+ */
+function listPaymentQueues() {
+  var props = PropertiesService.getScriptProperties();
+  var all = props.getProperties();
+
+  var keys = Object.keys(all).filter(function(k) {
+    return k.indexOf("sqq_") === 0 ||
+           k.indexOf("failed_customer_email_") === 0 ||
+           k.indexOf("failed_owner_email_") === 0 ||
+           k.indexOf("failed_payment_email_") === 0;
+  }).sort();
+
+  Logger.log("Queued/stale payment-email keys: " + keys.length);
+
+  keys.forEach(function(k) {
+    var value = all[k] || "";
+    Logger.log(k + " = " + value.substring(0, 1000));
+  });
+
+  return keys;
+}
+
+function retryPaymentQueueNow() {
+  Logger.log("Retrying Square payment queue now...");
+  processSquareQueue();
+  Logger.log("Done retrying Square payment queue.");
+}
+
+function clearSquareQueueOnlyAfterReview() {
+  var props = PropertiesService.getScriptProperties();
+  var all = props.getProperties();
+
+  var keys = Object.keys(all).filter(function(k) {
+    return k.indexOf("sqq_") === 0;
+  });
+
+  keys.forEach(function(k) {
+    props.deleteProperty(k);
+    Logger.log("Deleted stale Square queue key: " + k);
+  });
+
+  Logger.log("Deleted " + keys.length + " Square queue keys.");
+}
+
+
+// ============================================================
+//  SQUARE WORKER DURABLE INBOX PULLER  v8.2.2
+// ============================================================
+
+var SQUARE_WORKER_PULL_URL = prop_("SQUARE_WORKER_PULL_URL", "");
+var SQUARE_WORKER_ACK_URL = prop_("SQUARE_WORKER_ACK_URL", "");
+var SQUARE_WORKER_PULL_TOKEN = prop_("SQUARE_WORKER_PULL_TOKEN", "");
+var SQUARE_WORKER_PULL_ENABLED = boolProp_("SQUARE_WORKER_PULL_ENABLED", false);
+
+function pullSquareEventsFromWorker() {
+  if (!SQUARE_WORKER_PULL_ENABLED) {
+    Logger.log("Square Worker pull disabled.");
+    return;
+  }
+
+  if (!SQUARE_WORKER_PULL_URL || !SQUARE_WORKER_ACK_URL || !SQUARE_WORKER_PULL_TOKEN) {
+    Logger.log("Square Worker pull properties missing.");
+    return;
+  }
+
+  var res = UrlFetchApp.fetch(SQUARE_WORKER_PULL_URL + "?limit=25", {
+    method: "get",
+    muteHttpExceptions: true,
+    headers: {
+      "Authorization": "Bearer " + SQUARE_WORKER_PULL_TOKEN
+    }
+  });
+
+  var code = res.getResponseCode();
+
+  if (code !== 200) {
+    Logger.log("Square Worker pull failed: " + code + " " + res.getContentText());
+    return;
+  }
+
+  var body = JSON.parse(res.getContentText());
+  var events = body.events || [];
+
+  if (!events.length) {
+    Logger.log("No Square Worker events to pull.");
+    return;
+  }
+
+  var props = PropertiesService.getScriptProperties();
+  var ackIds = [];
+
+  events.forEach(function(ev) {
+    if (!ev.event_id || !ev.raw_json) return;
+
+    var key = "sqq_" + ev.event_id;
+    props.setProperty(key, ev.raw_json);
+    ackIds.push(ev.event_id);
+
+    Logger.log("Pulled Square event into Apps Script queue: " + ev.event_id);
+  });
+
+  if (ackIds.length) {
+    var ack = UrlFetchApp.fetch(SQUARE_WORKER_ACK_URL, {
+      method: "post",
+      contentType: "application/json",
+      muteHttpExceptions: true,
+      headers: {
+        "Authorization": "Bearer " + SQUARE_WORKER_PULL_TOKEN
+      },
+      payload: JSON.stringify({ event_ids: ackIds })
+    });
+
+    Logger.log("Square Worker ack response: " + ack.getResponseCode() + " " + ack.getContentText());
+  }
+
+  processSquareQueue();
+}
+
+function installSquareWorkerPullTrigger() {
+  var triggers = ScriptApp.getProjectTriggers();
+
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === "pullSquareEventsFromWorker") {
+      Logger.log("Square Worker pull trigger already installed.");
+      return;
+    }
+  }
+
+  ScriptApp.newTrigger("pullSquareEventsFromWorker")
+    .timeBased()
+    .everyMinutes(1)
+    .create();
+
+  Logger.log("Square Worker pull trigger installed.");
+}
+
+function testSquareWorkerPull() {
+  pullSquareEventsFromWorker();
+}
+
+
+
+function formatPhone_(value) {
+  var digits = String(value || "").replace(/\D/g, "");
+
+  if (digits.length === 11 && digits.charAt(0) === "1") {
+    digits = digits.slice(1);
+  }
+
+  if (digits.length !== 10) return value || "";
+
+  return digits.slice(0, 3) + "-" + digits.slice(3, 6) + "-" + digits.slice(6);
+}
+
+
+function recordSubscriptionEmailFailure_(subId, kind, data, err) {
+  try {
+    PropertiesService.getScriptProperties().setProperty(
+      "failed_subscription_" + kind + "_email_" + subId,
+      JSON.stringify({
+        subId: subId,
+        kind: kind,
+        ts: new Date().toISOString(),
+        email: data && data.email ? data.email : "",
+        name: data && data.name ? data.name : "",
+        error: err ? err.toString() : ""
+      })
+    );
+  } catch (logErr) {
+    Logger.log("Failed to record subscription email failure: " + logErr);
+  }
+}
+
+function resendSelectedSubscriptionNotice() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getActiveSheet();
+
+  if (!sheet || sheet.getName() !== "Subscriptions") {
+    throw new Error("Open the Subscriptions sheet and select the row to resend.");
+  }
+
+  var row = sheet.getActiveRange().getRow();
+
+  if (row <= 1) {
+    throw new Error("Select a subscription data row, not the header.");
+  }
+
+  return resendSubscriptionNoticeFromRow_(sheet, row);
+}
+
+function resendSubscriptionNoticeFromRow_(sheet, row) {
+  var values = sheet.getRange(row, 1, 1, 13).getValues()[0];
+
+  var tierText = String(values[5] || "");
+  var tierMatch = tierText.match(/(4|6|8)\s*weeks/i);
+  var tier = tierMatch ? tierMatch[1] + " weeks" : "4 weeks";
+
+  var loafLabel = tierText
+    .replace(/·\s*(4|6|8)\s*weeks/i, "")
+    .trim() || "Fatima Classic";
+
+  var price = Number(String(values[6] || "").replace(/[^0-9.]/g, "")) || 0;
+  var subId = String(values[12] || "").trim();
+
+  if (!subId) throw new Error("Selected row has no Sub ID.");
+
+  var data = {
+    name: values[1] || "",
+    phone: formatPhone_(values[2] || ""),
+    ig_handle: values[3] || "",
+    email: values[4] || "",
+    preferred_date: values[7] || "",
+    notes: values[10] || "",
+    source: "manual_resend"
+  };
+
+  var subInfo = {
+    price: price,
+    desc: "Reserved weekly loaf membership."
+  };
+
+  var totalFmt = "$" + Number(price || 0).toFixed(2);
+  var squareLink = null;
+
+  try {
+    squareLink = createSquarePaymentLink(
+      price * 100,
+      subId,
+      data.name,
+      "Pilgrim Membership — " + loafLabel + " · " + tier
+    );
+  } catch (squareErr) {
+    Logger.log("Manual resend Square link failed for " + subId + ": " + squareErr);
+  }
+
+  var cashLink = createCashAppLink(totalFmt);
+  var venmoLink = createVenmoLink(totalFmt, subId);
+
+  if (data.email) {
+    sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel, cashLink, venmoLink);
+  }
+
+  sendOwnerSubscriptionAlert(data, tier, subInfo, subId, squareLink, loafLabel, cashLink, venmoLink);
+
+  Logger.log("Resent subscription notice for " + subId + " row " + row);
+  return subId;
+}
+
