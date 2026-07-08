@@ -300,9 +300,10 @@ function doPost(e) {
   try {
     var looksLikeSquare = false;
     if (e && e.postData && e.postData.contents) {
+      // Square webhook events always contain event_id and merchant_id.
+      // Some test/subscription events omit "data", so we no longer require it.
       looksLikeSquare = /"event_id"\s*:/.test(e.postData.contents) &&
-                        /"type"\s*:/.test(e.postData.contents) &&
-                        /"data"\s*:/.test(e.postData.contents);
+                        /"merchant_id"\s*:/.test(e.postData.contents);
     }
     if (looksLikeSquare) {
       return handleSquareWebhook(e);
@@ -322,9 +323,10 @@ function doPost(e) {
     var ss   = SpreadsheetApp.getActiveSpreadsheet();
     var route = normalizeOrderType(data);
     var result;
-    if (route === "subscription")      result = handleSubscription(data, ss);
-    else if (route === "contact")      result = handleContact(data, ss);
-    else                               result = handleOrder(data, ss);
+    if (route === "square_event")       result = handleSquareWebhook(e);
+    else if (route === "subscription")  result = handleSubscription(data, ss);
+    else if (route === "contact")       result = handleContact(data, ss);
+    else                                result = handleOrder(data, ss);
     logOutcome(data, result);
     return result;
   } catch (err) {
@@ -335,6 +337,8 @@ function doPost(e) {
 
 function normalizeOrderType(data) {
   data = data || {};
+  // Square webhook events have event_id + merchant_id — never treat as a form.
+  if (data.event_id && data.merchant_id) return "square_event";
   var raw = String(data.order_type || data.type || "").toLowerCase().trim();
   if (raw.indexOf("contact") > -1 || raw.indexOf("message") > -1) return "contact";
   if (raw.indexOf("subscription") > -1 ||
