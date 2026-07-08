@@ -1,8 +1,26 @@
 // ============================================================
-//  Fatima Bakery ATX — Google Apps Script  v8.1  |  PRODUCTION
-//  Updated:   July 04, 2026
-//  Previous:  v7 — July 01, 2026
+//  Fatima Bakery ATX — Google Apps Script  v8.2  |  PRODUCTION
+//  Updated:   July 08, 2026
+//  Previous:  v8.1 — July 04, 2026
 //  Pilgrimage Collection · Bake Thursday, pickup/delivery Friday · Liberty Hill TX
+//
+//  ── CHANGELOG v8.2 (July 08, 2026) ────────────────────────
+//
+//  SQUARE 504 — STILL TIMING OUT AFTER THE v8.1 FAST-ACK FIX:
+//
+//  [FIX] The CONFIG section loads ~30 Script Properties at file
+//        load time via prop_()/propAny_(), and each call used to
+//        do its own PropertiesService.getScriptProperties() round
+//        trip. Apps Script always runs this global-scope config
+//        code BEFORE doPost()/handleSquareWebhook() on every cold
+//        start, so those ~30 stacked Properties Service calls were
+//        adding latency ahead of the "instant" Square fast-ACK
+//        path added in v8.1 — enough to still blow past Square's
+//        webhook timeout on cold starts (504), even though
+//        handleSquareWebhook() itself responds immediately once
+//        reached. prop_()/propAny_() now read from a single cached
+//        Properties snapshot fetched once, cutting ~30 API calls
+//        down to 1.
 //
 //  ── CHANGELOG v8 (July 04, 2026) ──────────────────────────
 //
@@ -89,9 +107,22 @@
 // ============================================================
 
 // ── SCRIPT PROPERTY HELPERS ──────────────────────────────────
+//
+// [FIX] The CONFIG section below calls prop_()/propAny_() ~30
+// times at script load time — BEFORE doPost()/handleSquareWebhook()
+// ever run. Each call used to do its own fresh
+// PropertiesService.getScriptProperties() round trip. On a cold
+// start that is ~30 sequential Properties Service calls stacked up
+// ahead of the Square fast-ACK path, and that cumulative latency
+// was enough to blow past Square's webhook timeout and produce a
+// 504 even though handleSquareWebhook() itself responds instantly.
+// Fetching every script property ONCE into a cached object here
+// collapses that to a single call, so config load time no longer
+// scales with the number of CONFIG constants.
+var _scriptProps_ = PropertiesService.getScriptProperties().getProperties();
 
 function prop_(name, fallback) {
-  var value = PropertiesService.getScriptProperties().getProperty(name);
+  var value = _scriptProps_[name];
 
   if (value === null || value === undefined || value === "") {
     if (fallback !== undefined) return fallback;
@@ -102,10 +133,8 @@ function prop_(name, fallback) {
 }
 
 function propAny_(names, fallback) {
-  var props = PropertiesService.getScriptProperties();
-
   for (var i = 0; i < names.length; i++) {
-    var value = props.getProperty(names[i]);
+    var value = _scriptProps_[names[i]];
     if (value !== null && value !== undefined && value !== "") {
       return value;
     }
