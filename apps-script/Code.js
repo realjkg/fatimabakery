@@ -147,6 +147,8 @@ var OWNER_EMAIL_BACKUP = propAny_(
   ""
 );
 
+var EMAIL_AUDIT_BCC = prop_("EMAIL_AUDIT_BCC", "");
+
 var ORDER_FORM_URL = propAny_(
   ["ORDER_FORM_URL", "PUBLIC_ORDER_URL"],
   "https://fatimabakery.com/order"
@@ -287,7 +289,104 @@ var SUBSCRIPTIONS = {
 
 // ── DEBUGGING ────────────────────────────────────────────────
 
+
 var DEBUG_LOG = boolProp_("DEBUG_LOG", true);
+
+function sendTrackedEmail(mail) {
+  mail = mail || {};
+
+  var to = String(mail.to || "");
+  var subject = String(mail.subject || "");
+  var body = String(mail.body || "");
+  var htmlBody = String(mail.htmlBody || "");
+
+  var haystack = [subject, body, htmlBody].join(" ");
+  var idMatch = haystack.match(/(FBS|FB)-\d+/);
+  var orderId = idMatch ? idMatch[0] : "";
+
+  var emailType = "general";
+  var subjLower = subject.toLowerCase();
+
+  if (subjLower.indexOf("payment received") > -1 ||
+      subjLower.indexOf("order confirmed") > -1 ||
+      subjLower.indexOf("confirmed") > -1) {
+    emailType = "payment_confirmed";
+  } else if (subjLower.indexOf("order received") > -1 ||
+             subjLower.indexOf("payment required") > -1 ||
+             subjLower.indexOf("received") > -1) {
+    emailType = "order_received";
+  } else if (subjLower.indexOf("subscription") > -1 ||
+             subjLower.indexOf("membership") > -1 ||
+             subjLower.indexOf("loaf reserve") > -1) {
+    emailType = "subscription";
+  } else if (subjLower.indexOf("waitlist") > -1 ||
+             subjLower.indexOf("spot just opened") > -1) {
+    emailType = "waitlist";
+  } else if (to.indexOf(OWNER_EMAIL) > -1) {
+    emailType = "owner_alert";
+  }
+
+  logEmailEvent_(orderId, emailType, to, subject, "ATTEMPTED", "");
+
+  try {
+    var audit = String(EMAIL_AUDIT_BCC || "").trim();
+
+    if (audit && to.toLowerCase().indexOf(audit.toLowerCase()) === -1) {
+      if (mail.bcc) {
+        if (String(mail.bcc).toLowerCase().indexOf(audit.toLowerCase()) === -1) {
+          mail.bcc = mail.bcc + "," + audit;
+        }
+      } else {
+        mail.bcc = audit;
+      }
+    }
+
+    MailApp.sendEmail(mail);
+
+    logEmailEvent_(orderId, emailType, to, subject, "SENT_ACCEPTED", "");
+    return true;
+  } catch (err) {
+    logEmailEvent_(orderId, emailType, to, subject, "FAILED", String(err));
+    throw err;
+  }
+}
+
+function logEmailEvent_(orderId, emailType, to, subject, status, error) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sh = ss.getSheetByName("Email Log") || ss.insertSheet("Email Log");
+
+    if (sh.getLastRow() === 0) {
+      sh.appendRow([
+        "Timestamp",
+        "Order ID",
+        "Email Type",
+        "Recipient",
+        "Subject",
+        "Status",
+        "Error"
+      ]);
+      sh.getRange("1:1")
+        .setBackground("#4a5e3a")
+        .setFontColor("#e8dfc8")
+        .setFontWeight("bold");
+      sh.setFrozenRows(1);
+    }
+
+    sh.appendRow([
+      new Date(),
+      orderId || "",
+      emailType || "",
+      to || "",
+      subject || "",
+      status || "",
+      error || ""
+    ]);
+  } catch (logErr) {
+    Logger.log("Email Log write failed: " + logErr);
+  }
+}
+
 
 
 // ============================================================
@@ -492,7 +591,7 @@ function processSquareQueue() {
                 markOrderPaid(fatimaId, payment.id, eventAmt);
               }
             } else {
-              try { MailApp.sendEmail({ to: OWNER_EMAIL,
+              try { sendTrackedEmail({ to: OWNER_EMAIL,
                 subject: "Square payment received — needs manual match",
                 body: "Verified Square payment " + payment.id + " ($" +
                       (eventAmt/100).toFixed(2) + ") had no matchable FB order id." });
@@ -689,7 +788,7 @@ function _alertSchemaDrift(itemsRaw, clientTotal) {
     var menuKeys = [];
     try { menuKeys = Object.keys(MENU); } catch (e) {}
 
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: OWNER_EMAIL,
       subject: "URGENT: Fatima order pricing is BROKEN (server priced a real order at $0)",
       body:
@@ -1041,7 +1140,7 @@ function sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel
     (venmoLink ? "Venmo: " + venmoLink + "\n" : "") +
     "\nCash App is preferred. Square confirms automatically. Cash App and Venmo are confirmed manually.\n\n" +
     "Fatima Bakery ATX";
-  MailApp.sendEmail({ to: data.email, subject: subject, body: text,
+  sendTrackedEmail({ to: data.email, subject: subject, body: text,
     htmlBody: html, name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL });
 }
 
@@ -1054,7 +1153,7 @@ function sendOwnerSubscriptionAlert(data, tier, subInfo, subId, squareLink, loaf
   tier = tier || "";
   subId = subId || "FBS-MANUAL-TEST";
   loafLabel = loafLabel || "Fatima Classic";
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "🌿 New Pilgrim Membership — " + (data.name||"") + " | " + loafLabel + " · " + tier,
     body:
@@ -1100,7 +1199,7 @@ function sendSubscriptionActiveEmail(data) {
     "\n\nYour Fatima boule will be ready every Friday for the length of your membership." +
     "\nNothing else due until renewal.\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "✅ Membership active — " + (data.subId||""),
     body: textBody, htmlBody: buildBaseEmailHTML("Membership Active ✅", contentHTML),
@@ -1190,7 +1289,7 @@ function handleContact(data, ss) {
 
   // Notify the owner — replyTo is the sender, so a direct reply
   // from the inbox goes straight back to them.
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL,
     bcc: OWNER_EMAIL_BACKUP || undefined,
     replyTo: email,
@@ -1349,7 +1448,7 @@ function sendRefundEmail(data) {
     methodNote + "\n\n" +
     "Questions: DM " + INSTAGRAM_HANDLE + " or " + OWNER_EMAIL + "\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "💸 Refund issued — " + (data.orderId||""),
     body: textBody, htmlBody: buildBaseEmailHTML("Refund Issued", contentHTML),
@@ -1510,7 +1609,7 @@ function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLi
     " when you're on your way" + (isDelivery ? " to confirm your delivery window" : "") + ".\n\n" +
     "Questions: DM " + INSTAGRAM_HANDLE + " or " + OWNER_EMAIL + "\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email,
     subject: "🧁 Order received — payment required — " + orderId,
     body: textBody, htmlBody: buildBaseEmailHTML("Order Received", contentHTML),
@@ -1544,7 +1643,7 @@ function sendPaymentConfirmedEmail(data) {
     " " + (data.preferred_time||"Friday") +
     "\n\nNothing due at pickup. See you Friday!\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "✅ Payment received — order confirmed! " + data.orderId,
     body: textBody, htmlBody: buildBaseEmailHTML("Order Confirmed ✅", contentHTML),
@@ -1553,7 +1652,7 @@ function sendPaymentConfirmedEmail(data) {
 }
 
 function sendOwnerPaymentAlert(data) {
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "💳 Payment received — " + data.name + " | " + data.total,
     body: "Order confirmed via payment.\n\nOrder ID: " + data.orderId +
@@ -1570,7 +1669,7 @@ function sendOwnerNewOrderAlert(data, rowNum, orderId, bouleCount, specialtyCoun
   if ((specialtyCount||0) >= SPECIALTY_LIMIT) warns += "⚠️  Specialty count at daily limit\n";
   if ((specialtyCount||0) > 0)                warns += "📅  Specialty — confirm 2-day advance\n";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL, bcc: OWNER_EMAIL_BACKUP || undefined,
     subject: "🧁 New order #" + rowNum + " — " + (data.name||"") + " | " + (data.total||""),
     body:
@@ -1616,7 +1715,7 @@ function sendPickupNotification(data) {
     "\nWindow: " + (data.preferred_time||"Friday") +
     "\n\nNothing due — payment collected upfront.\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email,
     subject: "🌿 Your order is ready — " + data.orderId,
     body: textBody, htmlBody: buildBaseEmailHTML("Order Ready 🌿", contentHTML),
@@ -1641,7 +1740,7 @@ function sendReviewRequest(data) {
     (GOOGLE_REVIEW_URL ? "Google review: " + GOOGLE_REVIEW_URL + "\n\n" : "") +
     "Or tag us " + INSTAGRAM_HANDLE + " on Instagram.\n\nFatima Bakery ATX";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: data.email,
     subject: "How was your Fatima Bakery order?",
     body: textBody, htmlBody: buildBaseEmailHTML("How was your order?", contentHTML),
@@ -1655,7 +1754,7 @@ function sendCapacityEmail(data, msg) {
   var html = buildBaseEmailHTML("Date Unavailable",
     "<p>Hi " + (data.name||"there") + ",</p><p>" + msg + "</p>" +
     "<p>Please choose a different Friday or DM us to check availability.</p>");
-  MailApp.sendEmail({ to: data.email, subject: "Fatima Bakery — date unavailable",
+  sendTrackedEmail({ to: data.email, subject: "Fatima Bakery — date unavailable",
     body: msg + "\n\nPlease choose a different Friday or DM " + INSTAGRAM_HANDLE,
     htmlBody: html, name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL });
 }
@@ -1665,7 +1764,7 @@ function sendAdvanceNoticeEmail(data, msg) {
   var html = buildBaseEmailHTML("Advance Notice Required",
     "<p>Hi " + (data.name||"there") + ",</p><p>" + msg + "</p>" +
     "<p>Please reorder for a Friday at least 2 days out.</p>");
-  MailApp.sendEmail({ to: data.email, subject: "Fatima Bakery — advance notice required",
+  sendTrackedEmail({ to: data.email, subject: "Fatima Bakery — advance notice required",
     body: msg + "\n\nPlease reorder for a Friday at least 2 days out.",
     htmlBody: html, name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL });
 }
@@ -1787,7 +1886,7 @@ function unpaidOrderTimeoutAgent() {
   });
   body += "\nCapacity for those pickup dates has been freed. Follow up with customers if needed.";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL,
     subject: "⏱ " + cancelled.length + " unpaid order(s) auto-cancelled",
     body: body,
@@ -1826,7 +1925,7 @@ function capacityGuardAgent() {
   if (combined >= COMBINED_LIMIT)           alerts.push("🔴 Combined: AT LIMIT (" + combined + "/" + COMBINED_LIMIT + ")");
 
   if (alerts.length > 0) {
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: OWNER_EMAIL, bcc: OWNER_EMAIL_BACKUP || undefined,
       subject: "⚠️  Capacity Alert — Friday " + fridayStr,
       body:
@@ -1897,7 +1996,7 @@ function orphanCheckerAgent() {
       "<p style='font-size:12px;margin-top:12px;color:#666'>Orders not paid within 24 hours may be released.</p>" +
       "</div>");
 
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: email,
       subject: "Reminder: complete your Fatima Bakery order — " + orderId,
       body: "Hi " + name + ", your order is still awaiting payment.\n\n" +
@@ -1945,7 +2044,7 @@ function waitlistAgent(pickupDate) {
       "<p style='font-size:12px;margin-top:10px;color:#666'>Spots fill quickly — first come, first served.</p>" +
       "</div>");
 
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: email,
       subject: "🧁 A spot just opened at Fatima Bakery!",
       body: "Hi " + name + ", a spot opened up. Order now: " + (ORDER_FORM_URL||"[order form URL]"),
@@ -2028,7 +2127,7 @@ function subscriptionRenewalAgent() {
       (s8 ? "8 weeks ($72): " + s8 + "\n" : "") +
       "\nNo action needed if not renewing.\nFatima Bakery ATX";
 
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: email,
       subject: "🌿 Your Pilgrim Membership is ending soon — renew?",
       body: textBody, htmlBody: buildBaseEmailHTML("Renew Your Pilgrim Membership 🌿", contentHTML),
@@ -2152,7 +2251,7 @@ function fridayBakeSheetAgent() {
     "<th style='background:#4a5e3a;color:#e8dfc8;padding:8px'>Window</th></tr>" +
     orderRows + "</table>";
 
-  MailApp.sendEmail({
+  sendTrackedEmail({
     to: OWNER_EMAIL,
     subject: "🧁 Friday Bake Sheet — " + orders.length + " orders | $" + totalRev.toFixed(2),
     body: body,
@@ -2222,7 +2321,7 @@ function sendWeeklyDrop() {
   // If fully sold out, notify Lindsay and skip
   if (combinedLeft === 0) {
     Logger.log("Weekly drop skipped \u2014 Friday " + fridayStr + " fully sold out.");
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: OWNER_EMAIL,
       subject: "Weekly drop skipped \u2014 Friday sold out",
       body: "This Friday (" + fridayStr + ") is fully booked. No availability email was sent.",
@@ -2309,7 +2408,7 @@ function sendWeeklyDrop() {
       "\n\nOrder: "  + (ORDER_FORM_URL||"[order form URL]") +
       "\n\nFatima Bakery ATX\n---\nReply STOP to unsubscribe.";
 
-    MailApp.sendEmail({
+    sendTrackedEmail({
       to: email,
       subject: "This Friday at Fatima Bakery \u2014 Liberty Hill",
       body: textBody,
@@ -2779,7 +2878,7 @@ function sendCutoffPassedEmail(data, msg, pickupDate) {
     "Please head back and choose the next available Friday. We would love to bake for you.</p>" +
     "<p><a href='" + ORDER_FORM_URL + "'>Place your order for next Friday</a></p>");
   try {
-    MailApp.sendEmail({ to: data.email, subject: "Fatima Bakery — order window closed",
+    sendTrackedEmail({ to: data.email, subject: "Fatima Bakery — order window closed",
       body: msg + "\n\nPlease choose the next available Friday: " + ORDER_FORM_URL,
       htmlBody: html, name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL });
   } catch (e) { Logger.log("sendCutoffPassedEmail error: " + e); }
