@@ -292,34 +292,30 @@ var DEBUG_LOG = boolProp_("DEBUG_LOG", true);
 //  1. RECEIVE FORM SUBMISSION — entry point
 // ============================================================
 function doPost(e) {
-  // ── Inbound request log (runs BEFORE any logic can fail) ──
-  // This is the single most useful diagnostic: if an order is
-  // failing, this proves whether it even ARRIVED. Logs to a
-  // "Debug Log" sheet tab. Disable by setting DEBUG_LOG = false.
-  logInbound(e);
-
-  // ── Square webhook? Detect and route BEFORE order-form parse. ──
-  // Square posts payment events with an HMAC signature header and
-  // a payload shaped completely differently from our order form.
-  // We detect it by the signature header + event envelope, verify
-  // the signature, then handle it separately. If it is not a valid
-  // Square event we fall through to normal order handling.
+  // ── Square webhook FAST PATH ──────────────────────────────────
+  // Square times out (504) if we don't respond within ~5s. We MUST
+  // detect Square events and return 200 BEFORE any slow calls
+  // (SpreadsheetApp, ScriptApp.getProjectTriggers, etc.).
+  // logInbound is deferred for Square events to avoid the timeout.
   try {
-    var sqSig = (e && e.parameter && e.parameter.__nohdr) ? null : squareGetSignature(e);
     var looksLikeSquare = false;
     if (e && e.postData && e.postData.contents) {
-      // cheap sniff: Square events carry "type" + "event_id" + "data"
       looksLikeSquare = /"event_id"\s*:/.test(e.postData.contents) &&
                         /"type"\s*:/.test(e.postData.contents) &&
                         /"data"\s*:/.test(e.postData.contents);
     }
-    if (looksLikeSquare && sqSig) {
-      return handleSquareWebhook(e, sqSig);
+    if (looksLikeSquare) {
+      return handleSquareWebhook(e);
     }
   } catch (sqErr) {
     Logger.log("Square pre-route error: " + sqErr);
     // fall through to normal handling
   }
+
+  // ── Inbound request log (non-Square requests only) ────────────
+  // Logs to a "Debug Log" sheet tab. Disable by setting
+  // DEBUG_LOG = false in Script Properties.
+  logInbound(e);
 
   try {
     var data = JSON.parse(e.postData.contents);
@@ -423,14 +419,19 @@ function squareVerifyByRefetch(paymentId, eventAmountCents) {
 }
 
 // Main Square webhook handler.
-function handleSquareWebhook(e, sigSentinel) {
+function handleSquareWebhook(e) {
   // ── FAST ACK PATTERN ──────────────────────────────────────
   // Square's webhook times out (504) if we don't respond quickly.
-  // Our verification requires slow calls BACK to Square's API, so
-  // we CANNOT finish inline. Instead: stash the raw event and
-  // return 200 immediately. A time-based trigger (processSquareQueue)
-  // does the verification + sheet update seconds later, off Square's
-  // clock. This is the standard robust webhook design.
+  // We MUST return 200 before doing any slow API calls. Stash the
+  // raw event into Script Properties (fast key-value store) and
+  // rely on the installed "processSquareQueue" time trigger to
+  // handle verification + sheet update asynchronously.
+  //
+  // IMPORTANT: Do NOT call ensureSquareQueueTrigger() here — it
+  // calls ScriptApp.getProjectTriggers() which is too slow for
+  // the webhook response window. Instead, install a recurring
+  // trigger via installTriggers() that runs processSquareQueue
+  // every 2 minutes.
   try {
     var raw = e.postData.contents;
     var evt = JSON.parse(raw);
@@ -440,19 +441,22 @@ function handleSquareWebhook(e, sigSentinel) {
     if (type.indexOf("payment") === 0) {
       var props = PropertiesService.getScriptProperties();
       var key   = "sqq_" + (evt.event_id || new Date().getTime());
-      props.setProperty(key, raw);        // queue it
-      ensureSquareQueueTrigger();          // make sure a processor runs soon
+      props.setProperty(key, raw);        // queue it (fast)
     }
   } catch (err) {
     Logger.log("Square ack-queue error: " + err);
     // Still ACK — never make Square retry a poison payload forever.
   }
   // Instant 200 so Square is happy.
-  return jsonResponse({ status: "square_received" });
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: "square_received" }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-// Ensure a one-shot trigger exists to drain the queue ~1 min out.
-// We keep at most one pending processor to avoid pile-ups.
+// Legacy one-shot trigger creator. No longer called from the webhook
+// inline path (it was too slow). Kept for manual use / backwards compat.
+// The preferred approach is a recurring 2-minute trigger installed by
+// installTriggers() — see installSquareQueueTrigger().
 function ensureSquareQueueTrigger() {
   var triggers = ScriptApp.getProjectTriggers();
   for (var i = 0; i < triggers.length; i++) {
@@ -461,6 +465,23 @@ function ensureSquareQueueTrigger() {
   ScriptApp.newTrigger("processSquareQueue")
     .timeBased().after(60 * 1000)  // ~1 minute
     .create();
+}
+
+// Install a recurring trigger that drains the Square queue every 2 min.
+// Call this ONCE from Run → installSquareQueueTrigger, or it will be
+// set up automatically by installTriggers().
+function installSquareQueueTrigger() {
+  // Remove any existing processSquareQueue triggers first.
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === "processSquareQueue") {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+  ScriptApp.newTrigger("processSquareQueue")
+    .timeBased().everyMinutes(2)
+    .create();
+  Logger.log("Installed recurring processSquareQueue trigger (every 2 min).");
 }
 
 // Drain queued Square events: verify each by API re-fetch, resolve
@@ -517,13 +538,9 @@ function processSquareQueue() {
     if (handled) props.deleteProperty(key);
   });
 
-  // Clean up: remove this one-shot trigger so we don't accumulate.
-  var triggers = ScriptApp.getProjectTriggers();
-  for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === "processSquareQueue") {
-      ScriptApp.deleteTrigger(triggers[i]);
-    }
-  }
+  // NOTE: This is now a recurring trigger (every 2 min) installed by
+  // installTriggers(). No need to self-delete. If no events are queued,
+  // it simply exits quickly.
 }
 
 // Given a verified Square payment, find our FB-xxxxx. Our
@@ -2587,7 +2604,7 @@ function onOpen() {
 function installTriggers() {
   // Remove existing to avoid duplicates
   var managed = ["unpaidOrderTimeoutAgent","sendWeeklyDrop","capacityGuardAgent","orphanCheckerAgent",
-                 "subscriptionRenewalAgent","fridayBakeSheetAgent"];
+                 "subscriptionRenewalAgent","fridayBakeSheetAgent","processSquareQueue"];
   ScriptApp.getProjectTriggers().forEach(function(t) {
     if (managed.indexOf(t.getHandlerFunction()) > -1) ScriptApp.deleteTrigger(t);
   });
@@ -2616,6 +2633,10 @@ function installTriggers() {
   ScriptApp.newTrigger("sendWeeklyDrop")
     .timeBased().onWeekDay(ScriptApp.WeekDay.TUESDAY).atHour(14).create();
 
+  // Square webhook queue processor: every 2 minutes
+  ScriptApp.newTrigger("processSquareQueue")
+    .timeBased().everyMinutes(2).create();
+
   safeAlert(
     "✅ All triggers installed:\n\n" +
     "• Daily 6am     — Unpaid Order Timeout Agent\n" +
@@ -2623,7 +2644,8 @@ function installTriggers() {
     "• Tuesday 2pm   — Weekly Availability Drop\n" +
     "• Friday 6am    — Friday Bake Sheet Agent\n" +
     "• Monday 9am    — Subscription Renewal Agent\n" +
-    "• Every 30 min  — Orphan Checker Agent\n\n" +
+    "• Every 30 min  — Orphan Checker Agent\n" +
+    "• Every 2 min   — Square Webhook Queue Processor\n\n" +
     "Remember to update thisWeek{} in sendWeeklyDrop() each Tuesday afternoon."
   );
 }
