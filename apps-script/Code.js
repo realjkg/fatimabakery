@@ -131,11 +131,7 @@ function scriptPropsSnapshot_() {
 }
 
 function prop_(name, fallback) {
-<<<<<<< HEAD
   var value = scriptPropsSnapshot_()[name];
-=======
-  var value = _scriptProps_[name];
->>>>>>> origin/main
 
   if (value === null || value === undefined || value === "") {
     if (fallback !== undefined) return fallback;
@@ -146,15 +142,10 @@ function prop_(name, fallback) {
 }
 
 function propAny_(names, fallback) {
-<<<<<<< HEAD
   var props = scriptPropsSnapshot_();
 
   for (var i = 0; i < names.length; i++) {
     var value = props[names[i]];
-=======
-  for (var i = 0; i < names.length; i++) {
-    var value = _scriptProps_[names[i]];
->>>>>>> origin/main
     if (value !== null && value !== undefined && value !== "") {
       return value;
     }
@@ -182,7 +173,7 @@ function numProp_(name, fallback) {
 
 // ── REQUIRED ─────────────────────────────────────────────────
 
-var APP_VERSION = prop_("APP_VERSION", "v8.1.3");
+var APP_VERSION = "v8.2.5";
 
 var SHEET_NAME = prop_("SHEET_NAME", "Orders");
 
@@ -288,10 +279,18 @@ var SPECIALTY_LIMIT = numProp_("SPECIALTY_LIMIT", 6);
 var COMBINED_LIMIT = numProp_("COMBINED_LIMIT", 12);
 var SPECIALTY_ADVANCE = numProp_("SPECIALTY_ADVANCE", 2);
 
-// Capacity limits are disabled by default.
-// Re-enable only when the bakery intentionally wants hard limits again.
-var ENFORCE_CAPACITY_LIMITS = boolProp_("ENFORCE_CAPACITY_LIMITS", false);
-var SHOW_CAPACITY_IN_EMAILS = boolProp_("SHOW_CAPACITY_IN_EMAILS", false);
+// Capacity limits stay off unless a new explicit v2 flag is enabled.
+// This intentionally ignores older ENFORCE_CAPACITY_LIMITS Script Properties
+// that may exist from earlier tests.
+var ENFORCE_CAPACITY_LIMITS = boolProp_("CAPACITY_LIMITS_ENABLED_V2", false);
+var SHOW_CAPACITY_IN_EMAILS = ENFORCE_CAPACITY_LIMITS && boolProp_("SHOW_CAPACITY_IN_EMAILS", false);
+
+if (!ENFORCE_CAPACITY_LIMITS) {
+  BOULE_LIMIT = 999;
+  SPECIALTY_LIMIT = 999;
+  COMBINED_LIMIT = 999;
+  SPECIALTY_ADVANCE = 0;
+}
 
 // ── ORDER CUTOFF ─────────────────────────────────────────────
 
@@ -475,7 +474,6 @@ function logEmailEvent_(orderId, emailType, to, subject, status, error) {
 //  1. RECEIVE FORM SUBMISSION — entry point
 // ============================================================
 function doPost(e) {
-<<<<<<< HEAD
   // ── Square webhook? Detect and route BEFORE any Sheets logging. ──
   // Keep this path tiny. No logInbound, no SpreadsheetApp, no trigger creation.
   try {
@@ -488,35 +486,12 @@ function doPost(e) {
 
     if (looksLikeSquare) {
       return handleSquareWebhook(e, "api-verify");
-=======
-  // ── Square webhook FAST PATH ──────────────────────────────────
-  // Square times out (504) if we don't respond within ~5s. We MUST
-  // detect Square events and return 200 BEFORE any slow calls
-  // (SpreadsheetApp, ScriptApp.getProjectTriggers, etc.).
-  // logInbound is deferred for Square events to avoid the timeout.
-  try {
-    var looksLikeSquare = false;
-    if (e && e.postData && e.postData.contents) {
-      // Square webhook events always contain event_id and merchant_id.
-      // Some test/subscription events omit "data", so we no longer require it.
-      looksLikeSquare = /"event_id"\s*:/.test(e.postData.contents) &&
-                        /"merchant_id"\s*:/.test(e.postData.contents);
-    }
-    if (looksLikeSquare) {
-      return handleSquareWebhook(e);
->>>>>>> origin/main
     }
   } catch (sqErr) {
     Logger.log("Square pre-route error: " + sqErr);
   }
 
-<<<<<<< HEAD
   // Non-Square form logging happens only after Square has had a chance to fast-ACK.
-=======
-  // ── Inbound request log (non-Square requests only) ────────────
-  // Logs to a "Debug Log" sheet tab. Disable by setting
-  // DEBUG_LOG = false in Script Properties.
->>>>>>> origin/main
   logInbound(e);
 
   try {
@@ -653,12 +628,8 @@ function handleSquareWebhook(e) {
     if (type.indexOf("payment") === 0) {
       var props = PropertiesService.getScriptProperties();
       var key   = "sqq_" + (evt.event_id || new Date().getTime());
-<<<<<<< HEAD
       props.setProperty(key, raw);        // queue it
       // Do not create/list triggers here. Webhook path must ACK fast.
-=======
-      props.setProperty(key, raw);        // queue it (fast)
->>>>>>> origin/main
     }
   } catch (err) {
     Logger.log("Square ack-queue error: " + err);
@@ -670,7 +641,6 @@ function handleSquareWebhook(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-<<<<<<< HEAD
 // Ensure a recurring trigger exists to drain the Square queue.
 // Install this manually; never create/list triggers from the webhook request path.
 function installSquareQueueTrigger() {
@@ -678,12 +648,6 @@ function installSquareQueueTrigger() {
   Logger.log("Square queue trigger installed or already present.");
 }
 
-=======
-// Legacy one-shot trigger creator. No longer called from the webhook
-// inline path (it was too slow). Kept for manual use / backwards compat.
-// The preferred approach is a recurring 2-minute trigger installed by
-// installTriggers() — see installSquareQueueTrigger().
->>>>>>> origin/main
 function ensureSquareQueueTrigger() {
   var triggers = ScriptApp.getProjectTriggers();
   for (var i = 0; i < triggers.length; i++) {
@@ -765,15 +729,9 @@ function processSquareQueue() {
     if (handled) props.deleteProperty(key);
   });
 
-<<<<<<< HEAD
 
   // Recurring Square queue trigger remains installed.
   // Do not delete processSquareQueue triggers here.
-=======
-  // NOTE: This is now a recurring trigger (every 2 min) installed by
-  // installTriggers(). No need to self-delete. If no events are queued,
-  // it simply exits quickly.
->>>>>>> origin/main
 }
 
 // Given a verified Square payment, find our FB-xxxxx. Our
@@ -3382,6 +3340,7 @@ function applyCapacityDefaults_v824() {
 
   var updates = {
     APP_VERSION: "v8.2.4",
+    CAPACITY_LIMITS_ENABLED_V2: "false",
     ENFORCE_CAPACITY_LIMITS: "false",
     SHOW_CAPACITY_IN_EMAILS: "false",
     BOULE_LIMIT: "999",
