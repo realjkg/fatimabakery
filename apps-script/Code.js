@@ -2996,3 +2996,99 @@ function clearSquareQueueOnlyAfterReview() {
   Logger.log("Deleted " + keys.length + " Square queue keys.");
 }
 
+
+// ============================================================
+//  SQUARE WORKER DURABLE INBOX PULLER  v8.2.2
+// ============================================================
+
+var SQUARE_WORKER_PULL_URL = prop_("SQUARE_WORKER_PULL_URL", "");
+var SQUARE_WORKER_ACK_URL = prop_("SQUARE_WORKER_ACK_URL", "");
+var SQUARE_WORKER_PULL_TOKEN = prop_("SQUARE_WORKER_PULL_TOKEN", "");
+var SQUARE_WORKER_PULL_ENABLED = boolProp_("SQUARE_WORKER_PULL_ENABLED", false);
+
+function pullSquareEventsFromWorker() {
+  if (!SQUARE_WORKER_PULL_ENABLED) {
+    Logger.log("Square Worker pull disabled.");
+    return;
+  }
+
+  if (!SQUARE_WORKER_PULL_URL || !SQUARE_WORKER_ACK_URL || !SQUARE_WORKER_PULL_TOKEN) {
+    Logger.log("Square Worker pull properties missing.");
+    return;
+  }
+
+  var res = UrlFetchApp.fetch(SQUARE_WORKER_PULL_URL + "?limit=25", {
+    method: "get",
+    muteHttpExceptions: true,
+    headers: {
+      "Authorization": "Bearer " + SQUARE_WORKER_PULL_TOKEN
+    }
+  });
+
+  var code = res.getResponseCode();
+
+  if (code !== 200) {
+    Logger.log("Square Worker pull failed: " + code + " " + res.getContentText());
+    return;
+  }
+
+  var body = JSON.parse(res.getContentText());
+  var events = body.events || [];
+
+  if (!events.length) {
+    Logger.log("No Square Worker events to pull.");
+    return;
+  }
+
+  var props = PropertiesService.getScriptProperties();
+  var ackIds = [];
+
+  events.forEach(function(ev) {
+    if (!ev.event_id || !ev.raw_json) return;
+
+    var key = "sqq_" + ev.event_id;
+    props.setProperty(key, ev.raw_json);
+    ackIds.push(ev.event_id);
+
+    Logger.log("Pulled Square event into Apps Script queue: " + ev.event_id);
+  });
+
+  if (ackIds.length) {
+    var ack = UrlFetchApp.fetch(SQUARE_WORKER_ACK_URL, {
+      method: "post",
+      contentType: "application/json",
+      muteHttpExceptions: true,
+      headers: {
+        "Authorization": "Bearer " + SQUARE_WORKER_PULL_TOKEN
+      },
+      payload: JSON.stringify({ event_ids: ackIds })
+    });
+
+    Logger.log("Square Worker ack response: " + ack.getResponseCode() + " " + ack.getContentText());
+  }
+
+  processSquareQueue();
+}
+
+function installSquareWorkerPullTrigger() {
+  var triggers = ScriptApp.getProjectTriggers();
+
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === "pullSquareEventsFromWorker") {
+      Logger.log("Square Worker pull trigger already installed.");
+      return;
+    }
+  }
+
+  ScriptApp.newTrigger("pullSquareEventsFromWorker")
+    .timeBased()
+    .everyMinutes(1)
+    .create();
+
+  Logger.log("Square Worker pull trigger installed.");
+}
+
+function testSquareWorkerPull() {
+  pullSquareEventsFromWorker();
+}
+
