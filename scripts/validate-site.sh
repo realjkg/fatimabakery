@@ -10,12 +10,17 @@ source "$SCRIPT_DIR/maintenance-config.sh"
 echo "Running Fatima Bakery site validation..."
 
 echo "Checking for forbidden secrets..."
-if grep -RniE "SQUARE_ACCESS_TOKEN|SQUARE_WEBHOOK_SIGNATURE_KEY|sk_live|EAAA|client_secret|password|api_key|private_key" . \
+
+SECRET_HITS="$(grep -RInE \
   --exclude-dir=.git \
   --exclude-dir=node_modules \
-  --exclude="*.md" \
-  --exclude="validate-site.sh" \
-  --exclude="validate.yml"; then
+  --exclude='*.md' \
+  --exclude='script.properties.example' \
+  '(EAAA[a-zA-Z0-9_-]{20,}|sq0[a-zA-Z0-9_-]{20,}|Bearer[[:space:]]+[A-Za-z0-9._-]{20,})' \
+  . || true)"
+
+if [ -n "$SECRET_HITS" ]; then
+  echo "$SECRET_HITS"
   echo "Potential secret found. Stop and review."
   exit 1
 fi

@@ -1,0 +1,9 @@
+.clasp.json
+.claspignore
+.clasprc.json
+.git/**
+node_modules/**
+.env
+.env.*
+README.md
+script.properties.example
