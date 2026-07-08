@@ -288,6 +288,11 @@ var SPECIALTY_LIMIT = numProp_("SPECIALTY_LIMIT", 6);
 var COMBINED_LIMIT = numProp_("COMBINED_LIMIT", 12);
 var SPECIALTY_ADVANCE = numProp_("SPECIALTY_ADVANCE", 2);
 
+// Capacity limits are disabled by default.
+// Re-enable only when the bakery intentionally wants hard limits again.
+var ENFORCE_CAPACITY_LIMITS = boolProp_("ENFORCE_CAPACITY_LIMITS", false);
+var SHOW_CAPACITY_IN_EMAILS = boolProp_("SHOW_CAPACITY_IN_EMAILS", false);
+
 // ── ORDER CUTOFF ─────────────────────────────────────────────
 
 var CUTOFF_DOW = numProp_("CUTOFF_DOW", 3);
@@ -1021,7 +1026,7 @@ function handleOrder(data, ss) {
     var today  = new Date(); today.setHours(0,0,0,0);
     var parts  = pickupDate.split("-");
     var pickup = new Date(parts[0], parts[1]-1, parts[2]);
-    if (Math.round((pickup - today) / 86400000) < SPECIALTY_ADVANCE) {
+    if (ENFORCE_CAPACITY_LIMITS && SPECIALTY_ADVANCE > 0 && Math.round((pickup - today) / 86400000) < SPECIALTY_ADVANCE) {
       var msg = "Specialty boules require " + SPECIALTY_ADVANCE + " days advance notice.";
       if (data.email) sendAdvanceNoticeEmail(data, msg);
       return jsonResponse({ status: "advance_required", message: msg });
@@ -1851,8 +1856,8 @@ function sendOwnerPaymentAlert(data) {
 // ── Owner new order alert ────────────────────────────────────
 function sendOwnerNewOrderAlert(data, rowNum, orderId, bouleCount, specialtyCount, squareLink, venmoLink) {
   var warns = "";
-  if ((bouleCount||0) >= BOULE_LIMIT)         warns += "⚠️  Boule count at daily limit\n";
-  if ((specialtyCount||0) >= SPECIALTY_LIMIT) warns += "⚠️  Specialty count at daily limit\n";
+  if (SHOW_CAPACITY_IN_EMAILS && (bouleCount||0) >= BOULE_LIMIT)         warns += "⚠️  Boule count at daily limit\n";
+  if (SHOW_CAPACITY_IN_EMAILS && (specialtyCount||0) >= SPECIALTY_LIMIT) warns += "⚠️  Specialty count at daily limit\n";
   if ((specialtyCount||0) > 0)                warns += "📅  Specialty — confirm 2-day advance\n";
 
   sendTrackedEmail({
@@ -1865,8 +1870,8 @@ function sendOwnerNewOrderAlert(data, rowNum, orderId, bouleCount, specialtyCoun
       "\nName:     " + (data.name||"") + "\nPhone:    " + (data.phone||"") +
       "\nIG:       " + (data.ig_handle||"") + "\nEmail:    " + (data.email||"") +
       "\n\nItems:    " + (data.order||"") +
-      "\nBoules:   " + (bouleCount||0) + " / " + BOULE_LIMIT +
-      "\nSpecialty:" + (specialtyCount||0) + " / " + SPECIALTY_LIMIT +
+      "\nBoules:   " + (bouleCount||0) + (SHOW_CAPACITY_IN_EMAILS ? " / " + BOULE_LIMIT : "") +
+      "\nSpecialty:" + (specialtyCount||0) + (SHOW_CAPACITY_IN_EMAILS ? " / " + SPECIALTY_LIMIT : "") +
       "\nTotal:    " + (data.total||"") +
       "\n\nPickup:   " + (data.preferred_date||"") + "  " + (data.preferred_time||"") +
       "\nNotes:    " + (data.notes||"") +
@@ -2087,6 +2092,11 @@ function unpaidOrderTimeoutAgent() {
 //  the availability drop or pause new orders.
 // ============================================================
 function capacityGuardAgent() {
+  if (!ENFORCE_CAPACITY_LIMITS) {
+    Logger.log("Capacity Guard disabled by ENFORCE_CAPACITY_LIMITS=false.");
+    return;
+  }
+
   var ss    = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) return;
@@ -2505,7 +2515,7 @@ function sendWeeklyDrop() {
   var combinedLeft = Math.max(COMBINED_LIMIT - bouleUsed - specUsed, 0);
 
   // If fully sold out, notify Lindsay and skip
-  if (combinedLeft === 0) {
+  if (ENFORCE_CAPACITY_LIMITS && combinedLeft === 0) {
     Logger.log("Weekly drop skipped \u2014 Friday " + fridayStr + " fully sold out.");
     sendTrackedEmail({
       to: OWNER_EMAIL,
@@ -2544,10 +2554,10 @@ function sendWeeklyDrop() {
     if (item.type !== "boule" && item.type !== "specialty") return;
     var limit     = item.type === "boule" ? BOULE_LIMIT : SPECIALTY_LIMIT;
     var remaining = Math.max(limit - (itemOrdered[name] || 0), 0);
-    if (remaining === 0) {
+    if (ENFORCE_CAPACITY_LIMITS && remaining === 0) {
       soldOutLines.push(name);
     } else {
-      var line = name + " (" + remaining + " left)";
+      var line = ENFORCE_CAPACITY_LIMITS ? name + " (" + remaining + " left)" : name;
       if (item.type === "boule") bouleLines.push(line);
       else specLines.push(line);
     }
@@ -3360,5 +3370,58 @@ function resendSubscriptionNoticeFromRow_(sheet, row) {
 
   Logger.log("Resent subscription notice for " + subId + " row " + row);
   return subId;
+}
+
+
+// ============================================================
+//  CAPACITY DEFAULTS v8.2.4 — CLI runnable via clasp
+// ============================================================
+
+function applyCapacityDefaults_v824() {
+  var props = PropertiesService.getScriptProperties();
+
+  var updates = {
+    APP_VERSION: "v8.2.4",
+    ENFORCE_CAPACITY_LIMITS: "false",
+    SHOW_CAPACITY_IN_EMAILS: "false",
+    BOULE_LIMIT: "999",
+    SPECIALTY_LIMIT: "999",
+    COMBINED_LIMIT: "999",
+    SPECIALTY_ADVANCE: "0",
+    EMAIL_AUDIT_BCC: ""
+  };
+
+  props.setProperties(updates, false);
+
+  Logger.log("Applied capacity defaults v8.2.4:");
+  Object.keys(updates).sort().forEach(function(k) {
+    Logger.log(k + " = " + (k === "EMAIL_AUDIT_BCC" && !updates[k] ? "<blank>" : updates[k]));
+  });
+
+  return updates;
+}
+
+function checkCapacityConfig_v824() {
+  var props = PropertiesService.getScriptProperties();
+
+  var keys = [
+    "APP_VERSION",
+    "ENFORCE_CAPACITY_LIMITS",
+    "SHOW_CAPACITY_IN_EMAILS",
+    "BOULE_LIMIT",
+    "SPECIALTY_LIMIT",
+    "COMBINED_LIMIT",
+    "SPECIALTY_ADVANCE",
+    "EMAIL_AUDIT_BCC"
+  ];
+
+  var out = {};
+
+  keys.forEach(function(k) {
+    out[k] = props.getProperty(k) || "";
+    Logger.log(k + " = " + (k === "EMAIL_AUDIT_BCC" && !out[k] ? "<blank>" : out[k]));
+  });
+
+  return out;
 }
 
