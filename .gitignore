@@ -1,2 +1,5 @@
 .DS_Store
-.DS_Store
+
+# Google Apps Script clasp
+apps-script/.clasp.json
+.clasprc.json
