@@ -1,11 +1,15 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$REPO_ROOT"
+
+source "$SCRIPT_DIR/maintenance-config.sh"
 
 REPORT_DIR="reports/weekly"
 REPORT_FILE="$REPORT_DIR/latest.md"
 TODAY=$(date -u +"%Y-%m-%d")
-
-ENDPOINT="https://script.google.com/macros/s/AKfycby6ahtqJ1pe7sLVk4BgcU48WIn34P1P1giY5lxh8pmEABxpQX3m0wI96lIhnjreiDO-/exec"
 
 mkdir -p "$REPORT_DIR"
 
@@ -34,16 +38,16 @@ echo "" >> "$REPORT_FILE"
 echo "## Customer-Facing Wording" >> "$REPORT_FILE"
 echo "" >> "$REPORT_FILE"
 
-if grep -R "Join the Fatima Bakery newsletter list" index.html order contact collection story privacy terms --include="*.html" >/dev/null; then
+if grep -R "$NEWSLETTER_CTA" "${CUSTOMER_HTML_PATHS[@]}" --include="*.html" >/dev/null; then
   echo "- ✅ Newsletter CTA found" >> "$REPORT_FILE"
 else
   echo "- ❌ Newsletter CTA missing" >> "$REPORT_FILE"
 fi
 
-if grep -Rni "Pilgrim Reserve\|Piligrim" index.html order contact collection story privacy terms --include="*.html" >/tmp/fatima-old-terms.txt; then
+if grep -Rni "Pilgrim Reserve\|Piligrim" "${CUSTOMER_HTML_PATHS[@]}" --include="*.html" >/tmp/fatima-maintenance-old-terms.txt; then
   echo "- ❌ Old Reserve wording found in customer-facing HTML:" >> "$REPORT_FILE"
   echo '```' >> "$REPORT_FILE"
-  cat /tmp/fatima-old-terms.txt >> "$REPORT_FILE"
+  cat /tmp/fatima-maintenance-old-terms.txt >> "$REPORT_FILE"
   echo '```' >> "$REPORT_FILE"
 else
   echo "- ✅ No old Pilgrim Reserve wording found in customer-facing HTML" >> "$REPORT_FILE"
@@ -53,7 +57,7 @@ echo "" >> "$REPORT_FILE"
 echo "## Apps Script Endpoint" >> "$REPORT_FILE"
 echo "" >> "$REPORT_FILE"
 
-if grep -R "$ENDPOINT" order contact index.html >/dev/null; then
+if grep -R "$ENDPOINT" "${FORM_ENDPOINT_FILES[@]}" >/dev/null; then
   echo "- ✅ Current public Apps Script endpoint found" >> "$REPORT_FILE"
 else
   echo "- ❌ Current public Apps Script endpoint not found where expected" >> "$REPORT_FILE"
@@ -63,7 +67,7 @@ echo "" >> "$REPORT_FILE"
 echo "## Local SEO Areas" >> "$REPORT_FILE"
 echo "" >> "$REPORT_FILE"
 
-for area in "Liberty Hill" "Leander" "Georgetown" "Cedar Park" "North Austin"; do
+for area in "${LOCAL_SEO_AREAS[@]}"; do
   if grep -R "$area" index.html order contact collection story --include="*.html" >/dev/null; then
     echo "- ✅ $area mentioned" >> "$REPORT_FILE"
   else

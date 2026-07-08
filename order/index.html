@@ -1182,7 +1182,7 @@ footer{
     <div class="form-row">
       <label class="radio-row">
         <input type="radio" name="fulfillment" value="pickup" checked>
-        <span>Curbside pickup at 112 Civita Road, Liberty Hill, TX. Fridays 9am to 12pm.</span>
+        <span>Curbside pickup at our Liberty Hill pickup location. Fridays 9am to 12pm.</span>
       </label>
       <label class="radio-row">
         <input type="radio" name="fulfillment" value="delivery">
@@ -1591,7 +1591,7 @@ footer{
     // Show the specialty dropdown only for the "Specialty" option
     specialtyPicker.style.display = (chosen && chosen.value === 'Specialty') ? '' : 'none';
     // Swap each plan price to the matching data attribute
-    document.querySelectorAll('#Pilgrim Membership-form .plan-price').forEach(function(el){
+    subForm.querySelectorAll('.plan-price').forEach(function(el){
       var val = (kind === 'specialty') ? el.getAttribute('data-specialty') : el.getAttribute('data-fatima');
       if (val) el.textContent = val;
     });

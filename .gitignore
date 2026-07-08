@@ -3,3 +3,6 @@
 # Google Apps Script clasp
 apps-script/.clasp.json
 .clasprc.json
+
+# Locally generated weekly maintenance report output
+reports/weekly/latest.md
