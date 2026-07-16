@@ -133,6 +133,7 @@ function createSubscriptionSandboxAdapters_(state, options) {
         },
 
         paymentMethod: context.paymentMethod,
+        data: sandboxClone_(context.data),
         payment: null,
         stages: {},
         duplicateCount: 0,
@@ -340,3 +341,36 @@ function runSubscriptionSandboxWorkflow_(
     state: state
   };
 }
+
+function retrySubscriptionSandboxWorkflow_(
+  requestId,
+  state,
+  options
+) {
+  state =
+    state ||
+    createSubscriptionSandboxState_();
+
+  var adapters =
+    createSubscriptionSandboxAdapters_(
+      state,
+      options
+    );
+
+  var result =
+    retrySubscriptionWorkflow_(
+      requestId,
+      adapters
+    );
+
+  persistSubscriptionSandboxResult_(
+    state,
+    result
+  );
+
+  return {
+    result: sandboxClone_(result),
+    state: state
+  };
+}
+
