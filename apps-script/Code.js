@@ -1143,14 +1143,10 @@ function handleSubscription(data, ss) {
     var h = sheet.getRange("1:1");
     h.setBackground("#4a5e3a"); h.setFontColor("#e8dfc8"); h.setFontWeight("bold");
   }
-
-  var tier    = normalizeSubscriptionTier(data);
-  // Determine loaf kind: "fatima" (standard) or "specialty".
-  // Default to fatima for backward compatibility with old payloads.
-  var kindRaw = String(data.subscription_kind || data.membership_kind || data.kind || "").toLowerCase();
-  var kind    = (kindRaw.indexOf("special") > -1) ? "specialty" : "fatima";
-  var kindTable = SUBSCRIPTIONS[kind] || SUBSCRIPTIONS["fatima"];
-  var subInfo = kindTable[tier] || { price: 0, desc: "" };
+  var plan = validateSubscriptionPlan_(data);
+  var tier = plan.tier;
+  var kind = plan.kind;
+  var subInfo = plan.info;
   var subId   = "FBS-" + new Date().getTime();
 
   // Human-readable loaf label for the sheet + emails.
@@ -1232,21 +1228,157 @@ function handleSubscription(data, ss) {
 
 function normalizeSubscriptionTier(data) {
   data = data || {};
-  var hay = [
+
+  // Only explicit plan fields may select a billing tier.
+  // Never infer price from notes, dates, phone numbers, or order text.
+  var candidates = [
     data.subscription_tier,
     data.membership_tier,
     data.tier,
     data.plan,
-    data.duration,
-    data.order,
-    data.notes
-  ].join(" ").toLowerCase();
-  if (hay.indexOf("8") > -1) return "8 weeks";
-  if (hay.indexOf("6") > -1) return "6 weeks";
-  if (hay.indexOf("4") > -1) return "4 weeks";
-  Logger.log("Subscription tier missing; defaulting to 4 weeks. Payload: " + JSON.stringify(data).substring(0, 500));
-  return "4 weeks";
+    data.duration
+  ];
+
+  for (var i = 0; i < candidates.length; i++) {
+    var raw = String(candidates[i] || "").toLowerCase().trim();
+    if (!raw) continue;
+
+    var match = raw.match(/^(?:plan\s*)?(4|6|8)(?:\s*[- ]?\s*weeks?)?$/);
+
+    if (match) {
+      return match[1] + " weeks";
+    }
+  }
+
+  throw new Error(
+    "Please choose a valid Loaf Reserve plan: 4, 6, or 8 weeks."
+  );
 }
+
+function normalizeSubscriptionKind_(data) {
+  data = data || {};
+
+  var raw = String(
+    data.subscription_kind ||
+    data.membership_kind ||
+    data.kind ||
+    ""
+  ).toLowerCase().trim();
+
+  raw = raw
+    .replace(/[’']/g, "")
+    .replace(/[\s-]+/g, "_");
+
+  // Backward-compatible aliases normalize to one canonical value.
+  if (
+    raw === "classic" ||
+    raw === "fatima" ||
+    raw === "fatima_classic" ||
+    raw === "classic_loaf"
+  ) {
+    return "classic";
+  }
+
+  if (
+    raw === "specialty" ||
+    raw === "special" ||
+    raw === "specialty_loaf"
+  ) {
+    return "specialty";
+  }
+
+  if (
+    raw === "bakers_choice" ||
+    raw === "baker_choice" ||
+    raw === "bakerschoice"
+  ) {
+    return "bakers_choice";
+  }
+
+  throw new Error(
+    "Please choose Classic, Specialty, or Baker's Choice."
+  );
+}
+
+function validateSubscriptionPlan_(data) {
+  data = data || {};
+
+  var tier = normalizeSubscriptionTier(data);
+  var kind = normalizeSubscriptionKind_(data);
+
+  /*
+   * The legacy internal key "fatima" represents Fatima Classic.
+   * Baker's Choice remains distinct but shares Specialty pricing.
+   */
+  var pricingKey = kind === "classic"
+    ? "fatima"
+    : "specialty";
+
+  var kindTable = SUBSCRIPTIONS[pricingKey];
+  var baseInfo = kindTable && kindTable[tier];
+
+  if (!baseInfo) {
+    throw new Error(
+      "The selected Loaf Reserve plan is unavailable."
+    );
+  }
+
+  var expectedPrices = {
+    classic: {
+      "4 weeks": 44,
+      "6 weeks": 60,
+      "8 weeks": 72
+    },
+
+    specialty: {
+      "4 weeks": 58,
+      "6 weeks": 84,
+      "8 weeks": 104
+    },
+
+    bakers_choice: {
+      "4 weeks": 58,
+      "6 weeks": 84,
+      "8 weeks": 104
+    }
+  };
+
+  var expectedPrice =
+    expectedPrices[kind] &&
+    expectedPrices[kind][tier];
+
+  if (
+    expectedPrice === undefined ||
+    Number(baseInfo.price) !== expectedPrice
+  ) {
+    throw new Error(
+      "Loaf Reserve pricing configuration error for " +
+      kind +
+      " / " +
+      tier +
+      "."
+    );
+  }
+
+  var labels = {
+    classic: "Fatima Classic Loaf Reserve",
+    specialty: "Specialty Loaf Reserve",
+    bakers_choice: "Baker's Choice Loaf Reserve"
+  };
+
+  return {
+    tier: tier,
+    kind: kind,
+    pricingKey: pricingKey,
+    label: labels[kind],
+
+    info: {
+      price: expectedPrice,
+      desc: labels[kind]
+    }
+  };
+}
+
 
 function sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel, cashLink, venmoLink) {
   if (!data || typeof data !== "object") {

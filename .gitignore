@@ -10,3 +10,5 @@ reports/weekly/latest.md
 # Wrangler local cache/state
 .wrangler/
 **/.wrangler/
+
+/reports/audit/

@@ -1,0 +1,185 @@
+[
+  {
+    "id": "classic-4-square",
+    "tier": "4 weeks",
+    "kind": "classic",
+    "paymentMethod": "square"
+  },
+  {
+    "id": "classic-4-venmo",
+    "tier": "4 weeks",
+    "kind": "classic",
+    "paymentMethod": "venmo"
+  },
+  {
+    "id": "classic-4-cashapp",
+    "tier": "4 weeks",
+    "kind": "classic",
+    "paymentMethod": "cashapp"
+  },
+  {
+    "id": "specialty-4-square",
+    "tier": "4 weeks",
+    "kind": "specialty",
+    "paymentMethod": "square",
+    "expectedPrice": 58
+  },
+  {
+    "id": "specialty-4-venmo",
+    "tier": "4 weeks",
+    "kind": "specialty",
+    "paymentMethod": "venmo",
+    "expectedPrice": 58
+  },
+  {
+    "id": "specialty-4-cashapp",
+    "tier": "4 weeks",
+    "kind": "specialty",
+    "paymentMethod": "cashapp",
+    "expectedPrice": 58
+  },
+  {
+    "id": "bakers-choice-4-square",
+    "tier": "4 weeks",
+    "kind": "bakers_choice",
+    "paymentMethod": "square",
+    "expectedPrice": 58
+  },
+  {
+    "id": "bakers-choice-4-venmo",
+    "tier": "4 weeks",
+    "kind": "bakers_choice",
+    "paymentMethod": "venmo",
+    "expectedPrice": 58
+  },
+  {
+    "id": "bakers-choice-4-cashapp",
+    "tier": "4 weeks",
+    "kind": "bakers_choice",
+    "paymentMethod": "cashapp",
+    "expectedPrice": 58
+  },
+  {
+    "id": "classic-6-square",
+    "tier": "6 weeks",
+    "kind": "classic",
+    "paymentMethod": "square",
+    "expectedPrice": 60
+  },
+  {
+    "id": "classic-6-venmo",
+    "tier": "6 weeks",
+    "kind": "classic",
+    "paymentMethod": "venmo",
+    "expectedPrice": 60
+  },
+  {
+    "id": "classic-6-cashapp",
+    "tier": "6 weeks",
+    "kind": "classic",
+    "paymentMethod": "cashapp",
+    "expectedPrice": 60
+  },
+  {
+    "id": "specialty-6-square",
+    "tier": "6 weeks",
+    "kind": "specialty",
+    "paymentMethod": "square",
+    "expectedPrice": 84
+  },
+  {
+    "id": "specialty-6-venmo",
+    "tier": "6 weeks",
+    "kind": "specialty",
+    "paymentMethod": "venmo",
+    "expectedPrice": 84
+  },
+  {
+    "id": "specialty-6-cashapp",
+    "tier": "6 weeks",
+    "kind": "specialty",
+    "paymentMethod": "cashapp",
+    "expectedPrice": 84
+  },
+  {
+    "id": "bakers-choice-6-square",
+    "tier": "6 weeks",
+    "kind": "bakers_choice",
+    "paymentMethod": "square",
+    "expectedPrice": 84
+  },
+  {
+    "id": "bakers-choice-6-venmo",
+    "tier": "6 weeks",
+    "kind": "bakers_choice",
+    "paymentMethod": "venmo",
+    "expectedPrice": 84
+  },
+  {
+    "id": "bakers-choice-6-cashapp",
+    "tier": "6 weeks",
+    "kind": "bakers_choice",
+    "paymentMethod": "cashapp",
+    "expectedPrice": 84
+  },
+  {
+    "id": "classic-8-square",
+    "tier": "8 weeks",
+    "kind": "classic",
+    "paymentMethod": "square"
+  },
+  {
+    "id": "classic-8-venmo",
+    "tier": "8 weeks",
+    "kind": "classic",
+    "paymentMethod": "venmo"
+  },
+  {
+    "id": "classic-8-cashapp",
+    "tier": "8 weeks",
+    "kind": "classic",
+    "paymentMethod": "cashapp"
+  },
+  {
+    "id": "specialty-8-square",
+    "tier": "8 weeks",
+    "kind": "specialty",
+    "paymentMethod": "square",
+    "expectedPrice": 104
+  },
+  {
+    "id": "specialty-8-venmo",
+    "tier": "8 weeks",
+    "kind": "specialty",
+    "paymentMethod": "venmo",
+    "expectedPrice": 104
+  },
+  {
+    "id": "specialty-8-cashapp",
+    "tier": "8 weeks",
+    "kind": "specialty",
+    "paymentMethod": "cashapp",
+    "expectedPrice": 104
+  },
+  {
+    "id": "bakers-choice-8-square",
+    "tier": "8 weeks",
+    "kind": "bakers_choice",
+    "paymentMethod": "square",
+    "expectedPrice": 104
+  },
+  {
+    "id": "bakers-choice-8-venmo",
+    "tier": "8 weeks",
+    "kind": "bakers_choice",
+    "paymentMethod": "venmo",
+    "expectedPrice": 104
+  },
+  {
+    "id": "bakers-choice-8-cashapp",
+    "tier": "8 weeks",
+    "kind": "bakers_choice",
+    "paymentMethod": "cashapp",
+    "expectedPrice": 104
+  }
+]
