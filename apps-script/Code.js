@@ -661,19 +661,7 @@ function ensureSquareQueueTrigger() {
 // Install a recurring trigger that drains the Square queue every 2 min.
 // Call this ONCE from Run → installSquareQueueTrigger, or it will be
 // set up automatically by installTriggers().
-function installSquareQueueTrigger() {
-  // Remove any existing processSquareQueue triggers first.
-  var triggers = ScriptApp.getProjectTriggers();
-  for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === "processSquareQueue") {
-      ScriptApp.deleteTrigger(triggers[i]);
-    }
-  }
-  ScriptApp.newTrigger("processSquareQueue")
-    .timeBased().everyMinutes(2)
-    .create();
-  Logger.log("Installed recurring processSquareQueue trigger (every 2 min).");
-}
+
 
 // Drain queued Square events: verify each by API re-fetch, resolve
 // our FB-/FBS- id and confirm the order or activate the subscription.
@@ -1126,7 +1114,7 @@ function handleOrder(data, ss) {
 
 
 // ============================================================
-//  3. SUBSCRIPTION — Pilgrim Membership (Cash App default, Square/Venmo optional)
+//  3. SUBSCRIPTION — Loaf Reserve (Cash App default, Square/Venmo optional)
 // ============================================================
 function handleSubscription(data, ss) {
   if (!data || typeof data !== "object") {
@@ -1149,12 +1137,8 @@ function handleSubscription(data, ss) {
   var subInfo = plan.info;
   var subId   = "FBS-" + new Date().getTime();
 
-  // Human-readable loaf label for the sheet + emails.
-  var loafChoice = data.subscription_loaf || data.membership_loaf || data.loaf || "Fatima Classic";
-  var specialty  = data.subscription_specialty || data.membership_specialty || data.specialty || "";
-  var loafLabel  = (loafChoice === "Specialty" && specialty)
-                     ? ("Specialty — " + specialty)
-                     : loafChoice;
+  // Canonical label derived from the validated plan.
+  var loafLabel = subscriptionLoafLabel_(plan, data);
 
   // Normalize phone before writing to sheet/email.
   data.phone = formatPhone_(data.phone || data.Phone || "");
@@ -1186,7 +1170,7 @@ function handleSubscription(data, ss) {
       subInfo.price * 100,
       subId,
       data.name,
-      "Pilgrim Membership — " + loafLabel + " · " + tier
+      "Loaf Reserve — " + loafLabel + " · " + tier
     );
   } catch (squareErr) {
     Logger.log("Subscription Square link failed for " + subId + ": " + squareErr);
@@ -1379,6 +1363,37 @@ function validateSubscriptionPlan_(data) {
   };
 }
 
+function subscriptionLoafLabel_(plan, data) {
+  plan = plan || {};
+  data = data || {};
+
+  if (plan.kind === "classic") {
+    return "Fatima Classic";
+  }
+
+  if (plan.kind === "specialty") {
+    var specialty = String(
+      data.subscription_specialty ||
+      data.membership_specialty ||
+      data.specialty ||
+      ""
+    ).trim();
+
+    return specialty
+      ? "Specialty — " + specialty
+      : "Specialty";
+  }
+
+  if (plan.kind === "bakers_choice") {
+    return "Baker's Choice";
+  }
+
+  throw new Error(
+    "Cannot create a loaf label for subscription kind: " +
+    String(plan.kind || "missing")
+  );
+}
+
 
 function sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel, cashLink, venmoLink) {
   if (!data || typeof data !== "object") {
@@ -1389,11 +1404,11 @@ function sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel
   tier = tier || "";
   subId = subId || "FBS-MANUAL-TEST";
   loafLabel = loafLabel || "Fatima Classic";
-  var subject = "🌿 Pilgrim Membership received — " + subId;
+  var subject = "🌿 Loaf Reserve received — " + subId;
   var html = buildBaseEmailHTML(
-    "Pilgrim Membership",
+    "Loaf Reserve",
     "<p>Hi " + (data.name||"there") + ",</p>" +
-    "<p>Your Pilgrim Membership has been received.</p>" +
+    "<p>Your Loaf Reserve has been received.</p>" +
     buildInfoTable([
       ["Sub ID",   subId],
       ["Loaf",     loafLabel],
@@ -1412,7 +1427,7 @@ function sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel
     "<p>Pickup every Friday at " + PICKUP_ADDRESS + ".</p>"
   );
   var text =
-    "Hi " + (data.name||"there") + ", Pilgrim Membership received.\n\n" +
+    "Hi " + (data.name||"there") + ", Loaf Reserve received.\n\n" +
     "Sub ID: " + subId + "\nTier: " + tier + " — $" + subInfo.price + "\n" +
     "Starts: " + (data.preferred_date||"TBD") + "\n\n" +
     "Pay in full to activate:\n" +
@@ -1436,9 +1451,9 @@ function sendOwnerSubscriptionAlert(data, tier, subInfo, subId, squareLink, loaf
   loafLabel = loafLabel || "Fatima Classic";
   sendTrackedEmail({
     to: OWNER_EMAIL, bcc: OWNER_EMAIL_BACKUP || undefined,
-    subject: "🌿 New Pilgrim Membership — " + (data.name||"") + " | " + loafLabel + " · " + tier,
+    subject: "🌿 New Loaf Reserve — " + (data.name||"") + " | " + loafLabel + " · " + tier,
     body:
-      "New Pilgrim Membership!\n\n" +
+      "New Loaf Reserve!\n\n" +
       "Sub ID: " + subId + "\nName: " + (data.name||"") +
       "\nEmail: " + (data.email||"") + "\nPhone: " + (data.phone||"") +
       "\nLoaf: " + loafLabel +
@@ -1462,7 +1477,7 @@ function sendSubscriptionActiveEmail(data) {
 
   var contentHTML =
     "<p>Hi " + name + ",</p>" +
-    "<p>✅ Payment received — your Pilgrim Membership is active!</p>" +
+    "<p>✅ Payment received — your Loaf Reserve is active!</p>" +
     buildInfoTable([
       ["Plan",         data.tier      || ""],
       ["Price",        data.price     || ""],
@@ -1473,7 +1488,7 @@ function sendSubscriptionActiveEmail(data) {
     "<p>Your Fatima boule will be ready for pickup every Friday for the length of your membership. Nothing else is due until renewal.</p>";
 
   var textBody =
-    "Hi " + name + ", payment received — your Pilgrim Membership is active!\n\n" +
+    "Hi " + name + ", payment received — your Loaf Reserve is active!\n\n" +
     "Plan: " + (data.tier||"") + "\nPrice: " + (data.price||"") +
     "\nFirst pickup: " + (data.startDate||"") + "\nLast pickup: " + (data.endDate||"") +
     "\nSub ID: " + (data.subId||"") +
@@ -1509,7 +1524,7 @@ function testSubscriptionEmail() {
     subInfo.price * 100,
     subId,
     testData.name,
-    "Pilgrim Membership — Fatima Classic · 4 weeks"
+    "Loaf Reserve — Fatima Classic · 4 weeks"
   );
   var totalFmt = "$" + Number(subInfo.price || 0).toFixed(2);
   var cashLink = createCashAppLink(totalFmt);
@@ -2386,13 +2401,13 @@ function subscriptionRenewalAgent() {
     if (PropertiesService.getScriptProperties().getProperty(sentKey)) return;
 
     // Generate Square links for each tier
-    var s4 = createSquarePaymentLink(4400, "FBS-RENEW4-"+Date.now(), name, "Pilgrim Membership 4 weeks");
-    var s6 = createSquarePaymentLink(6000, "FBS-RENEW6-"+Date.now(), name, "Pilgrim Membership 6 weeks");
-    var s8 = createSquarePaymentLink(7200, "FBS-RENEW8-"+Date.now(), name, "Pilgrim Membership 8 weeks");
+    var s4 = createSquarePaymentLink(4400, "FBS-RENEW4-"+Date.now(), name, "Loaf Reserve 4 weeks");
+    var s6 = createSquarePaymentLink(6000, "FBS-RENEW6-"+Date.now(), name, "Loaf Reserve 6 weeks");
+    var s8 = createSquarePaymentLink(7200, "FBS-RENEW8-"+Date.now(), name, "Loaf Reserve 8 weeks");
 
     var renewHTML =
       "<div class='pay-box'>" +
-      "<p><strong>Renew your Pilgrim Membership:</strong></p>" +
+      "<p><strong>Renew your Loaf Reserve:</strong></p>" +
       (s4 ? "<a class='pay-btn' href='" + s4 + "'>4 Weeks — $44</a>" : "") +
       (s6 ? "<a class='pay-btn' href='" + s6 + "'>6 Weeks — $60</a>" : "") +
       (s8 ? "<a class='pay-btn' href='" + s8 + "'>8 Weeks — $72</a>" : "") +
@@ -2400,13 +2415,13 @@ function subscriptionRenewalAgent() {
 
     var contentHTML =
       "<p>Hi " + name + ",</p>" +
-      "<p>Your " + tier + " Pilgrim Membership is ending soon. We hope you've enjoyed every loaf.</p>" +
+      "<p>Your " + tier + " Loaf Reserve is ending soon. We hope you've enjoyed every loaf.</p>" +
       "<p>Your last delivery is on " + endDateRaw + ".</p>" +
       renewHTML +
-      "<p>Not renewing? No action needed — your Pilgrim Membership ends automatically.</p>";
+      "<p>Not renewing? No action needed — your Loaf Reserve ends automatically.</p>";
 
     var textBody =
-      "Hi " + name + ", your " + tier + " Pilgrim Membership ends " + endDateRaw + ".\n\n" +
+      "Hi " + name + ", your " + tier + " Loaf Reserve ends " + endDateRaw + ".\n\n" +
       "Renew:\n" +
       (s4 ? "4 weeks ($44): " + s4 + "\n" : "") +
       (s6 ? "6 weeks ($60): " + s6 + "\n" : "") +
@@ -2415,8 +2430,8 @@ function subscriptionRenewalAgent() {
 
     sendTrackedEmail({
       to: email,
-      subject: "🌿 Your Pilgrim Membership is ending soon — renew?",
-      body: textBody, htmlBody: buildBaseEmailHTML("Renew Your Pilgrim Membership 🌿", contentHTML),
+      subject: "🌿 Your Loaf Reserve is ending soon — renew?",
+      body: textBody, htmlBody: buildBaseEmailHTML("Renew Your Loaf Reserve 🌿", contentHTML),
       name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL
     });
 
@@ -3005,7 +3020,7 @@ function installTriggers() {
 
   // Square webhook queue processor: every 2 minutes
   ScriptApp.newTrigger("processSquareQueue")
-    .timeBased().everyMinutes(2).create();
+    .timeBased().everyMinutes(1).create();
 
   safeAlert(
     "✅ All triggers installed:\n\n" +
@@ -3443,7 +3458,7 @@ function resendSubscriptionNoticeFromRow_(sheet, row) {
       price * 100,
       subId,
       data.name,
-      "Pilgrim Membership — " + loafLabel + " · " + tier
+      "Loaf Reserve — " + loafLabel + " · " + tier
     );
   } catch (squareErr) {
     Logger.log("Manual resend Square link failed for " + subId + ": " + squareErr);
