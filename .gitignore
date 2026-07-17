@@ -3,12 +3,11 @@
 # Google Apps Script clasp
 apps-script/.clasp.json
 .clasprc.json
-
 # Locally generated weekly maintenance report output
 reports/weekly/latest.md
-
 # Wrangler local cache/state
 .wrangler/
 **/.wrangler/
-
 /reports/audit/
+# Generated local audit reports
+reports/audit/
