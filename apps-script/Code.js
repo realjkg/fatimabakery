@@ -455,6 +455,72 @@ function logEmailEvent_(orderId, emailType, to, subject, status, error) {
 
 
 
+
+function canonicalJson_(value) {
+  if (Array.isArray(value)) return '[' + value.map(canonicalJson_).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort().filter(function(k){ return k !== 'request_signature'; }).map(function(k){ return JSON.stringify(k) + ':' + canonicalJson_(value[k]); }).join(',') + '}';
+  }
+  return JSON.stringify(value);
+}
+function hmacHex_(body, secret) {
+  return Utilities.computeHmacSha256Signature(body, secret).map(function(b){ var v=(b<0?b+256:b).toString(16); return v.length===1?'0'+v:v; }).join('');
+}
+function constantTimeEqual_(a, b) {
+  a = String(a || ''); b = String(b || '');
+  var diff = a.length ^ b.length;
+  for (var i = 0; i < Math.max(a.length, b.length); i++) diff |= a.charCodeAt(i % a.length) ^ b.charCodeAt(i % b.length);
+  return diff === 0;
+}
+function validateWorkerSignature_(data) {
+  var secret = prop_('APPS_SCRIPT_SIGNING_SECRET', '');
+  if (!secret) return true;
+  var ts = Number(data.request_timestamp || 0);
+  if (!ts || Math.abs(Math.floor(Date.now()/1000) - ts) > 300) throw new Error('Expired order request. Please refresh and try again.');
+  var nonce = String(data.request_nonce || '');
+  if (!nonce) throw new Error('Missing order request nonce.');
+  var props = PropertiesService.getScriptProperties();
+  var nonceKey = 'order_nonce_' + nonce;
+  if (props.getProperty(nonceKey)) throw new Error('Duplicate order request. Please refresh and try again.');
+  var expected = hmacHex_(canonicalJson_(data), secret);
+  if (!constantTimeEqual_(expected, data.request_signature)) throw new Error('Invalid order request signature.');
+  props.setProperty(nonceKey, String(ts));
+  return true;
+}
+function neutralizeSheetValue_(value) { value = String(value || ''); return /^[=+\-@]/.test(value) ? "'" + value : value; }
+function htmlEscape_(value) { return String(value || '').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]); }); }
+function normalizeDeliveryAddress_(data) {
+  return {
+    address1: neutralizeSheetValue_((data.delivery_address1 || '').trim()), address2: neutralizeSheetValue_((data.delivery_address2 || '').trim()),
+    city: neutralizeSheetValue_((data.delivery_city || '').trim()), state: neutralizeSheetValue_((data.delivery_state || 'TX').trim().toUpperCase()),
+    zip: neutralizeSheetValue_((data.delivery_zip || '').trim()), instructions: neutralizeSheetValue_((data.delivery_instructions || '').trim()),
+    status: neutralizeSheetValue_(data.address_status || ''), distance: neutralizeSheetValue_(data.address_distance || ''), updatedAt: data.address_updated_at || new Date().toISOString()
+  };
+}
+function fullDeliveryAddressText_(addr) { return [addr.address1, addr.address2, addr.city, addr.state, addr.zip].filter(Boolean).join(', '); }
+function correctionTokenUrl_(orderId) {
+  var token = Utilities.getUuid().replace(/-/g,'') + Utilities.getUuid().replace(/-/g,'');
+  var digest = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, token));
+  PropertiesService.getScriptProperties().setProperty('address_token_' + digest, JSON.stringify({ orderId: orderId, expires: Date.now() + 86400000, usedAt: '', revoked: false }));
+  return prop_('ADDRESS_CORRECTION_URL', ORDER_FORM_URL.replace('/order','/address-correction')) + '?token=' + encodeURIComponent(token);
+}
+function validateAddressUpdateToken_(token) {
+  var digest = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(token || '')));
+  var props = PropertiesService.getScriptProperties();
+  var key = 'address_token_' + digest;
+  var raw = props.getProperty(key);
+  if (!raw) throw new Error('Invalid address update link.');
+  var rec = JSON.parse(raw);
+  if (rec.revoked || rec.usedAt) throw new Error('This address update link has already been used.');
+  if (Date.now() > Number(rec.expires)) throw new Error('This address update link has expired.');
+  rec.usedAt = new Date().toISOString(); props.setProperty(key, JSON.stringify(rec));
+  return rec.orderId;
+}
+function handleAddressCorrection(data, ss) {
+  var orderId = validateAddressUpdateToken_(data.address_token);
+  return jsonResponse({ status: 'success', orderId: orderId, message: 'Delivery address update received for review.' });
+}
+
 // ============================================================
 //  1. RECEIVE FORM SUBMISSION — entry point
 // ============================================================
@@ -490,9 +556,15 @@ function doPost(e) {
     var route = normalizeOrderType(data);
     var result;
     if (route === "square_event")       result = handleSquareWebhook(e);
-    else if (route === "subscription")  result = handleSubscription(data, ss);
-    else if (route === "contact")       result = handleContact(data, ss);
-    else                                result = handleOrder(data, ss);
+    else {
+      if (route === "contact") result = handleContact(data, ss);
+      else {
+        validateWorkerSignature_(data);
+        if (route === "address_correction") result = handleAddressCorrection(data, ss);
+        else if (route === "subscription")  result = handleSubscription(data, ss);
+        else                                result = handleOrder(data, ss);
+      }
+    }
     logOutcome(data, result);
     return result;
   } catch (err) {
@@ -506,6 +578,7 @@ function normalizeOrderType(data) {
   // Square webhook events have event_id + merchant_id — never treat as a form.
   if (data.event_id && data.merchant_id) return "square_event";
   var raw = String(data.order_type || data.type || "").toLowerCase().trim();
+  if (raw.indexOf("address_correction") > -1) return "address_correction";
   if (raw.indexOf("contact") > -1 || raw.indexOf("message") > -1) return "contact";
   if (raw.indexOf("subscription") > -1 ||
       raw.indexOf("membership") > -1 ||
@@ -977,7 +1050,11 @@ function handleOrder(data, ss) {
     }
   }
 
-  var isDelivery       = (data.preferred_time||"").indexOf("Delivery") > -1;
+  var isDelivery       = String(data.fulfillment || data.preferred_time || "").toLowerCase().indexOf("delivery") > -1;
+  var deliveryAddress = normalizeDeliveryAddress_(data);
+  if (isDelivery && (!deliveryAddress.address1 || !deliveryAddress.city || !deliveryAddress.state || !deliveryAddress.zip)) {
+    return jsonResponse({ status: "missing_address", message: "Please enter your complete delivery address." });
+  }
   if (pickupDate) {
     var dateDow = dayOfWeek_(pickupDate);
     if (isDelivery && dateDow !== 4) {
@@ -1043,7 +1120,7 @@ function handleOrder(data, ss) {
   var totalFmt     = "$" + serverTotal.toFixed(2);
 
   // ── Payment links ────────────────────────────────────────
-  var squareLink = createSquarePaymentLink(totalCents, orderId, data.name, data.order);
+  var squareLink = data.address_status === "Address Review Required" ? "" : createSquarePaymentLink(totalCents, orderId, data.name, data.order);
   var venmoLink  = createVenmoLink(totalFmt, orderId);
   var cashLink   = createCashAppLink(totalFmt);
 
@@ -1067,7 +1144,16 @@ function handleOrder(data, ss) {
       data.source        || "",         // N  Source
       data.notes         || "",         // O  Notes
       orderId,                          // P  Order ID
-      "Awaiting Payment"                // Q  Status
+      data.address_status === "Address Review Required" ? "Address Review Required" : "Awaiting Payment", // Q Status
+      deliveryAddress.address1,          // R  Delivery Address 1
+      deliveryAddress.address2,          // S  Delivery Address 2
+      deliveryAddress.city,              // T  Delivery City
+      deliveryAddress.state,             // U  Delivery State
+      deliveryAddress.zip,               // V  Delivery ZIP
+      deliveryAddress.instructions,      // W  Delivery Instructions
+      deliveryAddress.status,            // X  Address Status
+      deliveryAddress.distance,          // Y  Address Distance
+      deliveryAddress.updatedAt          // Z  Address Updated At
     ]);
     logLineItems(ss, data, orderId, "Awaiting Payment");
   } catch(e) {
@@ -1088,6 +1174,8 @@ function handleOrder(data, ss) {
   emailData.total = totalFmt;
   emailData.subtotal = subtotalFmt;
   emailData.delivery_fee = deliveryFmt;
+  emailData.delivery_address = deliveryAddress;
+  emailData.address_correction_url = isDelivery ? correctionTokenUrl_(orderId) : "";
 
   try {
     if (data.waitlist === true || data.waitlist === "true") logWaitlist(ss, data);
@@ -1709,8 +1797,10 @@ function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLi
   var name    = data.name || "there";
   var greeting = returning ? "Welcome back, " + name + "." : "Hi " + name + ",";
   var isDelivery = (data.preferred_time||"").indexOf("Delivery") > -1;
+  var addr = data.delivery_address || normalizeDeliveryAddress_(data);
+  var addressText = fullDeliveryAddressText_(addr);
   var locationText = isDelivery
-    ? DELIVERY_AREA + " &mdash; " + DELIVERY_HOURS
+    ? htmlEscape_(addressText) + " &mdash; Thursday 3–5 PM"
     : PICKUP_ADDRESS + " &mdash; " + PICKUP_HOURS;
 
   var specialtyNote = hasSpecialty
@@ -1734,10 +1824,13 @@ function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLi
     buildInfoTable([
       ["Order ID",  orderId],
       ["Items",     data.order||""],
-      ["Total",     data.total||""],
+      ["Total",     htmlEscape_(data.total||"")],
       [isDelivery ? "Delivery" : "Pickup", locationText],
-      ["Window",    data.preferred_time||"Friday"],
-      data.notes ? ["Notes", data.notes] : null
+      ["Window",    htmlEscape_(data.preferred_time||"Friday")],
+      isDelivery ? ["Delivery fee", htmlEscape_(data.delivery_fee || "$10.00")] : null,
+      isDelivery ? ["Address status", htmlEscape_(addr.status || data.address_status || "Address Review Required")] : null,
+      isDelivery && data.address_correction_url ? ["Correct delivery address", "<a href='" + htmlEscape_(data.address_correction_url) + "'>Correct delivery address</a>"] : null,
+      data.notes ? ["Notes", htmlEscape_(data.notes)] : null
     ].filter(Boolean)) +
     "<p><strong>Members receive classic and specialty reserved loaves baked fresh every week in Liberty Hill.</strong></p>" + payHTML +
     "<p style='font-size:13px;color:#3a3a3a;border-top:1px solid #e5e0d8;padding-top:14px'>" +
@@ -1815,6 +1908,9 @@ function sendOwnerPaymentAlert(data) {
 
 // ── Owner new order alert ────────────────────────────────────
 function sendOwnerNewOrderAlert(data, rowNum, orderId, bouleCount, specialtyCount, squareLink, venmoLink) {
+  var addr = data.delivery_address || normalizeDeliveryAddress_(data);
+  var addressText = fullDeliveryAddressText_(addr);
+  var nav = addressText ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(addressText) : "";
   var warns = "";
   if ((bouleCount||0) >= BOULE_LIMIT)         warns += "⚠️  Boule count at daily limit\n";
   if ((specialtyCount||0) >= SPECIALTY_LIMIT) warns += "⚠️  Specialty count at daily limit\n";

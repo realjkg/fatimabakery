@@ -5,6 +5,8 @@
   "license": "Apache-2.0",
   "description": "Fatima Bakery ATX static Cloudflare Pages site.",
   "scripts": {
-    "serve": "python3 -m http.server 8787"
-  }
+    "serve": "python3 -m http.server 8787",
+    "test": "node --test"
+  },
+  "type": "module"
 }
