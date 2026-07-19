@@ -2,7 +2,7 @@
 //  Fatima Bakery ATX — Google Apps Script  v8.2  |  PRODUCTION
 //  Updated:   July 08, 2026
 //  Previous:  v8.1 — July 04, 2026
-//  Pilgrimage Collection · Bake Thursday, pickup/delivery Friday · Liberty Hill TX
+//  Pilgrimage Collection · Thursday delivery · Friday pickup · Liberty Hill TX
 //
 //  ── CHANGELOG v8.2 (July 08, 2026) ────────────────────────
 //
@@ -301,8 +301,8 @@ var PUBLIC_PICKUP_AREA = prop_("PUBLIC_PICKUP_AREA", "Liberty Hill, TX");
 var CONTACT_PHONE_SMS = propAny_(["CONTACT_PHONE_SMS", "CONTACT_PHONE"], "");
 var PICKUP_HOURS = prop_("PICKUP_HOURS", "Fridays 9am–12pm");
 var DELIVERY_AREA = prop_("DELIVERY_AREA", "Santa Rita Ranch neighborhood");
-var DELIVERY_HOURS = prop_("DELIVERY_HOURS", "Fridays 9am–12pm");
-var DELIVERY_FEE = prop_("DELIVERY_FEE", "$5.00");
+var DELIVERY_HOURS = prop_("DELIVERY_HOURS", "Thursdays 3pm–5pm");
+var DELIVERY_FEE = prop_("DELIVERY_FEE", "$10.00");
 
 // ── MENU ─────────────────────────────────────────────────────
 
@@ -910,7 +910,7 @@ function logOutcome(data, result, err) {
 
 function doGet() {
   return jsonResponse({
-    status: "Fatima Bakery " + APP_VERSION + " — bake Thursday, pickup/delivery Friday 9am-12pm, Liberty Hill TX"
+    status: "Fatima Bakery " + APP_VERSION + " — bake Thursday, pickup Friday 9am-12pm, delivery Thursday 3pm-5pm, Liberty Hill TX"
   });
 }
 
@@ -1050,7 +1050,7 @@ function handleOrder(data, ss) {
     serverSubtotal += (MENU[name] ? MENU[name].price : 0) * qty;
   });
   var isDelivery       = (data.preferred_time||"").indexOf("Delivery") > -1;
-  var serverDelivery   = isDelivery ? 5 : 0;
+  var serverDelivery   = isDelivery ? 10 : 0;
   var serverTotal      = serverSubtotal + serverDelivery;
   var clientTotal      = parseFloat((data.total||"$0").replace(/[^0-9.]/g,"")) || 0;
 
@@ -1820,14 +1820,14 @@ function sendPaymentConfirmedEmail(data) {
       [isDelivery ? "Delivery" : "Pickup", locationText],
       ["Window",    data.preferred_time||"Friday"]
     ]) +
-    "<p>Nothing due at " + (isDelivery ? "delivery" : "pickup") + ". See you Friday!</p>";
+    "<p>Nothing due at " + (isDelivery ? "delivery" : "pickup") + ". See you on your scheduled fulfillment day!</p>";
 
   var textBody =
     "Hi " + data.name + ", payment received — order confirmed!\n\n" +
     "Order ID: " + data.orderId + "\nItems: " + data.order +
     "\nTotal: " + data.total + "\nPickup: " + data.preferred_date +
     " " + (data.preferred_time||"Friday") +
-    "\n\nNothing due at pickup. See you Friday!\nFatima Bakery ATX";
+    "\n\nNothing due at pickup. See you on your scheduled fulfillment day!\nFatima Bakery ATX";
 
   sendTrackedEmail({
     to: data.email, bcc: OWNER_EMAIL_BACKUP || undefined,
@@ -2573,7 +2573,7 @@ function sendWeeklyDrop() {
       specLines.length    ? ["Specialty",  specLines.join(", ")]    : null,
       soldOutLines.length ? ["Sold out",   soldOutLines.join(", ")] : null,
       ["Pickup",   PICKUP_ADDRESS + " \u2014 " + PICKUP_HOURS],
-      ["Delivery", DELIVERY_AREA  + " \u2014 " + DELIVERY_HOURS + " (+$5)"]
+      ["Delivery", DELIVERY_AREA  + " \u2014 " + DELIVERY_HOURS + " (+$10)"]
     ].filter(Boolean);
 
     var contentHTML =
@@ -2590,7 +2590,7 @@ function sendWeeklyDrop() {
       (specLines.length    ? "Specialty: "  + specLines.join(", ")    + "\n" : "") +
       (soldOutLines.length ? "Sold out: "   + soldOutLines.join(", ") + "\n" : "") +
       "\nPickup: "   + PICKUP_ADDRESS + " \u2014 " + PICKUP_HOURS +
-      "\nDelivery: " + DELIVERY_AREA  + " \u2014 " + DELIVERY_HOURS + " (+$5)" +
+      "\nDelivery: " + DELIVERY_AREA  + " \u2014 " + DELIVERY_HOURS + " (+$10)" +
       "\n\nOrder: "  + (ORDER_FORM_URL||"[order form URL]") +
       "\n\nFatima Bakery ATX\n---\nReply STOP to unsubscribe.";
 
