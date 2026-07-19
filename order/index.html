@@ -1186,13 +1186,30 @@ footer{
       </label>
       <label class="radio-row">
         <input type="radio" name="fulfillment" value="delivery">
-        <span>Delivery from the Santa Rita Ranch area (within 10 miles) to residences in Liberty Hill, Georgetown, and Leander. Thursdays 3pm to 5pm. Adds $10.00.</span>
+        <span>Thursday delivery · 3–5 PM<br>Within 10 miles of Santa Rita Ranch · Adds $10</span>
       </label>
       <p class="fulfillment-note">To keep your bread at its freshest, text us at <a href="sms:+15122991241">(512) 299-1241</a> when you're on your way for pickup, or to confirm your delivery window.</p>
     </div>
 
+    <div class="form-row" id="delivery-fields" hidden>
+      <p class="fulfillment-note">Thursday delivery · 3–5 PM<br>Within 10 miles of Santa Rita Ranch · Adds $10</p>
+      <label for="delivery-address1">Delivery Address 1</label>
+      <input type="text" id="delivery-address1" name="delivery_address1" autocomplete="address-line1">
+      <label for="delivery-address2">Delivery Address 2 (optional)</label>
+      <input type="text" id="delivery-address2" name="delivery_address2" autocomplete="address-line2">
+      <label for="delivery-city">City</label>
+      <input type="text" id="delivery-city" name="delivery_city" autocomplete="address-level2">
+      <label for="delivery-state">State</label>
+      <input type="text" id="delivery-state" name="delivery_state" value="TX" autocomplete="address-level1" maxlength="2">
+      <label for="delivery-zip">ZIP</label>
+      <input type="text" id="delivery-zip" name="delivery_zip" autocomplete="postal-code" inputmode="numeric">
+      <label for="delivery-instructions">Delivery Instructions (optional)</label>
+      <textarea id="delivery-instructions" name="delivery_instructions" rows="2"></textarea>
+      <span class="date-error" id="delivery-address-error"></span>
+    </div>
+
     <div class="form-row">
-      <label for="order-date">Pickup Date</label>
+      <label for="order-date">Fulfillment Date</label>
       <input type="date" id="order-date" name="preferred_date" required>
       <span class="date-hint">Delivery is Thursday only; pickup is Friday only. Orders close Wednesday at 6 PM.</span>
       <span class="date-error" id="order-date-error"></span>
@@ -1372,7 +1389,7 @@ footer{
 // ─────────────────────────────────────────────────────────────────────────────
 // Fatima Bakery — Order + Pilgrim Membership forms
 //
-// GOOGLE SITES VERSION — uses mode:'no-cors' fire-and-forget for both forms.
+// Cloudflare Pages version — posts to /api/order for readable validation.
 //
 // WHY: Google Apps Script ContentService cannot set CORS headers, and Google
 // Sites iframes impose additional cross-origin restrictions. A credentialed
@@ -1384,7 +1401,7 @@ footer{
 // blocked for capacity; Lindsay tracks fill levels via her owner reports.
 // ─────────────────────────────────────────────────────────────────────────────
 (function(){
-  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6ahtqJ1pe7sLVk4BgcU48WIn34P1P1giY5lxh8pmEABxpQX3m0wI96lIhnjreiDO-/exec';
+  var ORDER_API_URL = '/api/order';
   var DELIVERY_FEE = 10.00;
   var MENU = {"Fatima":{"name":"Fatima","price":12,"type":"boule"},"Lourdes":{"name":"Lourdes","price":15,"type":"specialty"},"Guadalupe":{"name":"Guadalupe","price":15,"type":"specialty"},"Santiago":{"name":"Santiago","price":15,"type":"specialty"},"Kibeho":{"name":"Kibeho","price":15,"type":"specialty"},"Pilgrim_s_Dough":{"name":"Pilgrim's Dough","price":10,"type":"other"},"Mt_Carmel_Bowl_ind":{"name":"Mt. Carmel Bowl (ind)","price":12,"type":"other"},"Mt_Carmel_Bowl_duo":{"name":"Mt. Carmel Bowl (duo)","price":20,"type":"other"},"Pilgrim_s_Honey_Butter":{"name":"Pilgrim's Honey Butter","price":5,"type":"other"},"Pilgrim_s_Crunch":{"name":"Pilgrim's Crunch","price":7,"type":"other"}};
 
@@ -1419,6 +1436,7 @@ footer{
       var card = document.querySelector('.loaf-card[data-for="' + key + '"]');
       if (card) card.classList.toggle('selected', current > 0);
       recalc();
+  updateDeliveryFields();
     });
   });
 
@@ -1427,6 +1445,7 @@ footer{
       recalc();
       var orderDate = document.getElementById('order-date');
       if (orderDate) orderDate.dispatchEvent(new Event('change'));
+      updateDeliveryFields();
     });
   });
 
@@ -1505,6 +1524,40 @@ footer{
       }
     });
   }
+
+  function updateDeliveryFields(){
+    var isDelivery = selectedFulfillment() === 'delivery';
+    var wrap = document.getElementById('delivery-fields');
+    if (!wrap) return;
+    wrap.hidden = !isDelivery;
+    ['delivery-address1','delivery-city','delivery-state','delivery-zip'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.required = isDelivery;
+    });
+    if (!isDelivery) {
+      ['delivery-address1','delivery-address2','delivery-city','delivery-state','delivery-zip','delivery-instructions'].forEach(function(id){
+        var el = document.getElementById(id);
+        if (el) el.value = id === 'delivery-state' ? 'TX' : '';
+      });
+    }
+  }
+
+  function validateDeliveryAddress(){
+    var error = document.getElementById('delivery-address-error');
+    if (error) error.textContent = '';
+    if (selectedFulfillment() !== 'delivery') return true;
+    var fields = ['delivery-address1','delivery-city','delivery-state','delivery-zip'];
+    for (var i = 0; i < fields.length; i++) {
+      var el = document.getElementById(fields[i]);
+      if (!el || !el.value.trim()) {
+        if (error) error.textContent = 'Please enter your complete delivery address.';
+        if (el) el.focus();
+        return false;
+      }
+    }
+    return true;
+  }
+
   wireFulfillmentValidation('order-date', 'order-date-error', selectedFulfillment);
   wireFulfillmentValidation('sub-date',   'sub-date-error', function(){ return 'pickup'; });
 
@@ -1513,20 +1566,19 @@ footer{
     statusEl.textContent = 'Sending…';
     statusEl.className = 'form-status';
 
-    fetch(APPS_SCRIPT_URL, {
+    fetch(ORDER_API_URL, {
       method: 'POST',
-      mode:   'no-cors',           // required inside Google Sites iframe
+      headers: { 'content-type': 'application/json' },
       body:   JSON.stringify(payload)
     })
+    .then(function(res){ return res.json().then(function(body){ if (!res.ok || body.status === 'error') throw new Error(body.message || 'Order could not be processed.'); return body; }); })
     .then(function(){
-      // no-cors returns an opaque response — we can't read it,
-      // but reaching here means the network request was sent.
       statusEl.textContent = successMsg;
       statusEl.className = 'form-status success';
       if (resetFn) resetFn();
     })
-    .catch(function(){
-      statusEl.textContent = 'Something went wrong sending your order. Please DM us on Instagram @fatimabakeryatx or try again.';
+    .catch(function(err){
+      statusEl.textContent = err.message || 'Something went wrong sending your order. Please DM us on Instagram @fatimabakeryatx or try again.';
       statusEl.className = 'form-status error';
     });
   }
@@ -1551,6 +1603,7 @@ footer{
       orderDateError.textContent = 'Orders for that date closed Wednesday at 6 PM. Please choose the next available fulfillment date.';
       return;
     }
+    if (!validateDeliveryAddress()) return;
 
     var totals   = recalc();
     var itemKeys = Object.keys(MENU).filter(function(k){ return qty[k] > 0; });
@@ -1584,6 +1637,13 @@ footer{
       total:           fmt(totals.total),
       preferred_date:  dateVal,
       preferred_time:  preferredTime,
+      fulfillment:      fulfillment,
+      delivery_address1: fulfillment === 'delivery' ? orderForm.delivery_address1.value : '',
+      delivery_address2: fulfillment === 'delivery' ? orderForm.delivery_address2.value : '',
+      delivery_city:     fulfillment === 'delivery' ? orderForm.delivery_city.value : '',
+      delivery_state:    fulfillment === 'delivery' ? orderForm.delivery_state.value : '',
+      delivery_zip:      fulfillment === 'delivery' ? orderForm.delivery_zip.value : '',
+      delivery_instructions: fulfillment === 'delivery' ? orderForm.delivery_instructions.value : '',
       source:          'website',
       notes:           orderForm.notes.value,
       _gotcha:         (orderForm._gotcha ? orderForm._gotcha.value : '')

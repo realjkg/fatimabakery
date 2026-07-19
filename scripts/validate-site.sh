@@ -25,19 +25,15 @@ if [ -n "$SECRET_HITS" ]; then
   exit 1
 fi
 
-echo "Checking required public Apps Script endpoint in form pages..."
-for file in "${FORM_ENDPOINT_FILES[@]}"; do
-  grep -F "$ENDPOINT" "$file" >/dev/null || {
-    echo "Apps Script endpoint missing in $file."
-    exit 1
-  }
-done
+echo "Checking order form routes through Cloudflare endpoint..."
+grep -F "ORDER_API_URL = '/api/order'" order/index.html >/dev/null || {
+  echo "Order page must submit to /api/order."
+  exit 1
+}
 
-echo "Checking form pages do not contain mismatched Apps Script endpoints..."
-mismatched_endpoints="$(grep -RhoE "https://script.google.com/macros/s/[A-Za-z0-9_-]+/exec" "${FORM_ENDPOINT_FILES[@]}" | sort -u | grep -Fvx "$ENDPOINT" || true)"
-if [ -n "$mismatched_endpoints" ]; then
-  echo "Unexpected Apps Script endpoint(s) found:"
-  echo "$mismatched_endpoints"
+echo "Checking form pages do not expose Apps Script endpoints..."
+if grep -hoE "https://script.google.com/macros/s/[A-Za-z0-9_-]+/exec" order/index.html; then
+  echo "Apps Script endpoint should not be exposed in frontend form pages."
   exit 1
 fi
 
