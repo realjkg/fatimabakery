@@ -55,6 +55,26 @@ grep -R "$NEWSLETTER_CTA" "${CUSTOMER_HTML_PATHS[@]}" --include="*.html" >/dev/n
   exit 1
 }
 
+
+
+echo "Checking delivery and pickup schedule copy..."
+if grep -Rni "within 5 miles\|within a 5 mile\|Delivery to the Santa Rita Ranch neighborhood\|delivery on Friday morning" \
+  index.html order/index.html collection/index.html terms/index.html apps-script/Code.js docs \
+  --include="*.html" --include="*.js" --include="*.md"; then
+  echo "Outdated delivery or pickup schedule copy found."
+  exit 1
+fi
+
+grep -F "Delivery is available Thursday only from 3 PM to 5 PM." order/index.html >/dev/null || {
+  echo "Order page missing Thursday-only delivery validation message."
+  exit 1
+}
+
+grep -F "Loaf Reserve pickup is available Friday only from 9 AM to 12 PM." apps-script/Code.js >/dev/null || {
+  echo "Apps Script missing Friday-only Loaf Reserve validation."
+  exit 1
+}
+
 echo "Checking Wrangler config exists..."
 test -f wrangler.jsonc || {
   echo "Missing wrangler.jsonc."

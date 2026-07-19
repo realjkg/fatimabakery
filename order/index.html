@@ -1186,7 +1186,7 @@ footer{
       </label>
       <label class="radio-row">
         <input type="radio" name="fulfillment" value="delivery">
-        <span>Delivery to the Santa Rita Ranch neighborhood (within 5 miles). Thursdays 3pm to 5pm. Adds $10.00.</span>
+        <span>Delivery from the Santa Rita Ranch area (within 10 miles) to residences in Liberty Hill, Georgetown, and Leander. Thursdays 3pm to 5pm. Adds $10.00.</span>
       </label>
       <p class="fulfillment-note">To keep your bread at its freshest, text us at <a href="sms:+15122991241">(512) 299-1241</a> when you're on your way for pickup, or to confirm your delivery window.</p>
     </div>
@@ -1194,7 +1194,7 @@ footer{
     <div class="form-row">
       <label for="order-date">Pickup Date</label>
       <input type="date" id="order-date" name="preferred_date" required>
-      <span class="date-hint">We bake on Fridays only. Orders close Wednesday at 6 PM.</span>
+      <span class="date-hint">Delivery is Thursday only; pickup is Friday only. Orders close Wednesday at 6 PM.</span>
       <span class="date-error" id="order-date-error"></span>
     </div>
 
@@ -1423,12 +1423,23 @@ footer{
   });
 
   document.querySelectorAll('input[name="fulfillment"]').forEach(function(r){
-    r.addEventListener('change', recalc);
+    r.addEventListener('change', function(){
+      recalc();
+      var orderDate = document.getElementById('order-date');
+      if (orderDate) orderDate.dispatchEvent(new Event('change'));
+    });
   });
 
   recalc();
 
-  // ── Friday-only date validation ──
+  // ── Fulfillment date validation ──
+  function isThursday(dateStr){
+    if (!dateStr) return false;
+    var parts = dateStr.split('-');
+    var d = new Date(parts[0], parts[1] - 1, parts[2]);
+    return d.getDay() === 4;
+  }
+
   function isFriday(dateStr){
     if (!dateStr) return false;
     var parts = dateStr.split('-');
@@ -1436,14 +1447,15 @@ footer{
     return d.getDay() === 5;
   }
 
-  // Orders for a Friday close the Wednesday before at 6:00 PM (Central).
-  // Returns true if the cutoff for the chosen Friday has already passed.
+  // Orders close the Wednesday before fulfillment at 6:00 PM (Central).
+  // Returns true if the cutoff for the chosen Thursday/Friday has already passed.
   function isPastCutoff(dateStr){
     if (!dateStr) return false;
     var parts  = dateStr.split('-');
     var pickup = new Date(parts[0], parts[1] - 1, parts[2]);
     var cutoff = new Date(pickup.getTime());
-    cutoff.setDate(cutoff.getDate() - 2);   // Wednesday before
+    var daysSinceWednesday = (pickup.getDay() - 3 + 7) % 7;
+    cutoff.setDate(cutoff.getDate() - daysSinceWednesday);   // Wednesday before
     cutoff.setHours(18, 0, 0, 0);            // 6 PM
     return new Date() > cutoff;
   }
@@ -1454,31 +1466,47 @@ footer{
     if (el) el.min = todayStr;
   });
 
-  // ── Instant Friday validation on date pick ──
-  // The native date input can't restrict to Fridays only, so we
+  // ── Instant fulfillment validation on date pick ──
+  // The native date input can't restrict to Thursdays/Fridays only, so we
   // validate the moment a date is chosen and give immediate feedback
   // instead of waiting until the customer hits Place Order.
-  function wireFridayValidation(inputId, errorId){
+  function selectedFulfillment(){
+    var fulfillment = document.querySelector('input[name="fulfillment"]:checked');
+    return fulfillment ? fulfillment.value : 'pickup';
+  }
+
+  function isValidFulfillmentDate(dateStr, fulfillment){
+    return fulfillment === 'delivery' ? isThursday(dateStr) : isFriday(dateStr);
+  }
+
+  function fulfillmentDateMessage(fulfillment){
+    return fulfillment === 'delivery'
+      ? 'Delivery is available Thursday only from 3 PM to 5 PM.'
+      : 'Pickup is available Friday only from 9 AM to 12 PM.';
+  }
+
+  function wireFulfillmentValidation(inputId, errorId, fulfillmentResolver){
     var input = document.getElementById(inputId);
     var error = document.getElementById(errorId);
     if (!input) return;
     input.addEventListener('change', function(){
       var v = input.value;
       if (!v){ if (error) error.textContent = ''; return; }
-      if (!isFriday(v)){
-        if (error) error.textContent = 'We bake on Fridays only — please pick a Friday.';
-        input.setCustomValidity('Please choose a Friday.');
+      var fulfillment = fulfillmentResolver ? fulfillmentResolver() : 'pickup';
+      if (!isValidFulfillmentDate(v, fulfillment)){
+        if (error) error.textContent = fulfillmentDateMessage(fulfillment);
+        input.setCustomValidity(fulfillmentDateMessage(fulfillment));
       } else if (isPastCutoff(v)){
-        if (error) error.textContent = 'Orders for that Friday closed Wednesday at 6 PM. Please choose the next Friday.';
-        input.setCustomValidity('That Friday is closed.');
+        if (error) error.textContent = 'Orders for that date closed Wednesday at 6 PM. Please choose the next available fulfillment date.';
+        input.setCustomValidity('That date is closed.');
       } else {
         if (error) error.textContent = '';
         input.setCustomValidity('');
       }
     });
   }
-  wireFridayValidation('order-date', 'order-date-error');
-  wireFridayValidation('sub-date',   'sub-date-error');
+  wireFulfillmentValidation('order-date', 'order-date-error', selectedFulfillment);
+  wireFulfillmentValidation('sub-date',   'sub-date-error', function(){ return 'pickup'; });
 
   // ── Helper: fire-and-forget post (no-cors, same as contact form) ──
   function sendPayload(payload, statusEl, successMsg, resetFn){
@@ -1514,12 +1542,13 @@ footer{
     orderDateError.textContent = '';
 
     var dateVal = orderForm.preferred_date.value;
-    if (!isFriday(dateVal)){
-      orderDateError.textContent = 'Please choose a Friday. We only bake on Fridays.';
+    var fulfillment   = document.querySelector('input[name="fulfillment"]:checked').value;
+    if (!isValidFulfillmentDate(dateVal, fulfillment)){
+      orderDateError.textContent = fulfillmentDateMessage(fulfillment);
       return;
     }
     if (isPastCutoff(dateVal)){
-      orderDateError.textContent = 'Orders for that Friday closed Wednesday at 6 PM. Please choose the next Friday.';
+      orderDateError.textContent = 'Orders for that date closed Wednesday at 6 PM. Please choose the next available fulfillment date.';
       return;
     }
 
@@ -1538,9 +1567,8 @@ footer{
       if (MENU[k].type === 'specialty') specialtyCount += qty[k];
     });
 
-    var fulfillment   = document.querySelector('input[name="fulfillment"]:checked').value;
     var preferredTime = fulfillment === 'delivery'
-      ? 'Delivery — Santa Rita Ranch, Thursdays 3pm to 5pm'
+      ? 'Delivery — Santa Rita Ranch area within 10 miles to Liberty Hill, Georgetown, and Leander residences, Thursdays 3pm to 5pm'
       : 'Curbside pickup — Fridays 9am to 12pm';
 
     var payload = {

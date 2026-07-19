@@ -119,8 +119,6 @@
 // Fetching every script property ONCE into a cached object here
 // collapses that to a single call, so config load time no longer
 // scales with the number of CONFIG constants.
-var _scriptProps_ = PropertiesService.getScriptProperties().getProperties();
-
 var _scriptProps_ = null;
 
 function scriptPropsSnapshot_() {
@@ -131,11 +129,7 @@ function scriptPropsSnapshot_() {
 }
 
 function prop_(name, fallback) {
-<<<<<<< HEAD
   var value = scriptPropsSnapshot_()[name];
-=======
-  var value = _scriptProps_[name];
->>>>>>> origin/main
 
   if (value === null || value === undefined || value === "") {
     if (fallback !== undefined) return fallback;
@@ -146,15 +140,10 @@ function prop_(name, fallback) {
 }
 
 function propAny_(names, fallback) {
-<<<<<<< HEAD
   var props = scriptPropsSnapshot_();
 
   for (var i = 0; i < names.length; i++) {
     var value = props[names[i]];
-=======
-  for (var i = 0; i < names.length; i++) {
-    var value = _scriptProps_[names[i]];
->>>>>>> origin/main
     if (value !== null && value !== undefined && value !== "") {
       return value;
     }
@@ -300,7 +289,7 @@ var PICKUP_ADDRESS = prop_("PICKUP_ADDRESS", "Liberty Hill, TX");
 var PUBLIC_PICKUP_AREA = prop_("PUBLIC_PICKUP_AREA", "Liberty Hill, TX");
 var CONTACT_PHONE_SMS = propAny_(["CONTACT_PHONE_SMS", "CONTACT_PHONE"], "");
 var PICKUP_HOURS = prop_("PICKUP_HOURS", "Fridays 9am–12pm");
-var DELIVERY_AREA = prop_("DELIVERY_AREA", "Santa Rita Ranch neighborhood");
+var DELIVERY_AREA = prop_("DELIVERY_AREA", "from the Santa Rita Ranch area (within 10 miles) to residences in Liberty Hill, Georgetown, and Leander");
 var DELIVERY_HOURS = prop_("DELIVERY_HOURS", "Thursdays 3pm–5pm");
 var DELIVERY_FEE = prop_("DELIVERY_FEE", "$10.00");
 
@@ -470,20 +459,6 @@ function logEmailEvent_(orderId, emailType, to, subject, status, error) {
 //  1. RECEIVE FORM SUBMISSION — entry point
 // ============================================================
 function doPost(e) {
-<<<<<<< HEAD
-  // ── Square webhook? Detect and route BEFORE any Sheets logging. ──
-  // Keep this path tiny. No logInbound, no SpreadsheetApp, no trigger creation.
-  try {
-    var rawSquareBody = e && e.postData && e.postData.contents ? e.postData.contents : "";
-    var looksLikeSquare =
-      rawSquareBody &&
-      /"event_id"\s*:/.test(rawSquareBody) &&
-      /"type"\s*:/.test(rawSquareBody) &&
-      /"data"\s*:/.test(rawSquareBody);
-
-    if (looksLikeSquare) {
-      return handleSquareWebhook(e, "api-verify");
-=======
   // ── Square webhook FAST PATH ──────────────────────────────────
   // Square times out (504) if we don't respond within ~5s. We MUST
   // detect Square events and return 200 BEFORE any slow calls
@@ -499,19 +474,14 @@ function doPost(e) {
     }
     if (looksLikeSquare) {
       return handleSquareWebhook(e);
->>>>>>> origin/main
     }
   } catch (sqErr) {
     Logger.log("Square pre-route error: " + sqErr);
   }
 
-<<<<<<< HEAD
-  // Non-Square form logging happens only after Square has had a chance to fast-ACK.
-=======
   // ── Inbound request log (non-Square requests only) ────────────
   // Logs to a "Debug Log" sheet tab. Disable by setting
   // DEBUG_LOG = false in Script Properties.
->>>>>>> origin/main
   logInbound(e);
 
   try {
@@ -648,12 +618,7 @@ function handleSquareWebhook(e) {
     if (type.indexOf("payment") === 0) {
       var props = PropertiesService.getScriptProperties();
       var key   = "sqq_" + (evt.event_id || new Date().getTime());
-<<<<<<< HEAD
-      props.setProperty(key, raw);        // queue it
-      // Do not create/list triggers here. Webhook path must ACK fast.
-=======
       props.setProperty(key, raw);        // queue it (fast)
->>>>>>> origin/main
     }
   } catch (err) {
     Logger.log("Square ack-queue error: " + err);
@@ -665,20 +630,10 @@ function handleSquareWebhook(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-<<<<<<< HEAD
-// Ensure a recurring trigger exists to drain the Square queue.
-// Install this manually; never create/list triggers from the webhook request path.
-function installSquareQueueTrigger() {
-  ensureSquareQueueTrigger();
-  Logger.log("Square queue trigger installed or already present.");
-}
-
-=======
 // Legacy one-shot trigger creator. No longer called from the webhook
 // inline path (it was too slow). Kept for manual use / backwards compat.
 // The preferred approach is a recurring 2-minute trigger installed by
 // installTriggers() — see installSquareQueueTrigger().
->>>>>>> origin/main
 function ensureSquareQueueTrigger() {
   var triggers = ScriptApp.getProjectTriggers();
   for (var i = 0; i < triggers.length; i++) {
@@ -760,15 +715,9 @@ function processSquareQueue() {
     if (handled) props.deleteProperty(key);
   });
 
-<<<<<<< HEAD
-
-  // Recurring Square queue trigger remains installed.
-  // Do not delete processSquareQueue triggers here.
-=======
   // NOTE: This is now a recurring trigger (every 2 min) installed by
   // installTriggers(). No need to self-delete. If no events are queued,
   // it simply exits quickly.
->>>>>>> origin/main
 }
 
 // Given a verified Square payment, find our FB-xxxxx. Our
@@ -1028,9 +977,20 @@ function handleOrder(data, ss) {
     }
   }
 
-  // ── Order cutoff check (Wednesday 6 PM for that Friday) ──
+  var isDelivery       = (data.preferred_time||"").indexOf("Delivery") > -1;
+  if (pickupDate) {
+    var dateDow = dayOfWeek_(pickupDate);
+    if (isDelivery && dateDow !== 4) {
+      return jsonResponse({ status: "invalid_date", message: "Delivery is available Thursday only from 3 PM to 5 PM." });
+    }
+    if (!isDelivery && dateDow !== 5) {
+      return jsonResponse({ status: "invalid_date", message: "Pickup is available Friday only from 9 AM to 12 PM." });
+    }
+  }
+
+  // ── Order cutoff check (Wednesday 6 PM before fulfillment) ──
   if (pickupDate && isPastCutoff(pickupDate)) {
-    var msg = "Orders for " + pickupDate + " closed Wednesday at 6 PM. Please choose next Friday.";
+    var msg = "Orders for " + pickupDate + " closed Wednesday at 6 PM. Please choose the next available fulfillment date.";
     if (data.email) sendCutoffPassedEmail(data, msg, pickupDate);
     return jsonResponse({ status: "cutoff_passed", message: msg });
   }
@@ -1049,7 +1009,6 @@ function handleOrder(data, ss) {
     var name     = line.replace(/\s*x\d+$/, "").trim();
     serverSubtotal += (MENU[name] ? MENU[name].price : 0) * qty;
   });
-  var isDelivery       = (data.preferred_time||"").indexOf("Delivery") > -1;
   var serverDelivery   = isDelivery ? 10 : 0;
   var serverTotal      = serverSubtotal + serverDelivery;
   var clientTotal      = parseFloat((data.total||"$0").replace(/[^0-9.]/g,"")) || 0;
@@ -1202,6 +1161,12 @@ function handleSubscription(data, ss) {
 
   // Calculate end date
   var startDate = data.preferred_date || "";
+  if (startDate && dayOfWeek_(startDate) !== 5) {
+    return jsonResponse({ status: "invalid_date", message: "Loaf Reserve pickup is available Friday only from 9 AM to 12 PM." });
+  }
+  if (startDate && isPastCutoff(startDate)) {
+    return jsonResponse({ status: "cutoff_passed", message: "Orders for that Friday closed Wednesday at 6 PM. Please choose the next Friday." });
+  }
   var endDate   = "";
   if (startDate) {
     var weeks = parseInt(tier.split(" ")[0]) || 4;
@@ -2410,7 +2375,7 @@ function fridayBakeSheetAgent() {
     orderList +
     "\n\n── Pickups (" + pickups.length + "): 9am–12pm, 112 Civita Rd\n" +
     pickups.map(function(o){ return "  " + o.name + " — " + o.items; }).join("\n") +
-    "\n\n── Deliveries (" + deliveries.length + "): 9am–12pm, Santa Rita Ranch\n" +
+    "\n\n── Deliveries (" + deliveries.length + "): 3pm–5pm, " + DELIVERY_AREA + "\n" +
     deliveries.map(function(o){ return "  " + o.name + " — " + o.items; }).join("\n");
 
   // HTML version
@@ -2622,8 +2587,11 @@ function createCalendarEvent(data, orderId) {
     var parts = raw instanceof Date
                 ? [raw.getFullYear(), raw.getMonth()+1, raw.getDate()]
                 : raw.toString().split("-").map(Number);
-    var start = new Date(parts[0], parts[1]-1, parts[2], 9, 0);
-    var end   = new Date(parts[0], parts[1]-1, parts[2], 9, 30);
+    var isDelivery = (data.preferred_time||"").indexOf("Delivery") > -1;
+    var startHour = isDelivery ? 15 : 9;
+    var endHour = isDelivery ? 17 : 12;
+    var start = new Date(parts[0], parts[1]-1, parts[2], startHour, 0);
+    var end   = new Date(parts[0], parts[1]-1, parts[2], endHour, 0);
     cal.createEvent("🧁 " + data.name + " — " + data.total, start, end, {
       description:
         "Order ID: " + orderId + "\nItems: " + data.order +
@@ -3039,16 +3007,22 @@ function safeAlert(msg) {
 }
 
 // ── ORDER CUTOFF HELPERS ─────────────────────────────────────
-// Returns true if the Wednesday-6PM cutoff for the given Friday
-// pickup date has already passed (in America/Chicago time).
+function dayOfWeek_(dateStr) {
+  if (!dateStr) return -1;
+  var parts = dateStr.split("-");
+  return new Date(parts[0], parts[1]-1, parts[2]).getDay();
+}
+
+// Returns true if the Wednesday-6PM cutoff for the given Thursday/Friday
+// fulfillment date has already passed (in America/Chicago time).
 function isPastCutoff(pickupDateStr) {
   try {
     var parts  = pickupDateStr.split("-");
-    var pickup = new Date(parts[0], parts[1]-1, parts[2]);   // the Friday
-    // The cutoff is the Wednesday before that Friday, at 6 PM.
-    // Friday (dow 5) minus 2 days = Wednesday (dow 3).
+    var pickup = new Date(parts[0], parts[1]-1, parts[2]);
+    // The cutoff is the Wednesday before fulfillment, at 6 PM.
     var cutoff = new Date(pickup.getTime());
-    cutoff.setDate(cutoff.getDate() - 2);   // Wednesday
+    var daysSinceCutoffDow = (pickup.getDay() - CUTOFF_DOW + 7) % 7;
+    cutoff.setDate(cutoff.getDate() - daysSinceCutoffDow);   // Wednesday
     cutoff.setHours(CUTOFF_HOUR, 0, 0, 0);  // 6 PM
 
     // Compare "now" in the bakery's timezone against the cutoff.
@@ -3066,11 +3040,11 @@ function sendCutoffPassedEmail(data, msg, pickupDate) {
     "<p>Hi " + (data.name||"there") + ",</p>" +
     "<p>" + msg + "</p>" +
     "<p>We close orders each Wednesday at 6 PM so we have time to bake everything fresh. " +
-    "Please head back and choose the next available Friday. We would love to bake for you.</p>" +
-    "<p><a href='" + ORDER_FORM_URL + "'>Place your order for next Friday</a></p>");
+    "Please head back and choose the next available fulfillment date. We would love to bake for you.</p>" +
+    "<p><a href='" + ORDER_FORM_URL + "'>Place your order again</a></p>");
   try {
     sendTrackedEmail({ to: data.email, subject: "Fatima Bakery — order window closed",
-      body: msg + "\n\nPlease choose the next available Friday: " + ORDER_FORM_URL,
+      body: msg + "\n\nPlease choose the next available fulfillment date: " + ORDER_FORM_URL,
       htmlBody: html, name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL });
   } catch (e) { Logger.log("sendCutoffPassedEmail error: " + e); }
 }
