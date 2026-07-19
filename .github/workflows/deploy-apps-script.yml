@@ -1,0 +1,101 @@
+name: Deploy Apps Script
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps-script/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apps-script-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Validate and deploy Apps Script
+    if: github.repository == 'realjkg/fatimabakery'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: apps-script-production
+    env:
+      CLASP_VERSION: "3.3.0"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate repository and Apps Script syntax
+        run: |
+          set -euo pipefail
+          chmod +x scripts/*.sh
+          ./scripts/validate-site.sh
+          node --check apps-script/Code.js
+
+      - name: Configure clasp credentials
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          CLASP_JSON: ${{ secrets.CLASP_JSON }}
+          APPS_SCRIPT_DEPLOYMENT_ID: ${{ secrets.APPS_SCRIPT_DEPLOYMENT_ID }}
+          APPS_SCRIPT_WEBAPP_URL: ${{ secrets.APPS_SCRIPT_WEBAPP_URL }}
+        run: |
+          set -euo pipefail
+
+          test -n "$CLASPRC_JSON" || { echo "Missing CLASPRC_JSON environment secret."; exit 1; }
+          test -n "$CLASP_JSON" || { echo "Missing CLASP_JSON environment secret."; exit 1; }
+          test -n "$APPS_SCRIPT_DEPLOYMENT_ID" || { echo "Missing APPS_SCRIPT_DEPLOYMENT_ID environment secret."; exit 1; }
+          test -n "$APPS_SCRIPT_WEBAPP_URL" || { echo "Missing APPS_SCRIPT_WEBAPP_URL environment secret."; exit 1; }
+
+          umask 077
+          printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
+          printf '%s' "$CLASP_JSON" > apps-script/.clasp.json
+
+          jq -e 'type == "object"' "$HOME/.clasprc.json" >/dev/null
+          jq -e '.scriptId | type == "string" and length > 10' apps-script/.clasp.json >/dev/null
+
+      - name: Install pinned clasp CLI
+        run: |
+          set -euo pipefail
+          npm install --global "@google/clasp@$CLASP_VERSION"
+          clasp --version
+
+      - name: Push source and update production deployment
+        working-directory: apps-script
+        env:
+          APPS_SCRIPT_DEPLOYMENT_ID: ${{ secrets.APPS_SCRIPT_DEPLOYMENT_ID }}
+        run: |
+          set -euo pipefail
+          clasp push --force
+          clasp update-deployment "$APPS_SCRIPT_DEPLOYMENT_ID"             --description "GitHub ${GITHUB_SHA::12}"
+
+      - name: Verify deployed web app and unsigned order route
+        env:
+          APPS_SCRIPT_WEBAPP_URL: ${{ secrets.APPS_SCRIPT_WEBAPP_URL }}
+        run: |
+          set -euo pipefail
+
+          get_body="$(curl --fail-with-body --silent --show-error --location             --retry 5 --retry-delay 5 --retry-all-errors             "$APPS_SCRIPT_WEBAPP_URL")"
+
+          printf '%s' "$get_body" |
+            jq -e '.status | type == "string" and startswith("Fatima Bakery")' >/dev/null
+
+          smoke_payload='{"order_type":"order","_gotcha":"github-actions-deployment-smoke-test","source":"github_actions"}'
+          post_body="$(curl --fail-with-body --silent --show-error --location             --retry 5 --retry-delay 5 --retry-all-errors             --header 'content-type: text/plain;charset=UTF-8'             --data "$smoke_payload"             "$APPS_SCRIPT_WEBAPP_URL")"
+
+          printf '%s' "$post_body" |
+            jq -e '.status == "ignored" and .reason == "honeypot"' >/dev/null
+
+          echo "Apps Script deployment and unsigned order-route smoke test passed."
+
+      - name: Remove temporary credentials
+        if: ${{ always() }}
+        run: |
+          rm -f "$HOME/.clasprc.json" apps-script/.clasp.json
