@@ -843,8 +843,8 @@ function markOrderPaid(orderId, squarePaymentId, amountCents) {
       if (!alreadyConfirmed) {
         sheet.getRange(i+1, 17).setValue("Confirmed"); // Col Q = Status
       }
-      // Optional breadcrumb in a Notes col if present (Col R, 18)
-      try { sheet.getRange(i+1, 18).setValue(
+      // Payment breadcrumb belongs in Col AA. Col R starts the delivery address fields.
+      try { sheet.getRange(i+1, 27).setValue(
         "Square " + (squarePaymentId||"") + " $" + ((amountCents||0)/100).toFixed(2)
       ); } catch (noteErr) {}
       if (typeof updateLineItemStatus === "function") updateLineItemStatus(orderId, "Confirmed");
@@ -857,6 +857,16 @@ function markOrderPaid(orderId, squarePaymentId, amountCents) {
         total: rows[i][10],
         preferred_date: rows[i][11],
         preferred_time: rows[i][12],
+        fulfillment: String(rows[i][12] || "").indexOf("Delivery") > -1 ? "delivery" : "pickup",
+        delivery_address1: rows[i][17] || "",
+        delivery_address2: rows[i][18] || "",
+        delivery_city: rows[i][19] || "",
+        delivery_state: rows[i][20] || "",
+        delivery_zip: rows[i][21] || "",
+        delivery_instructions: rows[i][22] || "",
+        address_status: rows[i][23] || "",
+        address_distance: rows[i][24] || "",
+        address_updated_at: rows[i][25] || "",
         orderId: orderId
       };
       if (!alreadyConfirmed && d.email) {
@@ -896,7 +906,7 @@ function logInbound(e) {
       otype = d.order_type || "order";
       email = d.email || "";
     } catch (x) {}
-    sh.appendRow([new Date(), raw.substring(0, 500), parsedOk, otype, email, "received", ""]);
+    sh.appendRow([new Date(), "(redacted)", parsedOk, otype, email ? "(provided)" : "", "received", ""]);
   } catch (logErr) {
     Logger.log("logInbound failed: " + logErr);
   }
@@ -983,6 +993,7 @@ function _alertSchemaDrift(itemsRaw, clientTotal) {
 function handleOrder(data, ss) {
   data = data || {};
   var sheet = ss.getSheetByName(SHEET_NAME) || ss.getActiveSheet();
+  ensureOrderDeliveryColumns_(sheet);
 
   var bouleCount     = Number(data.boule_count)     || 0;
   var specialtyCount = Number(data.specialty_count) || 0;
@@ -1120,9 +1131,10 @@ function handleOrder(data, ss) {
   var totalFmt     = "$" + serverTotal.toFixed(2);
 
   // ── Payment links ────────────────────────────────────────
-  var squareLink = data.address_status === "Address Review Required" ? "" : createSquarePaymentLink(totalCents, orderId, data.name, data.order);
-  var venmoLink  = createVenmoLink(totalFmt, orderId);
-  var cashLink   = createCashAppLink(totalFmt);
+  var addressNeedsReview = data.address_status === "Address Review Required";
+  var squareLink = addressNeedsReview ? "" : createSquarePaymentLink(totalCents, orderId, data.name, data.order);
+  var venmoLink  = addressNeedsReview ? "" : createVenmoLink(totalFmt, orderId);
+  var cashLink   = addressNeedsReview ? "" : createCashAppLink(totalFmt);
 
   // ── Write to Sheet + Line Items (with recovery on failure) ──
   var writeError = null;
@@ -1175,7 +1187,8 @@ function handleOrder(data, ss) {
   emailData.subtotal = subtotalFmt;
   emailData.delivery_fee = deliveryFmt;
   emailData.delivery_address = deliveryAddress;
-  emailData.address_correction_url = isDelivery ? correctionTokenUrl_(orderId) : "";
+  // Address correction links remain disabled until the correction endpoint updates the order row.
+  emailData.address_correction_url = "";
 
   try {
     if (data.waitlist === true || data.waitlist === "true") logWaitlist(ss, data);
@@ -1828,7 +1841,7 @@ function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLi
       [isDelivery ? "Delivery" : "Pickup", locationText],
       ["Window",    htmlEscape_(data.preferred_time||"Friday")],
       isDelivery ? ["Delivery fee", htmlEscape_(data.delivery_fee || "$10.00")] : null,
-      isDelivery ? ["Address status", htmlEscape_(addr.status || data.address_status || "Address Review Required")] : null,
+      isDelivery ? ["Address status", htmlEscape_(addr.status || data.address_status || "Customer provided")] : null,
       isDelivery && data.address_correction_url ? ["Correct delivery address", "<a href='" + htmlEscape_(data.address_correction_url) + "'>Correct delivery address</a>"] : null,
       data.notes ? ["Notes", htmlEscape_(data.notes)] : null
     ].filter(Boolean)) +
@@ -1864,8 +1877,9 @@ function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLi
 // ── Payment confirmed email (fires via Square webhook) ───────
 function sendPaymentConfirmedEmail(data) {
   var isDelivery = (data.preferred_time||"").indexOf("Delivery") > -1;
+  var deliveryAddressText = fullDeliveryAddressText_(normalizeDeliveryAddress_(data));
   var locationText = isDelivery
-    ? DELIVERY_AREA + " &mdash; " + DELIVERY_HOURS
+    ? htmlEscape_(deliveryAddressText || DELIVERY_AREA) + " &mdash; " + DELIVERY_HOURS
     : PICKUP_ADDRESS + " &mdash; " + PICKUP_HOURS;
 
   var contentHTML =
@@ -1883,9 +1897,10 @@ function sendPaymentConfirmedEmail(data) {
   var textBody =
     "Hi " + data.name + ", payment received — order confirmed!\n\n" +
     "Order ID: " + data.orderId + "\nItems: " + data.order +
-    "\nTotal: " + data.total + "\nPickup: " + data.preferred_date +
+    "\nTotal: " + data.total + "\n" + (isDelivery ? "Delivery: " : "Pickup: ") + data.preferred_date +
     " " + (data.preferred_time||"Friday") +
-    "\n\nNothing due at pickup. See you on your scheduled fulfillment day!\nFatima Bakery ATX";
+    (isDelivery && deliveryAddressText ? "\nAddress: " + deliveryAddressText : "") +
+    "\n\nNothing due at " + (isDelivery ? "delivery" : "pickup") + ". See you on your scheduled fulfillment day!\nFatima Bakery ATX";
 
   sendTrackedEmail({
     to: data.email, bcc: OWNER_EMAIL_BACKUP || undefined,
@@ -1929,7 +1944,9 @@ function sendOwnerNewOrderAlert(data, rowNum, orderId, bouleCount, specialtyCoun
       "\nBoules:   " + (bouleCount||0) + " / " + BOULE_LIMIT +
       "\nSpecialty:" + (specialtyCount||0) + " / " + SPECIALTY_LIMIT +
       "\nTotal:    " + (data.total||"") +
-      "\n\nPickup:   " + (data.preferred_date||"") + "  " + (data.preferred_time||"") +
+      "\n\nFulfillment: " + (data.preferred_date||"") + "  " + (data.preferred_time||"") +
+      (addressText ? "\nAddress:   " + addressText : "") +
+      (nav ? "\nNavigate:  " + nav : "") +
       "\nNotes:    " + (data.notes||"") +
       "\n\n" + (squareLink ? "Square: " + squareLink + "\n" : "⚠️  Square not configured.\n") +
       (venmoLink ? "Venmo:  " + venmoLink : ""),
@@ -1940,8 +1957,9 @@ function sendOwnerNewOrderAlert(data, rowNum, orderId, bouleCount, specialtyCoun
 // ── Pickup ready notification ────────────────────────────────
 function sendPickupNotification(data) {
   var isDelivery = (data.preferred_time||"").indexOf("Delivery") > -1;
+  var deliveryAddressText = fullDeliveryAddressText_(normalizeDeliveryAddress_(data));
   var locationText = isDelivery
-    ? DELIVERY_AREA + " &mdash; " + DELIVERY_HOURS
+    ? htmlEscape_(deliveryAddressText || DELIVERY_AREA) + " &mdash; " + DELIVERY_HOURS
     : PICKUP_ADDRESS + " &mdash; " + PICKUP_HOURS;
 
   var contentHTML =
@@ -2688,10 +2706,13 @@ function createCalendarEvent(data, orderId) {
     var endHour = isDelivery ? 17 : 12;
     var start = new Date(parts[0], parts[1]-1, parts[2], startHour, 0);
     var end   = new Date(parts[0], parts[1]-1, parts[2], endHour, 0);
+    var deliveryAddressText = fullDeliveryAddressText_(normalizeDeliveryAddress_(data));
     cal.createEvent("🧁 " + data.name + " — " + data.total, start, end, {
       description:
         "Order ID: " + orderId + "\nItems: " + data.order +
-        "\nPhone: " + (data.phone||"—") + "\nWindow: " + (data.preferred_time||"Friday")
+        "\nPhone: " + (data.phone||"—") + "\nWindow: " + (data.preferred_time||"Friday") +
+        (isDelivery && deliveryAddressText ? "\nAddress: " + deliveryAddressText : ""),
+      location: isDelivery ? deliveryAddressText : PICKUP_ADDRESS
     });
   } catch (err) { Logger.log("Calendar error: " + err); }
 }
@@ -2988,6 +3009,15 @@ function installTriggers() {
 // ============================================================
 //  18. ONE-TIME SHEET SETUP
 // ============================================================
+function ensureOrderDeliveryColumns_(sheet) {
+  var headers = [
+    "Delivery Address 1", "Delivery Address 2", "Delivery City", "Delivery State",
+    "Delivery ZIP", "Delivery Instructions", "Address Status", "Address Distance",
+    "Address Updated At", "Payment Reference"
+  ];
+  sheet.getRange(1, 18, 1, headers.length).setValues([headers]);
+}
+
 function setupSheet() {
   var ss    = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
@@ -2996,7 +3026,9 @@ function setupSheet() {
   var headers = [
     "Timestamp","Name","Phone","Instagram","Email",
     "Order Items","Boule Count","Specialty Count","Subtotal","Delivery Fee","Total",
-    "Pickup Date","Pickup Window","Source","Notes","Order ID","Status"
+    "Pickup Date","Pickup Window","Source","Notes","Order ID","Status",
+    "Delivery Address 1","Delivery Address 2","Delivery City","Delivery State","Delivery ZIP",
+    "Delivery Instructions","Address Status","Address Distance","Address Updated At","Payment Reference"
   ];
   sheet.getRange(1,1,1,headers.length).setValues([headers]);
   var hr = sheet.getRange(1,1,1,headers.length);
@@ -3004,7 +3036,7 @@ function setupSheet() {
   hr.setFontWeight("bold"); hr.setFontSize(11);
   sheet.setFrozenRows(1);
 
-  var widths = [160,140,130,120,200,300,90,100,80,90,80,110,160,130,200,120,140];
+  var widths = [160,140,130,120,200,300,90,100,80,90,80,110,160,130,200,120,140,220,160,140,90,100,240,150,110,160,220];
   widths.forEach(function(w,i){ sheet.setColumnWidth(i+1,w); });
 
   var dv = SpreadsheetApp.newDataValidation()

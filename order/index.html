@@ -1389,19 +1389,19 @@ footer{
 // ─────────────────────────────────────────────────────────────────────────────
 // Fatima Bakery — Order + Pilgrim Membership forms
 //
-// Cloudflare Pages version — posts to /api/order for readable validation.
+// Recovery path — posts directly to the deployed Apps Script web app.
 //
-// WHY: Google Apps Script ContentService cannot set CORS headers, and Google
-// Sites iframes impose additional cross-origin restrictions. A credentialed
-// fetch that tries to read the response will be blocked before it reaches
-// Apps Script. The contact form already uses this pattern successfully.
+// WHY: This site is deployed as Cloudflare Workers Static Assets. Pages-style
+// functions/api routes are not executed unless a Worker entrypoint is configured.
+// Apps Script does not expose readable CORS responses, so this request intentionally
+// uses no-cors and treats successful dispatch as receipt.
 //
 // FLOW: User submits → optimistic "order received" message shown immediately →
 // Apps Script logs the order and emails confirmation. Orders are never
 // blocked for capacity; Lindsay tracks fill levels via her owner reports.
 // ─────────────────────────────────────────────────────────────────────────────
 (function(){
-  var ORDER_API_URL = '/api/order';
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6ahtqJ1pe7sLVk4BgcU48WIn34P1P1giY5lxh8pmEABxpQX3m0wI96lIhnjreiDO-/exec';
   var DELIVERY_FEE = 10.00;
   var MENU = {"Fatima":{"name":"Fatima","price":12,"type":"boule"},"Lourdes":{"name":"Lourdes","price":15,"type":"specialty"},"Guadalupe":{"name":"Guadalupe","price":15,"type":"specialty"},"Santiago":{"name":"Santiago","price":15,"type":"specialty"},"Kibeho":{"name":"Kibeho","price":15,"type":"specialty"},"Pilgrim_s_Dough":{"name":"Pilgrim's Dough","price":10,"type":"other"},"Mt_Carmel_Bowl_ind":{"name":"Mt. Carmel Bowl (ind)","price":12,"type":"other"},"Mt_Carmel_Bowl_duo":{"name":"Mt. Carmel Bowl (duo)","price":20,"type":"other"},"Pilgrim_s_Honey_Butter":{"name":"Pilgrim's Honey Butter","price":5,"type":"other"},"Pilgrim_s_Crunch":{"name":"Pilgrim's Crunch","price":7,"type":"other"}};
 
@@ -1566,12 +1566,11 @@ footer{
     statusEl.textContent = 'Sending…';
     statusEl.className = 'form-status';
 
-    fetch(ORDER_API_URL, {
+    fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      mode:   'no-cors',
       body:   JSON.stringify(payload)
     })
-    .then(function(res){ return res.json().then(function(body){ if (!res.ok || body.status === 'error') throw new Error(body.message || 'Order could not be processed.'); return body; }); })
     .then(function(){
       statusEl.textContent = successMsg;
       statusEl.className = 'form-status success';

@@ -25,17 +25,20 @@ if [ -n "$SECRET_HITS" ]; then
   exit 1
 fi
 
-echo "Checking order form routes through Cloudflare endpoint..."
-grep -F "ORDER_API_URL = '/api/order'" order/index.html >/dev/null || {
-  echo "Order page must submit to /api/order."
+echo "Checking emergency order routing..."
+EXPECTED_ORDER_ENDPOINT="https://script.google.com/macros/s/AKfycby6ahtqJ1pe7sLVk4BgcU48WIn34P1P1giY5lxh8pmEABxpQX3m0wI96lIhnjreiDO-/exec"
+grep -F "APPS_SCRIPT_URL = '$EXPECTED_ORDER_ENDPOINT'" order/index.html >/dev/null || {
+  echo "Order page is not using the approved Apps Script endpoint."
   exit 1
 }
-
-echo "Checking form pages do not expose Apps Script endpoints..."
-if grep -hoE "https://script.google.com/macros/s/[A-Za-z0-9_-]+/exec" order/index.html; then
-  echo "Apps Script endpoint should not be exposed in frontend form pages."
+if grep -F "ORDER_API_URL = '/api/order'" order/index.html >/dev/null; then
+  echo "Order page still points at the undeployed /api/order route."
   exit 1
 fi
+grep -F "mode:   'no-cors'" order/index.html >/dev/null || {
+  echo "Direct Apps Script recovery requires no-cors submission."
+  exit 1
+}
 
 echo "Checking Loaf Reserve terminology in customer-facing HTML..."
 if grep -Rni "Pilgrim Reserve\|Piligrim" \
