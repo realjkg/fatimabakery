@@ -106,7 +106,62 @@ h1 em{font-style:italic;color:var(--green-md);}
   font-size:1rem;color:var(--ink3);
   max-width:380px;margin-bottom:2rem;line-height:1.8;
 }
-.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;}
+.hero-btns{
+  display:flex;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-top:2rem;
+  margin-bottom:1.5rem;
+}
+
+.contact-hero .hero-intro{
+  max-width:440px;
+  margin-top:.5rem;
+  line-height:1.8;
+}
+
+.contact-hero .reserve-note{
+  max-width:440px;
+  margin-top:.25rem;
+  color:var(--ink3);
+  font-size:.9rem;
+  line-height:1.7;
+}
+
+.btn-order,
+.btn-reserve{
+  font-family:var(--fc);
+  font-size:.62rem;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  text-decoration:none;
+  padding:.8rem 2rem;
+  border-radius:1px;
+  display:inline-block;
+  transition:background .2s, border-color .2s, color .2s;
+}
+
+.btn-order{
+  border:1px solid var(--green);
+  color:var(--green);
+  background:transparent;
+}
+
+.btn-order:hover{
+  background:var(--green);
+  color:var(--cream);
+}
+
+.btn-reserve{
+  background:var(--gold);
+  border:1px solid var(--gold);
+  color:var(--green);
+}
+
+.btn-reserve:hover{
+  background:var(--gold-lt);
+  border-color:var(--gold-lt);
+}
 .btn-primary{
   font-family:var(--fc);font-size:.62rem;letter-spacing:.15em;
   text-transform:uppercase;text-decoration:none;
@@ -984,14 +1039,14 @@ footer{
 <!-- ORDER HEADER -->
 <section class="contact-hero">
   <div class="section-label gold-label">Place an Order</div>
-  <h1>Fresh bread<br>every week.</h1>
-  <p>Pick your loaves, choose Thursday delivery or Friday curbside pickup. Orders close Wednesday at 6 PM.</p>
-  <p class="hero-artisan">Each loaf is naturally leavened and baked by hand the morning of your pickup — slow-fermented over three days, never rushed.</p>
+  <h1>Fresh bread,<br>every week.</h1>
+  <p class="hero-intro">Choose Thursday delivery or Friday curbside pickup. Orders close Wednesday at 6 PM.</p>
   <div class="hero-btns">
-    <a class="btn-primary" href="#Pilgrim Membership">Join Loaf Reserve</a>
-    <a class="btn-ghost" href="#order">Order This Week</a>
+    <a class="btn-order" href="#order">Order This Week</a>
+    <a class="btn-reserve" href="#Pilgrim Membership">Join Loaf Reserve</a>
   </div>
-<p>Members receive classic and specialty reserved loaves baked fresh every week in Liberty Hill.</p></section>
+  <p class="reserve-note">Weekly loaves reserved and baked fresh in Liberty Hill.</p>
+</section>
 
 <!-- MEMBERSHIP CALLOUT -->
 <section class="reserve-callout" aria-labelledby="reserve-callout-title">
