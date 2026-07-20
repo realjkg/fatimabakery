@@ -28,3 +28,20 @@ This backlog is based on the current-state audit and avoids runtime code changes
 | B-018 | `unknown` | Verify `wrangler.jsonc` expectations and deployment target configuration. | Repository/deployment inventory. | Medium: CI or deployment can fail if config is absent/stale. | Config presence and purpose documented; validation script matches actual deployment setup. | `test -f wrangler.jsonc`; validation workflow/local script. | No. |
 | B-019 | `preserve` | Keep current Hotplate-free state unless a future dependency explicitly introduces it. | None. | Low. | Repo search remains clean for `Hotplate`/`hotplate`, or any future reference is documented. | `rg -n "Hotplate|hotplate" .` | No. |
 | B-020 | `preserve` | Preserve legacy root behavior until Ratio is production-ready; avoid extending root HTML except explicit safety/content fixes. | `AGENTS.md`; production migration plan. | Medium: accidental feature work in legacy root increases migration cost. | PR reviews reject new feature work under legacy root; changes cite explicit safety/content need. | Review changed files; CI legacy validation. | Yes only if legacy production files are changed/deployed. |
+
+## Controlled inventory production rollout readiness checklist
+
+Before changing any production Script Properties or deploying Apps Script for the controlled inventory integration, complete and record all of the following with dates and approver initials:
+
+- [ ] Staging workbook verified against the approved `Weekly Inventory`, `Inventory Reservations`, `Inventory Audit`, and `Inventory Shadow Mismatches` tab shapes.
+- [ ] Production workbook backup created and restore path confirmed.
+- [ ] Script Properties documented with placeholder values only: `INVENTORY_ROLLOUT_MODE`, `INVENTORY_KILL_SWITCH`, `INVENTORY_DRY_RUN`, `INVENTORY_PRODUCTION_SPREADSHEET_ID`, existing `SPREADSHEET_ID`/`SHEET_ID`, capacity limits, Square keys, and email configuration.
+- [ ] OFF mode verified for one-time orders and Loaf Reserve flows.
+- [ ] SHADOW mode verified without inventory writes.
+- [ ] One-time order mismatch report reviewed.
+- [ ] Subscription allocation mismatch report reviewed.
+- [ ] Inventory totals reconciled against order and reservation records.
+- [ ] Subscription and one-time totals reconciled together for each fulfillment week.
+- [ ] Rollback procedure tested by setting `INVENTORY_KILL_SWITCH=true` or `INVENTORY_ROLLOUT_MODE=OFF` without code changes.
+- [ ] ENFORCE approval recorded by the owner before setting `INVENTORY_ROLLOUT_MODE=ENFORCE`.
+- [ ] Post-deployment smoke tests defined for OFF, SHADOW, ENFORCE, duplicate submission, insufficient inventory, active subscription allocation, and invalid subscription product mapping.

@@ -277,6 +277,14 @@ var SPECIALTY_LIMIT = numProp_("SPECIALTY_LIMIT", 6);
 var COMBINED_LIMIT = numProp_("COMBINED_LIMIT", 12);
 var SPECIALTY_ADVANCE = numProp_("SPECIALTY_ADVANCE", 2);
 
+// ── CONTROLLED INVENTORY INTEGRATION ─────────────────────────
+// Default OFF. Production ENFORCE requires explicit mode + production
+// spreadsheet guard. Do not store secret values in these properties.
+var INVENTORY_ROLLOUT_MODE = prop_("INVENTORY_ROLLOUT_MODE", "OFF");
+var INVENTORY_KILL_SWITCH = boolProp_("INVENTORY_KILL_SWITCH", false);
+var INVENTORY_DRY_RUN = boolProp_("INVENTORY_DRY_RUN", false);
+var INVENTORY_PRODUCTION_SPREADSHEET_ID = prop_("INVENTORY_PRODUCTION_SPREADSHEET_ID", "");
+
 // ── ORDER CUTOFF ─────────────────────────────────────────────
 
 var CUTOFF_DOW = numProp_("CUTOFF_DOW", 3);
@@ -1130,6 +1138,25 @@ function handleOrder(data, ss) {
   var deliveryFmt  = "$" + serverDelivery.toFixed(2);
   var totalFmt     = "$" + serverTotal.toFixed(2);
 
+  var inventoryDecision = evaluateProductionInventoryForOrder_(ss, data, {
+    orderId: orderId,
+    idempotencyKey: stableOrderIdempotencyKey_(data, orderId),
+    correlationId: stableCorrelationId_(data, orderId),
+    fulfillmentWeek: pickupDate,
+    legacyResult: "accepted"
+  });
+  if (inventoryDecision.mode === "ENFORCE" && !inventoryDecision.accepted) {
+    return jsonResponse({
+      status: inventoryDecision.status || "inventory_unavailable",
+      message: inventoryDecision.message || "We could not reserve inventory for that order. Please refresh and try again.",
+      orderId: orderId,
+      correlationId: inventoryDecision.correlationId
+    });
+  }
+  if (inventoryDecision.mode === "ENFORCE" && inventoryDecision.duplicate) {
+    return jsonResponse({ status: "success", orderId: orderId, duplicate: true, correlationId: inventoryDecision.correlationId });
+  }
+
   // ── Payment links ────────────────────────────────────────
   var addressNeedsReview = data.address_status === "Address Review Required";
   var squareLink = addressNeedsReview ? "" : createSquarePaymentLink(totalCents, orderId, data.name, data.order);
@@ -1177,6 +1204,20 @@ function handleOrder(data, ss) {
     );
     Logger.log("SHEET WRITE FAILED for " + orderId + ": " + e);
     // Still attempt to send confirmation email — customer should know we received it
+  }
+
+  if (writeError && inventoryDecision.mode === "ENFORCE") {
+    appendInventoryAudit_(ss, {
+      correlationId: inventoryDecision.correlationId,
+      sourceType: "ONE_TIME",
+      sourceId: orderId,
+      weekId: pickupDate,
+      mode: inventoryDecision.mode,
+      result: "order_persistence_failed_after_reservation",
+      idempotencyKey: stableOrderIdempotencyKey_(data, orderId),
+      details: String(writeError).substring(0, 300)
+    });
+    return jsonResponse({ status: "order_persistence_failed", message: "We could not safely record that order. Please try again or contact us.", orderId: orderId, correlationId: inventoryDecision.correlationId });
   }
 
   var rowNum    = sheet.getLastRow();
@@ -1331,6 +1372,177 @@ function handleSubscription(data, ss) {
     emailStatus: emailFailures.length ? "failed" : "sent",
     emailFailures: emailFailures
   });
+}
+
+
+// ============================================================
+//  CONTROLLED PRODUCTION INVENTORY INTEGRATION
+// ============================================================
+function inventoryRolloutMode_() {
+  if (INVENTORY_KILL_SWITCH) return "OFF";
+  var mode = String(INVENTORY_ROLLOUT_MODE || "OFF").toUpperCase();
+  if (mode !== "SHADOW" && mode !== "ENFORCE") return "OFF";
+  if (INVENTORY_DRY_RUN && mode === "ENFORCE") return "SHADOW";
+  return mode;
+}
+
+function stableCorrelationId_(data, fallbackId) {
+  return String(data.correlation_id || data.correlationId || fallbackId || ("corr-" + new Date().getTime()));
+}
+
+function stableOrderIdempotencyKey_(data, orderId) {
+  return String(data.idempotency_key || data.request_id || data.order_request_id || ("order:" + orderId));
+}
+
+function inventoryProductionGuard_(ss) {
+  var mode = inventoryRolloutMode_();
+  if (mode !== "ENFORCE") return { ok: true, mode: mode };
+  var expected = String(INVENTORY_PRODUCTION_SPREADSHEET_ID || "");
+  var actual = "";
+  try { actual = ss && ss.getId ? String(ss.getId()) : ""; } catch (e) {}
+  if (!expected || !actual || expected !== actual) {
+    return { ok: false, mode: mode, status: "inventory_configuration_error", message: "Inventory configuration requires owner review before accepting orders." };
+  }
+  return { ok: true, mode: mode };
+}
+
+function parseInventoryOrderLines_(orderText) {
+  var lines = [];
+  String(orderText || "").split(";").forEach(function(line) {
+    line = line.trim();
+    if (!line) return;
+    var qtyMatch = line.match(/x(\d+)$/);
+    var qty = qtyMatch ? parseInt(qtyMatch[1], 10) : 1;
+    var name = line.replace(/\s*x\d+$/, "").trim();
+    var item = MENU[name];
+    if (!item || qty <= 0) {
+      lines.push({ valid: false, product_id: name, quantity: qty, type: "unknown" });
+    } else {
+      lines.push({ valid: true, product_id: name, quantity: qty, type: item.type });
+    }
+  });
+  return lines;
+}
+
+function getInventorySheet_(ss, name, headers, create) {
+  var sh = ss.getSheetByName(name);
+  if (!sh && create) {
+    sh = ss.insertSheet(name);
+    sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+  }
+  return sh;
+}
+
+function readInventoryAvailability_(ss, weekId) {
+  var sh = ss.getSheetByName("Weekly Inventory");
+  var byProduct = {};
+  if (sh) {
+    var rows = sh.getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      if (String(rows[i][0]) === String(weekId) && String(rows[i][3]).toLowerCase() === "approved") {
+        byProduct[String(rows[i][1])] = Number(rows[i][2]) || 0;
+      }
+    }
+  }
+  if (!byProduct.Fatima) byProduct.Fatima = BOULE_LIMIT;
+  Object.keys(MENU).forEach(function(k) { if (MENU[k].type === "specialty" && !byProduct[k]) byProduct[k] = SPECIALTY_LIMIT; });
+  return byProduct;
+}
+
+function existingInventoryReservations_(ss, weekId, skipKey) {
+  var sh = ss.getSheetByName("Inventory Reservations");
+  var used = {};
+  if (!sh) return used;
+  var rows = sh.getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][2]) !== String(weekId)) continue;
+    if (String(rows[i][7]) === String(skipKey)) continue;
+    var status = String(rows[i][5] || "").toUpperCase();
+    if (status !== "CONFIRMED" && status !== "RESERVED") continue;
+    var product = String(rows[i][3]);
+    used[product] = (used[product] || 0) + (Number(rows[i][4]) || 0);
+  }
+  return used;
+}
+
+function appendInventoryAudit_(ss, event) {
+  var sh = getInventorySheet_(ss, "Inventory Audit", ["Timestamp","Correlation ID","Source Type","Source ID","Fulfillment Week","Mode","Result","Idempotency Key","Details"], true);
+  sh.appendRow([new Date(), event.correlationId, event.sourceType, event.sourceId, event.weekId, event.mode, event.result, event.idempotencyKey, event.details || ""]);
+}
+
+function recordInventoryShadowMismatch_(ss, event) {
+  var sh = getInventorySheet_(ss, "Inventory Shadow Mismatches", ["Timestamp","Order or Membership ID","Fulfillment Week","Correlation ID","Mode","Source Type","Legacy Result","Orchestration Result","Mismatch Type"], true);
+  sh.appendRow([new Date(), event.sourceId, event.weekId, event.correlationId, event.mode, event.sourceType, event.legacyResult, event.orchestrationResult, event.mismatchType]);
+}
+
+function evaluateProductionInventoryForOrder_(ss, data, opts) {
+  var guard = inventoryProductionGuard_(ss);
+  var mode = guard.mode;
+  if (mode === "OFF") return { mode: "OFF", accepted: true, correlationId: opts.correlationId };
+  if (!guard.ok) return { mode: mode, accepted: false, status: guard.status, message: guard.message, correlationId: opts.correlationId };
+
+  var lines = parseInventoryOrderLines_(data.order);
+  var invalid = lines.filter(function(l){ return !l.valid; });
+  var orchestrationResult = invalid.length ? "rejected_invalid_product" : "accepted";
+  var used = existingInventoryReservations_(ss, opts.fulfillmentWeek, opts.idempotencyKey);
+  var available = readInventoryAvailability_(ss, opts.fulfillmentWeek);
+  if (!invalid.length) {
+    lines.forEach(function(l) {
+      var remaining = (available[l.product_id] || 0) - (used[l.product_id] || 0);
+      if (remaining < l.quantity) orchestrationResult = "rejected_insufficient_inventory";
+    });
+  }
+  if (mode === "SHADOW") {
+    if (opts.legacyResult !== orchestrationResult) recordInventoryShadowMismatch_(ss, {
+      sourceId: opts.orderId, weekId: opts.fulfillmentWeek, correlationId: opts.correlationId, mode: mode, sourceType: "ONE_TIME", legacyResult: opts.legacyResult, orchestrationResult: orchestrationResult, mismatchType: orchestrationResult
+    });
+    return { mode: mode, accepted: true, correlationId: opts.correlationId };
+  }
+
+  var sh = getInventorySheet_(ss, "Inventory Reservations", ["Timestamp","Reservation ID","Fulfillment Week","Product ID","Quantity","Status","Source Type","Idempotency Key","Source ID","Correlation ID"], true);
+  var rows = sh.getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    if (String(rows[i][7]) === String(opts.idempotencyKey)) {
+      if (String(rows[i][8]) !== String(opts.orderId)) return { mode: mode, accepted: false, status: "idempotency_conflict", message: "This order request could not be safely reused.", correlationId: opts.correlationId };
+      return { mode: mode, accepted: true, duplicate: true, correlationId: opts.correlationId };
+    }
+  }
+  if (orchestrationResult !== "accepted") {
+    appendInventoryAudit_(ss, { correlationId: opts.correlationId, sourceType: "ONE_TIME", sourceId: opts.orderId, weekId: opts.fulfillmentWeek, mode: mode, result: orchestrationResult, idempotencyKey: opts.idempotencyKey });
+    return { mode: mode, accepted: false, status: orchestrationResult, correlationId: opts.correlationId };
+  }
+  lines.forEach(function(l) { sh.appendRow([new Date(), "res-" + opts.orderId + "-" + l.product_id, opts.fulfillmentWeek, l.product_id, l.quantity, "RESERVED", "ONE_TIME", opts.idempotencyKey, opts.orderId, opts.correlationId]); });
+  appendInventoryAudit_(ss, { correlationId: opts.correlationId, sourceType: "ONE_TIME", sourceId: opts.orderId, weekId: opts.fulfillmentWeek, mode: mode, result: "reserved", idempotencyKey: opts.idempotencyKey });
+  return { mode: mode, accepted: true, correlationId: opts.correlationId };
+}
+
+function subscriptionAllocationIdempotencyKey_(membershipId, weekId) {
+  return "subscription:" + membershipId + ":" + weekId;
+}
+
+function allocateWeeklySubscriptionInventory(fulfillmentWeek) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var mode = inventoryRolloutMode_();
+  if (mode === "OFF") return { status: "off", allocated: 0 };
+  var sheet = ss.getSheetByName("Subscriptions");
+  if (!sheet) return { status: "no_subscriptions", allocated: 0 };
+  var rows = sheet.getDataRange().getValues();
+  var allocated = 0;
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][9] !== "Active") continue;
+    var membershipId = rows[i][12];
+    if (!membershipId) continue;
+    var tier = String(rows[i][5] || "");
+    var product = tier.indexOf("Specialty") > -1 ? "" : "Fatima";
+    var corr = "suballoc-" + membershipId + "-" + fulfillmentWeek;
+    if (!product) {
+      if (mode === "SHADOW") recordInventoryShadowMismatch_(ss, { sourceId: membershipId, weekId: fulfillmentWeek, correlationId: corr, mode: mode, sourceType: "SUBSCRIPTION", legacyResult: "accepted", orchestrationResult: "rejected_invalid_product_mapping", mismatchType: "invalid_product_mapping" });
+      continue;
+    }
+    var result = evaluateProductionInventoryForOrder_(ss, { order: product + " x1" }, { orderId: "SUB-" + membershipId + "-" + fulfillmentWeek, idempotencyKey: subscriptionAllocationIdempotencyKey_(membershipId, fulfillmentWeek), correlationId: corr, fulfillmentWeek: fulfillmentWeek, legacyResult: "accepted" });
+    if (result.accepted && mode === "ENFORCE") allocated++;
+  }
+  return { status: mode.toLowerCase(), allocated: allocated };
 }
 
 function normalizeSubscriptionTier(data) {
