@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fatimabakery.com/schemas/weekly-drop.schema.json",
+  "title": "Weekly Drop Proposal",
+  "description": "Channel-neutral weekly drop proposal for human-approved publication.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "proposalId",
+    "fulfillmentWindowId",
+    "status",
+    "items",
+    "editorial",
+    "approval"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "proposalId": { "type": "string", "pattern": "^cnt_[a-z0-9][a-z0-9_-]*$" },
+    "fulfillmentWindowId": { "type": "string", "pattern": "^fw_[a-z0-9][a-z0-9_-]*$" },
+    "status": { "type": "string", "enum": ["draft", "pending_approval", "approved", "rejected", "archived"] },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["productId", "weeklyInventoryId", "displayName", "quantityAvailable", "unitPrice"],
+        "properties": {
+          "productId": { "type": "string", "pattern": "^prod_[a-z0-9][a-z0-9_-]*$" },
+          "weeklyInventoryId": { "type": "string", "pattern": "^winv_[a-z0-9][a-z0-9_-]*$" },
+          "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "description": { "type": "string", "maxLength": 1000 },
+          "quantityAvailable": { "type": "integer", "minimum": 0 },
+          "unitPrice": { "type": "number", "minimum": 0, "multipleOf": 0.01 },
+          "dietaryNotes": { "type": "array", "items": { "type": "string", "maxLength": 80 }, "uniqueItems": true }
+        }
+      }
+    },
+    "editorial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["headline", "summary"],
+      "properties": {
+        "headline": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 600 },
+        "longDescription": { "type": "string", "maxLength": 3000 },
+        "callToAction": { "type": "string", "maxLength": 160 }
+      }
+    },
+    "aiAssistance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "type": "string", "maxLength": 80 },
+        "model": { "type": "string", "maxLength": 120 },
+        "promptSummary": { "type": "string", "maxLength": 1000 }
+      }
+    },
+    "approval": { "$ref": "#/$defs/approval" }
+  },
+  "$defs": {
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": { "type": "string", "enum": ["not_requested", "pending", "approved", "rejected"] },
+        "approverId": { "type": "string", "maxLength": 120 },
+        "approvedAt": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string", "maxLength": 1000 }
+      }
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fatimabakery.com/schemas/channel-publication.schema.json",
+  "title": "Channel Publication Record",
+  "description": "Channel-neutral publication state for approved content or availability.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "publicationId",
+    "channelKey",
+    "publicationType",
+    "source",
+    "status",
+    "approval",
+    "idempotencyKey",
+    "audit"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "publicationId": { "type": "string", "pattern": "^pub_[a-z0-9][a-z0-9_-]*$" },
+    "channelKey": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+    "publicationType": { "type": "string", "enum": ["weekly_drop", "recipe", "newsletter", "subscriber_alert", "membership_perk", "inventory_update"] },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entityType", "entityId", "schemaId", "schemaVersion"],
+      "properties": {
+        "entityType": { "type": "string", "enum": ["weekly_drop", "newsletter_content", "recipe_content", "membership_perk", "inventory_record"] },
+        "entityId": { "type": "string", "pattern": "^[a-z]+_[a-z0-9][a-z0-9_-]*$" },
+        "schemaId": { "type": "string", "format": "uri" },
+        "schemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "status": { "type": "string", "enum": ["draft", "pending_approval", "approved", "scheduled", "published", "update_pending", "unpublish_pending", "unpublished", "failed", "disabled"] },
+    "external": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "externalId": { "type": "string", "maxLength": 200 },
+        "externalUrl": { "type": "string", "format": "uri" },
+        "lastRequestId": { "type": "string", "maxLength": 200 }
+      }
+    },
+    "scheduledFor": { "type": "string", "format": "date-time" },
+    "publishedAt": { "type": "string", "format": "date-time" },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": { "type": "string", "enum": ["not_requested", "pending", "approved", "rejected"] },
+        "approverId": { "type": "string", "maxLength": 120 },
+        "decidedAt": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string", "maxLength": 1000 }
+      }
+    },
+    "idempotencyKey": { "type": "string", "minLength": 16, "maxLength": 200 },
+    "retry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "attemptCount": { "type": "integer", "minimum": 0 },
+        "nextAttemptAt": { "type": "string", "format": "date-time" },
+        "lastErrorCode": { "type": "string", "maxLength": 120 },
+        "lastErrorMessage": { "type": "string", "maxLength": 1000 }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["createdAt", "createdBy", "correlationId"],
+      "properties": {
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string", "maxLength": 120 },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "updatedBy": { "type": "string", "maxLength": 120 },
+        "correlationId": { "type": "string", "minLength": 8, "maxLength": 200 }
+      }
+    }
+  }
+}
