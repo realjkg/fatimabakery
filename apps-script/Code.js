@@ -1001,7 +1001,7 @@ function handleOrder(data, ss) {
     serverSubtotal += (MENU[name] ? MENU[name].price : 0) * qty;
   });
   var isDelivery       = (data.preferred_time||"").indexOf("Delivery") > -1;
-  var serverDelivery   = isDelivery ? 5 : 0;
+  var serverDelivery   = isDelivery ? 10 : 0;
   var serverTotal      = serverSubtotal + serverDelivery;
   var clientTotal      = parseFloat((data.total||"$0").replace(/[^0-9.]/g,"")) || 0;
 
