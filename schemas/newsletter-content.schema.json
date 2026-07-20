@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fatimabakery.com/schemas/newsletter-content.schema.json",
+  "title": "Newsletter Content Proposal",
+  "description": "Structured, human-approved newsletter content proposal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contentId", "status", "audience", "subject", "sections", "approval"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "contentId": { "type": "string", "pattern": "^cnt_[a-z0-9][a-z0-9_-]*$" },
+    "status": { "type": "string", "enum": ["draft", "pending_approval", "approved", "rejected", "archived"] },
+    "audience": { "type": "string", "enum": ["general_subscribers", "customers", "members", "internal_test"] },
+    "subject": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "previewText": { "type": "string", "maxLength": 180 },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "heading", "body"],
+        "properties": {
+          "type": { "type": "string", "enum": ["intro", "weekly_drop", "recipe", "story", "membership_perk", "closing"] },
+          "heading": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "body": { "type": "string", "minLength": 1, "maxLength": 4000 },
+          "sourceEntityIds": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z]+_[a-z0-9][a-z0-9_-]*$" },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "callsToAction": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "url"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "url": { "type": "string", "format": "uri" }
+        }
+      }
+    },
+    "aiAssistance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "type": "string", "maxLength": 80 },
+        "model": { "type": "string", "maxLength": 120 },
+        "promptSummary": { "type": "string", "maxLength": 1000 }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": { "type": "string", "enum": ["not_requested", "pending", "approved", "rejected"] },
+        "approverId": { "type": "string", "maxLength": 120 },
+        "decidedAt": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string", "maxLength": 1000 }
+      }
+    }
+  }
+}
