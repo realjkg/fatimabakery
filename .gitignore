@@ -11,3 +11,6 @@ reports/weekly/latest.md
 /reports/audit/
 # Generated local audit reports
 reports/audit/
+
+# Local generated artifacts
+artifacts/
