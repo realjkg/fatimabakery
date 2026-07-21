@@ -2849,16 +2849,16 @@ function sendWeeklyDrop() {
     if (remaining === 0) {
       soldOutLines.push(name);
     } else {
-      var line = name + " (" + remaining + " left)";
+      var line = name;
       if (item.type === "boule") bouleLines.push(line);
       else specLines.push(line);
     }
   });
 
   if (bouleLines.length === 0 && soldOutLines.indexOf("Fatima") === -1)
-    bouleLines = ["Fatima (" + bouleLeft + " left)"];
+    bouleLines = ["Fatima"];
   if (specLines.length === 0 && specLeft > 0)
-    specLines = ["Specialty boules (" + specLeft + " left)"];
+    specLines = ["Specialty boules"];
 
   // Send to each active subscriber
   var rows = emailSheet.getDataRange().getValues();
