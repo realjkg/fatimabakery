@@ -510,6 +510,20 @@ function isDeliveryOrder_(data) {
   if (String(data.preferred_time || "").toLowerCase().indexOf("delivery") > -1) return true;
   return parseMoneyPositive_(data.delivery_fee);
 }
+
+var DELIVERY_SERVICE_AREA_MESSAGE = "Delivery is currently limited to the Santa Rita Ranch area near Liberty Hill, Leander, and Georgetown. Please choose Friday pickup, or contact us before placing a delivery order.";
+var DELIVERY_ALLOWED_ZIPS = { "78642": true, "78641": true, "78628": true };
+function deliveryServiceAreaDecision_(data) {
+  if (!isDeliveryOrder_(data)) return { ok: true };
+  var addr = normalizeDeliveryAddress_(data || {});
+  var zip = String(addr.zip || "").trim();
+  var city = String(addr.city || "").trim().toLowerCase();
+  if (!/^\d{5}$/.test(zip)) return { ok: false, status: "delivery_unavailable", message: DELIVERY_SERVICE_AREA_MESSAGE };
+  if (zip.indexOf("787") === 0) return { ok: false, status: "delivery_unavailable", message: DELIVERY_SERVICE_AREA_MESSAGE };
+  if (city === "austin") return { ok: false, status: "delivery_unavailable", message: DELIVERY_SERVICE_AREA_MESSAGE };
+  if (!DELIVERY_ALLOWED_ZIPS[zip]) return { ok: false, status: "delivery_unavailable", message: DELIVERY_SERVICE_AREA_MESSAGE };
+  return { ok: true };
+}
 function fulfillmentDayInstruction_(isDelivery, html) {
   if (isDelivery) return "On delivery day, we will text you when we’re on our way to confirm the delivery window. It helps us hand you the freshest possible loaf.";
   var phone = html ? "<a href='sms:" + CONTACT_PHONE_SMS + "' style='color:#b5963e'>" + CONTACT_PHONE + "</a>" : CONTACT_PHONE;
@@ -1017,6 +1031,16 @@ function handleOrder(data, ss) {
     return jsonResponse({ status: "error", message: "Please include an email or phone number so we can confirm your order." });
   }
 
+  var isDelivery       = isDeliveryOrder_(data);
+  var deliveryAddress = normalizeDeliveryAddress_(data);
+  if (isDelivery && (!deliveryAddress.address1 || !deliveryAddress.city || !deliveryAddress.state)) {
+    return jsonResponse({ status: "missing_address", message: "Please enter your complete delivery address." });
+  }
+  var deliveryServiceArea = deliveryServiceAreaDecision_(data);
+  if (!deliveryServiceArea.ok) {
+    return jsonResponse(deliveryServiceArea);
+  }
+
   // ── Capacity checks removed ─────────────────────────────
   // Orders are never blocked for capacity. Lindsay's owner-facing
   // reports (Capacity Guard agent, weekly drop availability, Daily
@@ -1035,11 +1059,6 @@ function handleOrder(data, ss) {
     }
   }
 
-  var isDelivery       = isDeliveryOrder_(data);
-  var deliveryAddress = normalizeDeliveryAddress_(data);
-  if (isDelivery && (!deliveryAddress.address1 || !deliveryAddress.city || !deliveryAddress.state || !deliveryAddress.zip)) {
-    return jsonResponse({ status: "missing_address", message: "Please enter your complete delivery address." });
-  }
   if (pickupDate) {
     var dateDow = dayOfWeek_(pickupDate);
     if (isDelivery && dateDow !== 4) {

@@ -41,6 +41,15 @@ test('central delivery helper recognizes explicit fields and malformed values sa
   assert.equal(h.isDeliveryOrder_({ delivery_fee: 'nope' }), false);
 });
 
+test('Apps Script delivery service area rejects Austin and unlisted ZIPs without affecting pickup', () => {
+  const h = load();
+  assert.equal(h.deliveryServiceAreaDecision_({ fulfillment: 'pickup', delivery_city: 'Austin', delivery_zip: '78701' }).ok, true);
+  assert.equal(h.deliveryServiceAreaDecision_({ fulfillment: 'delivery', delivery_city: 'Liberty Hill', delivery_zip: '78642' }).ok, true);
+  assert.equal(h.deliveryServiceAreaDecision_({ fulfillment: 'delivery', delivery_city: 'Austin', delivery_zip: '78642' }).status, 'delivery_unavailable');
+  assert.equal(h.deliveryServiceAreaDecision_({ fulfillment: 'delivery', delivery_city: 'Leander', delivery_zip: '78717' }).status, 'delivery_unavailable');
+  assert.equal(h.deliveryServiceAreaDecision_({ fulfillment: 'delivery', delivery_city: 'Georgetown', delivery_zip: '78626' }).status, 'delivery_unavailable');
+});
+
 test('order received messaging separates pickup and delivery texting instructions', () => {
   const h = load();
   const base = { name: 'Test', email: 't@example.test', order: 'Fatima x1', total: '$12', preferred_date: '2026-07-24', preferred_time: 'Friday Pickup — 9 AM–12 PM' };
@@ -77,6 +86,13 @@ test('calendar events use delivery and pickup information through centralized he
   assert.match(fn, /var endHour = isDelivery \? 17 : 12/);
   assert.match(fn, /location: isDelivery \? deliveryAddressText : PICKUP_ADDRESS/);
   assert.match(fn, /Address: /);
+});
+
+test('active order form advertises service-area ZIP enforcement without radius claims', () => {
+  const orderSection = orderHtml.slice(orderHtml.indexOf('id="order-form"'), orderHtml.indexOf('</form>', orderHtml.indexOf('id="order-form"')));
+  assert.match(orderSection, /Santa Rita Ranch service area near Liberty Hill, Leander, and Georgetown · Adds \$10/);
+  assert.doesNotMatch(orderSection, /within 10 miles|8 miles|10-mile|8-mile/i);
+  assert.match(orderHtml, /Delivery — Santa Rita Ranch service area near Liberty Hill, Leander, and Georgetown, Thursdays 3 PM to 5 PM/);
 });
 
 test('Loaf Reserve form keeps stable IDs, Friday pickup, and required loaf options', () => {
