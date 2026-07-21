@@ -62,12 +62,12 @@ Do not commit live payment secrets or tokens into GitHub. For Apps Script, sensi
 
 Current front-end updates included in this repo:
 
-- Changed visible membership wording from “Pilgrim Reserve” to “Loaf Reserve.”
+- Uses Loaf Reserve terminology consistently for the membership program.
 - Updated the next market event to August 6, 2026, 5:00–8:30 PM, Wolf Ranch River Camp, 101 River Overlook Rd., Georgetown, TX 78626.
 - Added local SEO wording for Liberty Hill, Leander, Georgetown, Cedar Park, and North Austin.
 - Renamed the email list callout to “Fatima Bakery newsletter list.”
 
-Keep the form anchor `#Pilgrim Membership` unless/until the backend and front-end form payload are changed together. The user-facing label can say “Loaf Reserve” while the internal anchor stays stable.
+Use the current form anchor `#loaf-reserve` and hidden order type `Loaf Reserve Membership`.
 
 ## Agentic Release Guardrails
 

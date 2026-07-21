@@ -497,6 +497,24 @@ function validateWorkerSignature_(data) {
 }
 function neutralizeSheetValue_(value) { value = String(value || ''); return /^[=+\-@]/.test(value) ? "'" + value : value; }
 function htmlEscape_(value) { return String(value || '').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]); }); }
+function parseMoneyPositive_(value) {
+  if (typeof value === "number") return isFinite(value) && value > 0;
+  var cleaned = String(value == null ? "" : value).replace(/[^0-9.\-]/g, "");
+  if (!cleaned) return false;
+  var n = Number(cleaned);
+  return isFinite(n) && n > 0;
+}
+function isDeliveryOrder_(data) {
+  data = data || {};
+  if (String(data.fulfillment || "").toLowerCase().indexOf("delivery") > -1) return true;
+  if (String(data.preferred_time || "").toLowerCase().indexOf("delivery") > -1) return true;
+  return parseMoneyPositive_(data.delivery_fee);
+}
+function fulfillmentDayInstruction_(isDelivery, html) {
+  if (isDelivery) return "On delivery day, we will text you when we’re on our way to confirm the delivery window. It helps us hand you the freshest possible loaf.";
+  var phone = html ? "<a href='sms:" + CONTACT_PHONE_SMS + "' style='color:#b5963e'>" + CONTACT_PHONE + "</a>" : CONTACT_PHONE;
+  return "On pickup day, please text us at " + phone + " when you’re on your way. It helps us prepare the freshest possible handoff.";
+}
 function normalizeDeliveryAddress_(data) {
   return {
     address1: neutralizeSheetValue_((data.delivery_address1 || '').trim()), address2: neutralizeSheetValue_((data.delivery_address2 || '').trim()),
@@ -506,29 +524,6 @@ function normalizeDeliveryAddress_(data) {
   };
 }
 function fullDeliveryAddressText_(addr) { return [addr.address1, addr.address2, addr.city, addr.state, addr.zip].filter(Boolean).join(', '); }
-function correctionTokenUrl_(orderId) {
-  var token = Utilities.getUuid().replace(/-/g,'') + Utilities.getUuid().replace(/-/g,'');
-  var digest = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, token));
-  PropertiesService.getScriptProperties().setProperty('address_token_' + digest, JSON.stringify({ orderId: orderId, expires: Date.now() + 86400000, usedAt: '', revoked: false }));
-  return prop_('ADDRESS_CORRECTION_URL', ORDER_FORM_URL.replace('/order','/address-correction')) + '?token=' + encodeURIComponent(token);
-}
-function validateAddressUpdateToken_(token) {
-  var digest = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(token || '')));
-  var props = PropertiesService.getScriptProperties();
-  var key = 'address_token_' + digest;
-  var raw = props.getProperty(key);
-  if (!raw) throw new Error('Invalid address update link.');
-  var rec = JSON.parse(raw);
-  if (rec.revoked || rec.usedAt) throw new Error('This address update link has already been used.');
-  if (Date.now() > Number(rec.expires)) throw new Error('This address update link has expired.');
-  rec.usedAt = new Date().toISOString(); props.setProperty(key, JSON.stringify(rec));
-  return rec.orderId;
-}
-function handleAddressCorrection(data, ss) {
-  var orderId = validateAddressUpdateToken_(data.address_token);
-  return jsonResponse({ status: 'success', orderId: orderId, message: 'Delivery address update received for review.' });
-}
-
 // ============================================================
 //  1. RECEIVE FORM SUBMISSION — entry point
 // ============================================================
@@ -568,8 +563,7 @@ function doPost(e) {
       if (route === "contact") result = handleContact(data, ss);
       else {
         validateWorkerSignature_(data);
-        if (route === "address_correction") result = handleAddressCorrection(data, ss);
-        else if (route === "subscription")  result = handleSubscription(data, ss);
+        if (route === "subscription")  result = handleSubscription(data, ss);
         else                                result = handleOrder(data, ss);
       }
     }
@@ -586,15 +580,14 @@ function normalizeOrderType(data) {
   // Square webhook events have event_id + merchant_id — never treat as a form.
   if (data.event_id && data.merchant_id) return "square_event";
   var raw = String(data.order_type || data.type || "").toLowerCase().trim();
-  if (raw.indexOf("address_correction") > -1) return "address_correction";
   if (raw.indexOf("contact") > -1 || raw.indexOf("message") > -1) return "contact";
-  if (raw.indexOf("subscription") > -1 ||
+  if (raw.indexOf("loaf reserve") > -1 ||
+      raw.indexOf("subscription") > -1 ||
       raw.indexOf("membership") > -1 ||
-      raw.indexOf("pilgrim") > -1 ||
-      raw.indexOf("bread share") > -1 ||
       data.subscription_tier ||
       data.membership_tier ||
       data.subscription_kind ||
+      data.subscription_label ||
       data.subscription_loaf) {
     return "subscription";
   }
@@ -618,22 +611,6 @@ function normalizeOrderType(data) {
 //    by API re-fetch from Square before confirming any payment.
 // ------------------------------------------------------------
 
-// Pull the Square signature header across the header-name variants
-// Apps Script may expose. Returns the signature string or null.
-function squareGetSignature(e) {
-  if (!e) return null;
-  // Apps Script does not expose request headers directly on e.
-  // Square also mirrors the signature into the body-adjacent
-  // parameter only in tests; in production we rely on the header
-  // being forwarded via e.parameter when using a proxy, OR we
-  // accept the event if signature key is blank ONLY in test mode.
-  // Google Apps Script web apps DO NOT provide request headers,
-  // so true HMAC header verification is not possible here.
-  // We therefore verify by re-deriving trust from the Square API:
-  // see handleSquareWebhook(), which re-fetches the payment from
-  // Square using our secret access token before trusting it.
-  return "api-verify";  // sentinel: use API re-fetch verification
-}
 
 // Verify a Square event is authentic. Because Apps Script cannot
 // read the HMAC header, we use a stronger check instead: take the
@@ -685,7 +662,7 @@ function handleSquareWebhook(e) {
   // because the payment won't exist under our account. This is
   // stronger than HMAC for this platform (see lines 391-423).
   //
-  // IMPORTANT: Do NOT call ensureSquareQueueTrigger() here — it
+  // IMPORTANT: Do NOT call slow trigger setup here — it
   // calls ScriptApp.getProjectTriggers() which is too slow for
   // the webhook response window. Instead, install a recurring
   // trigger via installTriggers() that runs processSquareQueue
@@ -711,19 +688,6 @@ function handleSquareWebhook(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// Legacy one-shot trigger creator. No longer called from the webhook
-// inline path (it was too slow). Kept for manual use / backwards compat.
-// The preferred approach is a recurring 2-minute trigger installed by
-// installTriggers() — see installSquareQueueTrigger().
-function ensureSquareQueueTrigger() {
-  var triggers = ScriptApp.getProjectTriggers();
-  for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === "processSquareQueue") return; // already scheduled
-  }
-  ScriptApp.newTrigger("processSquareQueue")
-    .timeBased().everyMinutes(1)
-    .create();
-}
 
 // Install a recurring trigger that drains the Square queue every 2 min.
 // Call this ONCE from Run → installSquareQueueTrigger, or it will be
@@ -846,7 +810,9 @@ function markOrderPaid(orderId, squarePaymentId, amountCents) {
     if (rows[i][15] === orderId) {                    // Col P = Order ID
       var current = rows[i][16];                       // Col Q = Status (index 16)
       var alreadyConfirmed = current === "Confirmed" ||
+                             current === "Paid" ||
                              current === "Ready for Pickup" ||
+                             current === "Ready for Delivery" ||
                              current === "Completed";
       if (!alreadyConfirmed) {
         sheet.getRange(i+1, 17).setValue("Confirmed"); // Col Q = Status
@@ -855,7 +821,7 @@ function markOrderPaid(orderId, squarePaymentId, amountCents) {
       try { sheet.getRange(i+1, 27).setValue(
         "Square " + (squarePaymentId||"") + " $" + ((amountCents||0)/100).toFixed(2)
       ); } catch (noteErr) {}
-      if (typeof updateLineItemStatus === "function") updateLineItemStatus(orderId, "Confirmed");
+      if (!alreadyConfirmed && typeof updateLineItemStatus === "function") updateLineItemStatus(orderId, "Confirmed");
 
       var d = {
         name: rows[i][1],
@@ -865,7 +831,7 @@ function markOrderPaid(orderId, squarePaymentId, amountCents) {
         total: rows[i][10],
         preferred_date: rows[i][11],
         preferred_time: rows[i][12],
-        fulfillment: String(rows[i][12] || "").indexOf("Delivery") > -1 ? "delivery" : "pickup",
+        fulfillment: String(rows[i][12] || "").toLowerCase().indexOf("delivery") > -1 ? "delivery" : "pickup",
         delivery_address1: rows[i][17] || "",
         delivery_address2: rows[i][18] || "",
         delivery_city: rows[i][19] || "",
@@ -884,10 +850,10 @@ function markOrderPaid(orderId, squarePaymentId, amountCents) {
           Logger.log("customer payment confirmation failed for " + orderId + ": " + customerMailErr);
         }
       }
-      if (CALENDAR_ID) createCalendarEvent(d, orderId);
+      if (!alreadyConfirmed && CALENDAR_ID) createCalendarEvent(d, orderId);
 
       // Notify owner.
-      try {
+      if (!alreadyConfirmed) try {
         sendOwnerPaymentAlert(d);
       } catch (mailErr) { Logger.log("paid alert failed: " + mailErr); }
       return true;
@@ -1069,7 +1035,7 @@ function handleOrder(data, ss) {
     }
   }
 
-  var isDelivery       = String(data.fulfillment || data.preferred_time || "").toLowerCase().indexOf("delivery") > -1;
+  var isDelivery       = isDeliveryOrder_(data);
   var deliveryAddress = normalizeDeliveryAddress_(data);
   if (isDelivery && (!deliveryAddress.address1 || !deliveryAddress.city || !deliveryAddress.state || !deliveryAddress.zip)) {
     return jsonResponse({ status: "missing_address", message: "Please enter your complete delivery address." });
@@ -1229,7 +1195,6 @@ function handleOrder(data, ss) {
   emailData.delivery_fee = deliveryFmt;
   emailData.delivery_address = deliveryAddress;
   // Address correction links remain disabled until the correction endpoint updates the order row.
-  emailData.address_correction_url = "";
 
   try {
     if (data.waitlist === true || data.waitlist === "true") logWaitlist(ss, data);
@@ -1264,7 +1229,7 @@ function handleOrder(data, ss) {
 
 
 // ============================================================
-//  3. SUBSCRIPTION — Pilgrim Membership (Cash App default, Square/Venmo optional)
+//  3. SUBSCRIPTION — Loaf Reserve Membership (Cash App default, Square/Venmo optional)
 // ============================================================
 function handleSubscription(data, ss) {
   if (!data || typeof data !== "object") {
@@ -1334,7 +1299,7 @@ function handleSubscription(data, ss) {
       subInfo.price * 100,
       subId,
       data.name,
-      "Pilgrim Membership — " + loafLabel + " · " + tier
+      "Loaf Reserve Membership — " + loafLabel + " · " + tier
     );
   } catch (squareErr) {
     Logger.log("Subscription Square link failed for " + subId + ": " + squareErr);
@@ -1634,17 +1599,18 @@ function sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel
   tier = tier || "";
   subId = subId || "FBS-MANUAL-TEST";
   loafLabel = loafLabel || "Fatima Classic";
-  var subject = "🌿 Pilgrim Membership received — " + subId;
+  var subject = "🌿 Loaf Reserve Membership received — " + subId;
   var html = buildBaseEmailHTML(
-    "Pilgrim Membership",
+    "Loaf Reserve Membership",
     "<p>Hi " + (data.name||"there") + ",</p>" +
-    "<p>Your Pilgrim Membership has been received.</p>" +
+    "<p>Your Loaf Reserve Membership has been received.</p>" +
     buildInfoTable([
-      ["Sub ID",   subId],
+      ["Membership ID",   subId],
       ["Loaf",     loafLabel],
-      ["Tier",     tier + " — $" + subInfo.price],
-      ["What",     subInfo.desc],
-      ["Starts",   data.preferred_date || "TBD — we'll confirm"]
+      ["Term",     tier],
+      ["Price",    "$" + subInfo.price],
+      ["First Friday",   data.preferred_date || "TBD — we'll confirm"],
+      ["Pickup window", "Friday pickup only, 9 AM–12 PM in Liberty Hill"]
     ]) +
     "<div class='pay-box'>" +
     "<p><strong>Pay in full to activate your membership:</strong></p>" +
@@ -1657,9 +1623,9 @@ function sendSubscriptionEmail(data, tier, subInfo, squareLink, subId, loafLabel
     "<p>Pickup every Friday at " + PICKUP_ADDRESS + ".</p>"
   );
   var text =
-    "Hi " + (data.name||"there") + ", Pilgrim Membership received.\n\n" +
-    "Sub ID: " + subId + "\nTier: " + tier + " — $" + subInfo.price + "\n" +
-    "Starts: " + (data.preferred_date||"TBD") + "\n\n" +
+    "Hi " + (data.name||"there") + ", Loaf Reserve Membership received.\n\n" +
+    "Membership ID: " + subId + "\nLoaf: " + loafLabel + "\nTerm: " + tier + "\nPrice: $" + subInfo.price + "\n" +
+    "First Friday: " + (data.preferred_date||"TBD") + "\nFriday pickup only, 9 AM–12 PM in Liberty Hill" + "\n\n" +
     "Pay in full to activate:\n" +
     (cashLink ? "Cash App (preferred): " + cashLink + "\n" : "") +
     (squareLink ? "Square: " + squareLink + "\n" : "") +
@@ -1681,10 +1647,10 @@ function sendOwnerSubscriptionAlert(data, tier, subInfo, subId, squareLink, loaf
   loafLabel = loafLabel || "Fatima Classic";
   sendTrackedEmail({
     to: OWNER_EMAIL, bcc: OWNER_EMAIL_BACKUP || undefined,
-    subject: "🌿 New Pilgrim Membership — " + (data.name||"") + " | " + loafLabel + " · " + tier,
+    subject: "🌿 New Loaf Reserve Membership — " + (data.name||"") + " | " + loafLabel + " · " + tier,
     body:
-      "New Pilgrim Membership!\n\n" +
-      "Sub ID: " + subId + "\nName: " + (data.name||"") +
+      "New Loaf Reserve Membership!\n\n" +
+      "Membership ID: " + subId + "\nName: " + (data.name||"") +
       "\nEmail: " + (data.email||"") + "\nPhone: " + (data.phone||"") +
       "\nLoaf: " + loafLabel +
       "\nTier: " + tier + " — $" + subInfo.price +
@@ -1707,23 +1673,23 @@ function sendSubscriptionActiveEmail(data) {
 
   var contentHTML =
     "<p>Hi " + name + ",</p>" +
-    "<p>✅ Payment received — your Pilgrim Membership is active!</p>" +
+    "<p>✅ Payment received — your Loaf Reserve Membership is active!</p>" +
     buildInfoTable([
-      ["Plan",         data.tier      || ""],
+      ["Selected loaf", data.loaf || data.tier      || ""],
       ["Price",        data.price     || ""],
       ["First pickup", data.startDate || ""],
       ["Last pickup",  data.endDate   || ""],
-      ["Sub ID",       data.subId     || ""]
+      ["Membership ID",       data.subId     || ""]
     ]) +
     "<p>Your Fatima boule will be ready for pickup every Friday for the length of your membership. Nothing else is due until renewal.</p>";
 
   var textBody =
-    "Hi " + name + ", payment received — your Pilgrim Membership is active!\n\n" +
+    "Hi " + name + ", payment received — your Loaf Reserve Membership is active!\n\n" +
     "Plan: " + (data.tier||"") + "\nPrice: " + (data.price||"") +
     "\nFirst pickup: " + (data.startDate||"") + "\nLast pickup: " + (data.endDate||"") +
-    "\nSub ID: " + (data.subId||"") +
-    "\n\nYour Fatima boule will be ready every Friday for the length of your membership." +
-    "\nNothing else due until renewal.\nFatima Bakery ATX";
+    "\nMembership ID: " + (data.subId||"") +
+    "\nFriday pickup window: 9 AM–12 PM at " + PICKUP_ADDRESS +
+    "\n\nMembership is paid by term. We will send a reminder before your term ends.\nFatima Bakery ATX";
 
   sendTrackedEmail({
     to: data.email, bcc: OWNER_EMAIL_BACKUP || undefined,
@@ -1754,7 +1720,7 @@ function testSubscriptionEmail() {
     subInfo.price * 100,
     subId,
     testData.name,
-    "Pilgrim Membership — Fatima Classic · 4 weeks"
+    "Loaf Reserve Membership — Fatima Classic · 4 weeks"
   );
   var totalFmt = "$" + Number(subInfo.price || 0).toFixed(2);
   var cashLink = createCashAppLink(totalFmt);
@@ -1883,24 +1849,6 @@ function createCashAppLink(total) {
 }
 
 
-// ============================================================
-//  6. SQUARE WEBHOOK — auto-confirm on payment
-//     Register Web App URL → Square Developer → Webhooks
-//     Events: payment.completed
-// ============================================================
-function receiveSquareWebhook(e) {
-  try {
-    var body = JSON.parse(e.postData.contents);
-    if (body.type !== "payment.completed") return jsonResponse({ status: "ok" });
-    var note    = body.data && body.data.object && body.data.object.payment
-                  ? (body.data.object.payment.note || "") : "";
-    var isSub   = note.match(/FBS-\d+/);
-    var isOrder = note.match(/FB-\d+/);
-    if (isSub)   updateSubscriptionStatus(isSub[0], "Active");
-    if (isOrder) confirmOrder(isOrder[0]);
-    return jsonResponse({ status: "ok" });
-  } catch (err) { Logger.log("Webhook error: " + err); return jsonResponse({ status: "ok" }); }
-}
 
 function confirmOrder(orderId) {
   var ss    = SpreadsheetApp.getActiveSpreadsheet();
@@ -1924,10 +1872,6 @@ function confirmOrder(orderId) {
   }
 }
 
-function confirmOrderVenmo(orderId) {
-  // Call from Sheet menu when you manually verify a Venmo payment
-  confirmOrder(orderId);
-}
 
 // ── Refund — call manually when you cannot fulfill an order ──
 // method: "Square" (refunded automatically via Square dashboard/API)
@@ -2083,7 +2027,7 @@ function buildInfoTable(rows) {
 function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLink, venmoLink, cashLink) {
   var name    = data.name || "there";
   var greeting = returning ? "Welcome back, " + name + "." : "Hi " + name + ",";
-  var isDelivery = (data.preferred_time||"").indexOf("Delivery") > -1;
+  var isDelivery = isDeliveryOrder_(data);
   var addr = data.delivery_address || normalizeDeliveryAddress_(data);
   var addressText = fullDeliveryAddressText_(addr);
   var locationText = isDelivery
@@ -2116,15 +2060,11 @@ function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLi
       ["Window",    htmlEscape_(data.preferred_time||"Friday")],
       isDelivery ? ["Delivery fee", htmlEscape_(data.delivery_fee || "$10.00")] : null,
       isDelivery ? ["Address status", htmlEscape_(addr.status || data.address_status || "Customer provided")] : null,
-      isDelivery && data.address_correction_url ? ["Correct delivery address", "<a href='" + htmlEscape_(data.address_correction_url) + "'>Correct delivery address</a>"] : null,
       data.notes ? ["Notes", htmlEscape_(data.notes)] : null
     ].filter(Boolean)) +
     "<p><strong>Members receive classic and specialty reserved loaves baked fresh every week in Liberty Hill.</strong></p>" + payHTML +
     "<p style='font-size:13px;color:#3a3a3a;border-top:1px solid #e5e0d8;padding-top:14px'>" +
-    "🥖 <strong>On " + (isDelivery ? "delivery" : "pickup") + " day:</strong> please text us at " +
-    "<a href='sms:" + CONTACT_PHONE_SMS + "' style='color:#b5963e'>" + CONTACT_PHONE + "</a> when you're on your way" +
-    (isDelivery ? " so we can confirm your delivery window" : "") +
-    " — it helps us hand you the freshest possible loaf.</p>";
+    "🥖 <strong>Fulfillment note:</strong> " + fulfillmentDayInstruction_(isDelivery, true) + "</p>";
 
   var textBody =
     greeting + " Your order has been received.\n\n" +
@@ -2136,8 +2076,7 @@ function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLi
     (venmoLink  ? "Venmo:  " + venmoLink  + "\n" : "") +
     "\nSquare confirms automatically. Cash App and Venmo confirmed within a few hours." +
     "\nFull refund if we cannot fulfill.\n\n" +
-    "On " + (isDelivery ? "delivery" : "pickup") + " day, please text us at " + CONTACT_PHONE +
-    " when you're on your way" + (isDelivery ? " to confirm your delivery window" : "") + ".\n\n" +
+    fulfillmentDayInstruction_(isDelivery, false) + "\n\n" +
     "Questions: DM " + INSTAGRAM_HANDLE + " or " + OWNER_EMAIL + "\nFatima Bakery ATX";
 
   sendTrackedEmail({
@@ -2150,7 +2089,7 @@ function sendOrderReceivedEmail(data, orderId, returning, hasSpecialty, squareLi
 
 // ── Payment confirmed email (fires via Square webhook) ───────
 function sendPaymentConfirmedEmail(data) {
-  var isDelivery = (data.preferred_time||"").indexOf("Delivery") > -1;
+  var isDelivery = isDeliveryOrder_(data);
   var deliveryAddressText = fullDeliveryAddressText_(normalizeDeliveryAddress_(data));
   var locationText = isDelivery
     ? htmlEscape_(deliveryAddressText || DELIVERY_AREA) + " &mdash; " + DELIVERY_HOURS
@@ -2228,9 +2167,9 @@ function sendOwnerNewOrderAlert(data, rowNum, orderId, bouleCount, specialtyCoun
   });
 }
 
-// ── Pickup ready notification ────────────────────────────────
-function sendPickupNotification(data) {
-  var isDelivery = (data.preferred_time||"").indexOf("Delivery") > -1;
+// ── Fulfillment ready notification ────────────────────────────────
+function sendFulfillmentReadyNotification(data) {
+  var isDelivery = isDeliveryOrder_(data);
   var deliveryAddressText = fullDeliveryAddressText_(normalizeDeliveryAddress_(data));
   var locationText = isDelivery
     ? htmlEscape_(deliveryAddressText || DELIVERY_AREA) + " &mdash; " + DELIVERY_HOURS
@@ -2238,7 +2177,7 @@ function sendPickupNotification(data) {
 
   var contentHTML =
     "<p>Hi " + data.name + ",</p>" +
-    "<p>🌿 Your order is freshly baked and ready!</p>" +
+    isDelivery ? "<p>🌿 Your delivery is scheduled.</p><p>On delivery day, we will text you when we’re on our way to confirm the delivery window. It helps us hand you the freshest possible loaf.</p>" : "<p>🌿 Your curbside pickup is ready.</p><p>" + fulfillmentDayInstruction_(false, true) + "</p>" +
     buildInfoTable([
       ["Order ID",  data.orderId],
       ["Items",     data.order],
@@ -2248,15 +2187,15 @@ function sendPickupNotification(data) {
     "<p>Nothing due at " + (isDelivery ? "delivery" : "pickup") + " — payment was collected upfront.</p>";
 
   var textBody =
-    "Hi " + data.name + ", your order is ready!\n\n" +
+    "Hi " + data.name + (isDelivery ? ", your order is scheduled for delivery!\n\n" : ", your curbside pickup is ready!\n\n") +
     "Order ID: " + data.orderId + "\nItems: " + data.order +
     "\n" + (isDelivery ? "Delivery: " + DELIVERY_AREA : "Pickup: " + PICKUP_ADDRESS) +
     "\nWindow: " + (data.preferred_time||"Friday") +
-    "\n\nNothing due — payment collected upfront.\nFatima Bakery ATX";
+    "\n\n" + fulfillmentDayInstruction_(isDelivery, false) + "\nNothing due — payment collected upfront.\nFatima Bakery ATX";
 
   sendTrackedEmail({
     to: data.email,
-    subject: "🌿 Your order is ready — " + data.orderId,
+    subject: (isDelivery ? "🌿 Your order is scheduled for delivery — " : "🌿 Your order is ready for pickup — ") + data.orderId,
     body: textBody, htmlBody: buildBaseEmailHTML("Order Ready 🌿", contentHTML),
     name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL
   });
@@ -2287,16 +2226,6 @@ function sendReviewRequest(data) {
   });
 }
 
-// ── Capacity / advance notice emails ─────────────────────────
-function sendCapacityEmail(data, msg) {
-  if (!data.email) return;
-  var html = buildBaseEmailHTML("Date Unavailable",
-    "<p>Hi " + (data.name||"there") + ",</p><p>" + msg + "</p>" +
-    "<p>Please choose a different Friday or DM us to check availability.</p>");
-  sendTrackedEmail({ to: data.email, subject: "Fatima Bakery — date unavailable",
-    body: msg + "\n\nPlease choose a different Friday or DM " + INSTAGRAM_HANDLE,
-    htmlBody: html, name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL });
-}
 
 function sendAdvanceNoticeEmail(data, msg) {
   if (!data.email) return;
@@ -2334,11 +2263,12 @@ function markOrderReady() {
     orderId:        sheet.getRange(row, 16).getValue()
   };
 
-  sheet.getRange(row, 17).setValue("Ready for Pickup");
-  updateLineItemStatus(data.orderId, "Ready for Pickup");
+  var readyStatus = isDeliveryOrder_(data) ? "Ready for Delivery" : "Ready for Pickup";
+  sheet.getRange(row, 17).setValue(readyStatus);
+  updateLineItemStatus(data.orderId, readyStatus);
 
   if (data.email) {
-    sendPickupNotification(data);
+    sendFulfillmentReadyNotification(data);
     scheduleReviewRequest(row, data);
     safeAlert("✅ " + data.name + " notified.");
   } else {
@@ -2639,13 +2569,13 @@ function subscriptionRenewalAgent() {
     if (PropertiesService.getScriptProperties().getProperty(sentKey)) return;
 
     // Generate Square links for each tier
-    var s4 = createSquarePaymentLink(4400, "FBS-RENEW4-"+Date.now(), name, "Pilgrim Membership 4 weeks");
-    var s6 = createSquarePaymentLink(6000, "FBS-RENEW6-"+Date.now(), name, "Pilgrim Membership 6 weeks");
-    var s8 = createSquarePaymentLink(7200, "FBS-RENEW8-"+Date.now(), name, "Pilgrim Membership 8 weeks");
+    var s4 = createSquarePaymentLink(4400, "FBS-RENEW4-"+Date.now(), name, "Loaf Reserve Membership 4 weeks");
+    var s6 = createSquarePaymentLink(6000, "FBS-RENEW6-"+Date.now(), name, "Loaf Reserve Membership 6 weeks");
+    var s8 = createSquarePaymentLink(7200, "FBS-RENEW8-"+Date.now(), name, "Loaf Reserve Membership 8 weeks");
 
     var renewHTML =
       "<div class='pay-box'>" +
-      "<p><strong>Renew your Pilgrim Membership:</strong></p>" +
+      "<p><strong>Renew your Loaf Reserve Membership:</strong></p>" +
       (s4 ? "<a class='pay-btn' href='" + s4 + "'>4 Weeks — $44</a>" : "") +
       (s6 ? "<a class='pay-btn' href='" + s6 + "'>6 Weeks — $60</a>" : "") +
       (s8 ? "<a class='pay-btn' href='" + s8 + "'>8 Weeks — $72</a>" : "") +
@@ -2653,13 +2583,13 @@ function subscriptionRenewalAgent() {
 
     var contentHTML =
       "<p>Hi " + name + ",</p>" +
-      "<p>Your " + tier + " Pilgrim Membership is ending soon. We hope you've enjoyed every loaf.</p>" +
-      "<p>Your last delivery is on " + endDateRaw + ".</p>" +
+      "<p>Your " + tier + " Loaf Reserve Membership is ending soon. We hope you've enjoyed every loaf.</p>" +
+      "<p>Your final pickup is on " + endDateRaw + ".</p>" +
       renewHTML +
-      "<p>Not renewing? No action needed — your Pilgrim Membership ends automatically.</p>";
+      "<p>Not renewing? No action needed — your Loaf Reserve Membership ends automatically.</p>";
 
     var textBody =
-      "Hi " + name + ", your " + tier + " Pilgrim Membership ends " + endDateRaw + ".\n\n" +
+      "Hi " + name + ", your " + tier + " Loaf Reserve Membership ends " + endDateRaw + ".\n\n" +
       "Renew:\n" +
       (s4 ? "4 weeks ($44): " + s4 + "\n" : "") +
       (s6 ? "6 weeks ($60): " + s6 + "\n" : "") +
@@ -2668,8 +2598,8 @@ function subscriptionRenewalAgent() {
 
     sendTrackedEmail({
       to: email,
-      subject: "🌿 Your Pilgrim Membership is ending soon — renew?",
-      body: textBody, htmlBody: buildBaseEmailHTML("Renew Your Pilgrim Membership 🌿", contentHTML),
+      subject: "🌿 Your Loaf Reserve Membership is ending soon — renew?",
+      body: textBody, htmlBody: buildBaseEmailHTML("Renew Your Loaf Reserve Membership 🌿", contentHTML),
       name: "Fatima Bakery ATX", replyTo: OWNER_EMAIL
     });
 
@@ -2707,7 +2637,7 @@ function fridayBakeSheetAgent() {
       : rowDate.toString();
 
     if (rowDateStr !== todayStr) continue;
-    if (status !== "Confirmed" && status !== "Ready for Pickup" && status !== "Paid") continue;
+    if (status !== "Confirmed" && status !== "Ready for Pickup" && status !== "Ready for Delivery" && status !== "Paid") continue;
 
     var orderData = {
       name:   rows[i][1],
@@ -2975,7 +2905,7 @@ function createCalendarEvent(data, orderId) {
     var parts = raw instanceof Date
                 ? [raw.getFullYear(), raw.getMonth()+1, raw.getDate()]
                 : raw.toString().split("-").map(Number);
-    var isDelivery = (data.preferred_time||"").indexOf("Delivery") > -1;
+    var isDelivery = isDeliveryOrder_(data);
     var startHour = isDelivery ? 15 : 9;
     var endHour = isDelivery ? 17 : 12;
     var start = new Date(parts[0], parts[1]-1, parts[2], startHour, 0);
@@ -3113,7 +3043,7 @@ function setupRevenueSheet(ss) {
   var summaryRows = [
     ["A2","Total orders",        '=COUNTA(Orders!B2:B2000)'],
     ["A3","Awaiting payment",    '=COUNTIF(Orders!Q2:Q2000,"Awaiting Payment")'],
-    ["A4","Confirmed orders",    '=COUNTIF(Orders!Q2:Q2000,"Confirmed")+COUNTIF(Orders!Q2:Q2000,"Paid")+COUNTIF(Orders!Q2:Q2000,"Ready for Pickup")+COUNTIF(Orders!Q2:Q2000,"Completed")'],
+    ["A4","Confirmed orders",    '=COUNTIF(Orders!Q2:Q2000,"Confirmed")+COUNTIF(Orders!Q2:Q2000,"Paid")+COUNTIF(Orders!Q2:Q2000,"Ready for Pickup")+COUNTIF(Orders!Q2:Q2000,"Ready for Delivery")+COUNTIF(Orders!Q2:Q2000,"Completed")'],
     ["A5","Completed orders",    '=COUNTIF(Orders!Q2:Q2000,"Completed")'],
     ["A6","Cancelled",           '=COUNTIF(Orders!Q2:Q2000,"Cancelled")'],
   ];
@@ -3124,7 +3054,7 @@ function setupRevenueSheet(ss) {
 
   hStyle("A8","REVENUE");
   sheet.getRange("A9").setValue("Confirmed revenue");
-  sheet.getRange("B9").setFormula('=SUMPRODUCT(((Orders!Q2:Q2000="Confirmed")+(Orders!Q2:Q2000="Paid")+(Orders!Q2:Q2000="Ready for Pickup")+(Orders!Q2:Q2000="Completed")>0)*(IFERROR(VALUE(SUBSTITUTE(Orders!K2:K2000,"$","")),0)))');
+  sheet.getRange("B9").setFormula('=SUMPRODUCT(((Orders!Q2:Q2000="Confirmed")+(Orders!Q2:Q2000="Paid")+(Orders!Q2:Q2000="Ready for Pickup")+(Orders!Q2:Q2000="Ready for Delivery")+(Orders!Q2:Q2000="Completed")>0)*(IFERROR(VALUE(SUBSTITUTE(Orders!K2:K2000,"$","")),0)))');
   sheet.getRange("A10").setValue("Average order value");
   sheet.getRange("B10").setFormula('=IFERROR(B9/B4,"—")');
   sheet.getRange("A11").setValue("Delivery fees");
@@ -3193,7 +3123,7 @@ function setupCustomerSheet(ss) {
   sheet.getRange("A5").setValue("Repeat rate"); sheet.getRange("B5").setFormula('=IFERROR(B3/B2,"—")');
   sheet.getRange("B5").setNumberFormat("0%");
 
-  hStyle("A7","BREAD SHARE");
+  hStyle("A7","LOAF RESERVE");
   sheet.getRange("A8").setValue("Active"); sheet.getRange("B8").setFormula('=COUNTIF(Subscriptions!J2:J2000,"Active")');
   sheet.getRange("A9").setValue("4-week"); sheet.getRange("B9").setFormula('=COUNTIFS(Subscriptions!F2:F2000,"*4 weeks*",Subscriptions!J2:J2000,"Active")');
   sheet.getRange("A10").setValue("6-week"); sheet.getRange("B10").setFormula('=COUNTIFS(Subscriptions!F2:F2000,"*6 weeks*",Subscriptions!J2:J2000,"Active")');
@@ -3315,7 +3245,7 @@ function setupSheet() {
 
   var dv = SpreadsheetApp.newDataValidation()
     .requireValueInList([
-      "Awaiting Payment","Confirmed","Ready for Pickup",
+      "Awaiting Payment","Confirmed","Ready for Pickup","Ready for Delivery",
       "Completed","Paid","Cancelled","Cancelled — Unpaid"
     ], true)
     .build();
@@ -3332,6 +3262,8 @@ function setupSheet() {
     SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo("Paid")
       .setBackground("#d4edda").setFontColor("#155724").setRanges([qRange]).build(),
     SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo("Ready for Pickup")
+      .setBackground("#cce5ff").setFontColor("#004085").setRanges([qRange]).build(),
+    SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo("Ready for Delivery")
       .setBackground("#cce5ff").setFontColor("#004085").setRanges([qRange]).build(),
     SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo("Completed")
       .setBackground("#e8dfc8").setFontColor("#2e3d22").setRanges([qRange]).build(),
@@ -3351,7 +3283,7 @@ function setupSheet() {
   safeAlert(
     "✅ All sheets ready — v5 with 7 agents\n\n" +
     "Status flow:\n" +
-    "Awaiting Payment → Confirmed → Ready for Pickup → Completed\n" +
+    "Awaiting Payment → Confirmed → Ready for Pickup/Ready for Delivery → Completed\n" +
     "Unpaid after 24h → Cancelled — Unpaid (auto, daily 6am)\n\n" +
     "New Sheet menu options:\n" +
     "• Mark Confirmed (Venmo payment received)\n" +
@@ -3719,7 +3651,7 @@ function resendSubscriptionNoticeFromRow_(sheet, row) {
       price * 100,
       subId,
       data.name,
-      "Pilgrim Membership — " + loafLabel + " · " + tier
+      "Loaf Reserve Membership — " + loafLabel + " · " + tier
     );
   } catch (squareErr) {
     Logger.log("Manual resend Square link failed for " + subId + ": " + squareErr);

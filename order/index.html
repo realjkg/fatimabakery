@@ -943,7 +943,7 @@ footer{
 .footer-col p       { font-size: .9rem;  }
 .footer-bottom p    { font-size: .68rem; letter-spacing: .08em; }
 
-/* Order / Pilgrim Membership labels */
+/* Order / Loaf Reserve Membership labels */
 .order-group-title  { font-size: .72rem; letter-spacing: .13em; }
 .oi-name            { font-size: 1.05rem; }
 .oi-desc            { font-size: .85rem;  }
@@ -1021,7 +1021,7 @@ footer{
     <a href="/order">Order</a>
     <a href="/contact">Contact</a>
   </nav>
-  <a class="sh-order" href="/order#Pilgrim Membership">Membership</a>
+  <a class="sh-order" href="/order#loaf-reserve">Membership</a>
   <button class="sh-hamburger" id="sh-hamburger" aria-label="Open menu" aria-expanded="false">
     <span></span><span></span><span></span>
   </button>
@@ -1033,7 +1033,7 @@ footer{
   <a href="/collection">Pilgrim Collection</a>
   <a href="/contact">Contact</a>
   <a href="/order">Order</a>
-  <a href="/order#Pilgrim Membership" style="color:var(--gold);margin-top:.4rem;">Membership</a>
+  <a href="/order#loaf-reserve" style="color:var(--gold);margin-top:.4rem;">Membership</a>
 </nav>
 
 <!-- ORDER HEADER -->
@@ -1043,7 +1043,7 @@ footer{
   <p class="hero-intro">Choose Thursday delivery or Friday curbside pickup. Orders close Wednesday at 6 PM.</p>
   <div class="hero-btns">
     <a class="btn-order" href="#order">Order This Week</a>
-    <a class="btn-reserve" href="#Pilgrim Membership">Join Loaf Reserve</a>
+    <a class="btn-reserve" href="#loaf-reserve">Join Loaf Reserve</a>
   </div>
   <p class="reserve-note">Weekly loaves reserved and baked fresh in Liberty Hill.</p>
 </section>
@@ -1053,9 +1053,9 @@ footer{
   <div class="reserve-callout-inner">
     <div>
       <h2 id="reserve-callout-title">Bread lovers can reserve Fridays.</h2>
-      <p>Loaf Reserve Membership keeps your loaf on the list for 4, 6, or 8 weeks. Memberships are paid by term, typically auto-renew, and can be canceled for any reason before the next term begins.</p>
+      <p>Loaf Reserve Membership keeps your loaf on the list for 4, 6, or 8 weeks. Friday pickup only, 9 AM–12 PM in Liberty Hill. Membership is paid by term. We will send a reminder before your term ends.</p>
     </div>
-    <a class="btn-primary" href="#Pilgrim Membership">See Membership Plans</a>
+    <a class="btn-primary" href="#loaf-reserve">See Membership Plans</a>
   </div>
 </section>
 
@@ -1308,9 +1308,9 @@ footer{
   </form>
 </section>
 
-<!-- Pilgrim Membership -->
-<section id="Pilgrim Membership" class="contact-section">
-  <form class="contact-form order-form" id="Pilgrim Membership-form">
+<!-- Loaf Reserve Membership -->
+<section id="loaf-reserve" class="contact-section">
+  <form class="contact-form order-form" id="loaf-reserve-form">
     <div class="section-label gold-label">Loaf Reserve Membership</div>
     <h2 style="margin:0;">Never miss<br><em>a Friday.</em></h2>
     <p style="font-size:1rem;color:var(--ink2);line-height:1.8;margin:0;">Choose your loaf and a membership term below, and a fresh boule will be reserved for you every Friday for the length of your plan.</p>
@@ -1330,7 +1330,7 @@ footer{
       <label class="sub-loaf">
         <input type="radio" name="subscription_loaf" value="Baker's Choice" data-kind="specialty">
         <div class="loaf-name">Baker's Choice</div>
-        <div class="loaf-desc">A specialty loaf, our pick each week</div>
+        <div class="loaf-desc">A specialty loaf selected by the bakery</div>
       </label>
     </div>
 
@@ -1397,12 +1397,12 @@ footer{
     </div>
 
     <input type="hidden" name="source" value="website">
-    <input type="hidden" name="order_type" value="Pilgrim Membership">
+    <input type="hidden" name="order_type" value="Loaf Reserve Membership">
     <div class="order-reassure">
-      <p><strong>Membership terms.</strong> Loaf Reserve Membership is paid by term and is not handled as ad-hoc weekly refunds. Plans are typically set to auto-renew and can be canceled for any reason before the next term begins.</p>
+      <p><strong>Membership terms.</strong> Loaf Reserve Membership is paid by term. We will send a reminder before your term ends.</p>
     </div>
     <button type="submit" class="btn-primary">Join Loaf Reserve</button>
-    <p id="Pilgrim Membership-status" class="form-status"></p>
+    <p id="loaf-reserve-status" class="form-status"></p>
   </form>
 </section>
 
@@ -1424,7 +1424,7 @@ footer{
     <h4>Order</h4>
     <a href="/collection">Browse the Menu</a>
     <a href="/order">Order a Loaf</a>
-    <a href="/order#Pilgrim Membership">Loaf Reserve Membership</a>
+    <a href="/order#loaf-reserve">Loaf Reserve Membership</a>
     <a href="/contact">Contact</a>
   </div>
   <div class="footer-bottom">
@@ -1442,7 +1442,7 @@ footer{
 
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
-// Fatima Bakery — Order + Pilgrim Membership forms
+// Fatima Bakery — Order + Loaf Reserve Membership forms
 //
 // Recovery path — posts directly to the deployed Apps Script web app.
 //
@@ -1720,12 +1720,12 @@ footer{
     );
   });
 
-  // ── Pilgrim Membership FORM ──
-  var subForm      = document.getElementById('Pilgrim Membership-form');
-  var subStatus    = document.getElementById('Pilgrim Membership-status');
+  // ── Loaf Reserve Membership form ──
+  var subForm      = document.getElementById('loaf-reserve-form');
+  var subStatus    = document.getElementById('loaf-reserve-status');
   var subDateError = document.getElementById('sub-date-error');
 
-  // ── Pilgrim Membership loaf-type: toggle specialty dropdown + swap prices ──
+  // ── Loaf Reserve loaf-type: toggle specialty dropdown + swap prices ──
   var specialtyPicker = document.getElementById('specialty-picker');
   function updateSubLoaf(){
     var chosen = document.querySelector('input[name="subscription_loaf"]:checked');
@@ -1777,7 +1777,7 @@ footer{
     }
 
     var payload = {
-      order_type:            'Pilgrim Membership',
+      order_type:            'Loaf Reserve Membership',
       subscription_tier:     tierEl.value,
       subscription_loaf:     loafChoice,          // "Fatima Classic" | "Specialty" | "Baker's Choice"
       subscription_specialty: specialtyPick,      // e.g. "Guadalupe" (only when Specialty)
@@ -1800,7 +1800,7 @@ footer{
       function(){
         subForm.reset();
         // restore hidden field wiped by reset()
-        subForm.querySelector('[name="order_type"]').value = 'Pilgrim Membership';
+        subForm.querySelector('[name="order_type"]').value = 'Loaf Reserve Membership';
       }
     );
   });

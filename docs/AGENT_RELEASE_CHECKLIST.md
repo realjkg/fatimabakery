@@ -7,7 +7,7 @@ Use this before every Fatima Bakery front-end release.
 - [ ] CTA wording is correct.
 - [ ] Event dates and addresses are current.
 - [ ] Loaf Reserve terminology is consistent.
-- [ ] No outdated Pilgrim Reserve wording remains.
+- [ ] No outdated Loaf Reserve wording remains.
 - [ ] Local SEO wording is natural and useful.
 - [ ] No promo text is stale.
 
