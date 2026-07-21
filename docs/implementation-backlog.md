@@ -31,16 +31,20 @@ This backlog is based on the current-state audit and avoids runtime code changes
 
 ## Near-term rollout sequence
 
-1. **PR 1 — Fulfillment messaging + Loaf Reserve terminology**
+1. **Fulfillment messaging + Loaf Reserve implementation**
    - Deploy only after the standard repository validation passes.
    - Smoke test the public order and contact paths after deployment, including Thursday delivery, Friday pickup, Loaf Reserve Friday-only validation, confirmation email wording, and payment-link generation.
    - Do not combine this deploy with inventory Script Property changes.
-2. **PR 2 — Subscription preservation regression safeguards**
+2. **Existing preservation safeguards verified as additive**
    - Keep `INVENTORY_ROLLOUT_MODE=OFF` and `INVENTORY_KILL_SWITCH` available during validation and deployment.
    - Validate one-time order behavior and Loaf Reserve preservation against committed fixtures or a copied workbook before touching production data.
    - Confirm active subscriptions remain active and pending subscriptions remain pending after the regression checks.
-3. **Only then consider SHADOW mode**
-   - Enable SHADOW only after PR 1 is deployed and smoke-tested, PR 2 safeguards pass, and the controlled inventory checklist below has owner initials for the required staging/copy-workbook checks.
+3. **Focused pre-SHADOW subscription allocation correctness**
+   - Correct source attribution, membership-week eligibility, specialty product mapping, and subscription allocation idempotency before SHADOW is considered.
+   - Validate with committed synthetic fixtures only; do not mutate, rewrite, reorder, delete, or append existing production `Subscriptions` rows.
+   - Leave inventory operationally OFF until a separate owner-approved rollout step.
+4. **Owner approval before SHADOW**
+   - Enable SHADOW only after the preceding implementation and preservation checks pass and the controlled inventory checklist below has owner initials for the required staging/copy-workbook checks.
    - In SHADOW, review mismatch reports and audits before any ENFORCE discussion.
 
 ## Controlled inventory production rollout readiness checklist
