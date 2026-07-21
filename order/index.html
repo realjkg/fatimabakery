@@ -1241,13 +1241,13 @@ footer{
       </label>
       <label class="radio-row">
         <input type="radio" name="fulfillment" value="delivery">
-        <span>Thursday delivery · 3–5 PM<br>Within 10 miles of Santa Rita Ranch · Adds $10</span>
+        <span>Thursday delivery · 3–5 PM<br>Santa Rita Ranch service area near Liberty Hill, Leander, and Georgetown · Adds $10</span>
       </label>
       <p class="fulfillment-note">To keep your bread at its freshest, text us at <a href="sms:+15122991241">(512) 299-1241</a> when you're on your way for pickup, or to confirm your delivery window.</p>
     </div>
 
     <div class="form-row" id="delivery-fields" hidden>
-      <p class="fulfillment-note">Thursday delivery · 3–5 PM<br>Within 10 miles of Santa Rita Ranch · Adds $10</p>
+      <p class="fulfillment-note">Thursday delivery · 3–5 PM<br>Santa Rita Ranch service area near Liberty Hill, Leander, and Georgetown · Adds $10</p>
       <label for="delivery-address1">Delivery Address 1</label>
       <input type="text" id="delivery-address1" name="delivery_address1" autocomplete="address-line1">
       <label for="delivery-address2">Delivery Address 2 (optional)</label>
@@ -1458,6 +1458,8 @@ footer{
 (function(){
   var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6ahtqJ1pe7sLVk4BgcU48WIn34P1P1giY5lxh8pmEABxpQX3m0wI96lIhnjreiDO-/exec';
   var DELIVERY_FEE = 10.00;
+  var DELIVERY_SERVICE_AREA_MESSAGE = 'Delivery is currently limited to the Santa Rita Ranch area near Liberty Hill, Leander, and Georgetown. Please choose Friday pickup, or contact us before placing a delivery order.';
+  var DELIVERY_ALLOWED_ZIPS = { '78642': true, '78641': true, '78628': true };
   var MENU = {"Fatima":{"name":"Fatima","price":12,"type":"boule"},"Lourdes":{"name":"Lourdes","price":15,"type":"specialty"},"Guadalupe":{"name":"Guadalupe","price":15,"type":"specialty"},"Santiago":{"name":"Santiago","price":15,"type":"specialty"},"Kibeho":{"name":"Kibeho","price":15,"type":"specialty"},"Pilgrim_s_Dough":{"name":"Pilgrim's Dough","price":10,"type":"other"},"Mt_Carmel_Bowl_ind":{"name":"Mt. Carmel Bowl (ind)","price":12,"type":"other"},"Mt_Carmel_Bowl_duo":{"name":"Mt. Carmel Bowl (duo)","price":20,"type":"other"},"Pilgrim_s_Honey_Butter":{"name":"Pilgrim's Honey Butter","price":5,"type":"other"},"Pilgrim_s_Crunch":{"name":"Pilgrim's Crunch","price":7,"type":"other"}};
 
   var qty = {};
@@ -1601,7 +1603,7 @@ footer{
     var error = document.getElementById('delivery-address-error');
     if (error) error.textContent = '';
     if (selectedFulfillment() !== 'delivery') return true;
-    var fields = ['delivery-address1','delivery-city','delivery-state','delivery-zip'];
+    var fields = ['delivery-address1','delivery-city','delivery-state'];
     for (var i = 0; i < fields.length; i++) {
       var el = document.getElementById(fields[i]);
       if (!el || !el.value.trim()) {
@@ -1609,6 +1611,15 @@ footer{
         if (el) el.focus();
         return false;
       }
+    }
+    var cityEl = document.getElementById('delivery-city');
+    var zipEl = document.getElementById('delivery-zip');
+    var city = cityEl ? cityEl.value.trim().toLowerCase() : '';
+    var zip = zipEl ? zipEl.value.trim() : '';
+    if (!/^\d{5}$/.test(zip) || zip.indexOf('787') === 0 || city === 'austin' || !DELIVERY_ALLOWED_ZIPS[zip]) {
+      if (error) error.textContent = DELIVERY_SERVICE_AREA_MESSAGE;
+      if (zipEl) zipEl.focus();
+      return false;
     }
     return true;
   }
@@ -1675,7 +1686,7 @@ footer{
     });
 
     var preferredTime = fulfillment === 'delivery'
-      ? 'Delivery — Santa Rita Ranch area within 10 miles to Liberty Hill, Georgetown, and Leander residences, Thursdays 3pm to 5pm'
+      ? 'Delivery — Santa Rita Ranch service area near Liberty Hill, Leander, and Georgetown, Thursdays 3 PM to 5 PM'
       : 'Curbside pickup — Fridays 9am to 12pm';
 
     var payload = {

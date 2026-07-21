@@ -1,5 +1,6 @@
 const DELIVERY_FEE = 10;
-const DELIVERY_RADIUS_MILES_DEFAULT = 10;
+const DELIVERY_SERVICE_AREA_MESSAGE = 'Delivery is currently limited to the Santa Rita Ranch area near Liberty Hill, Leander, and Georgetown. Please choose Friday pickup, or contact us before placing a delivery order.';
+const DELIVERY_ALLOWED_ZIPS = new Set(['78642', '78641', '78628']);
 
 const MENU = { Fatima: 12, Lourdes: 15, Guadalupe: 15, Santiago: 15, Kibeho: 15, "Pilgrim's Dough": 10, 'Mt. Carmel Bowl (ind)': 12, 'Mt. Carmel Bowl (duo)': 20, "Pilgrim's Honey Butter": 5, "Pilgrim's Crunch": 7 };
 const SUBSCRIPTION_PRICES = { fatima: { '4 weeks': 44, '6 weeks': 60, '8 weeks': 72 }, specialty: { '4 weeks': 58, '6 weeks': 84, '8 weeks': 104 } };
@@ -47,7 +48,9 @@ export async function normalizeAndValidate(input, env = {}) {
   if (isDelivery) {
     if (!isThursday(data.preferred_date)) return fail('Delivery is available Thursday only from 3 PM to 5 PM.', 'invalid_date');
     const address = normalizeAddress(data);
-    if (!address.delivery_address1 || !address.delivery_city || !address.delivery_state || !address.delivery_zip) return fail('Please enter your complete delivery address.', 'missing_address');
+    if (!address.delivery_address1 || !address.delivery_city || !address.delivery_state) return fail('Please enter your complete delivery address.', 'missing_address');
+    const serviceArea = validateDeliveryServiceArea(address);
+    if (!serviceArea.ok) return { ok: false, status: 422, error: serviceArea.error };
     Object.assign(data, address, { fulfillment: 'delivery', preferred_time: 'Delivery — Thursday 3–5 PM', delivery_fee: money(DELIVERY_FEE) });
     const subtotal = orderSubtotal(data.order || '');
     data.subtotal = money(subtotal);
@@ -75,6 +78,14 @@ function isFriday(s) { const d = date(s); return d && d.getUTCDay() === 5; }
 function date(s) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s)); return m && new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])); }
 function normalizeAddress(d) { return { delivery_address1: clean(d.delivery_address1), delivery_address2: clean(d.delivery_address2), delivery_city: clean(d.delivery_city), delivery_state: clean(d.delivery_state || 'TX').toUpperCase(), delivery_zip: clean(d.delivery_zip), delivery_instructions: clean(d.delivery_instructions) }; }
 function clean(v) { return String(v || '').trim().replace(/\s+/g, ' '); }
+function validateDeliveryServiceArea(address) {
+  const zip = String(address.delivery_zip || '').trim();
+  const city = String(address.delivery_city || '').trim().toLowerCase();
+  if (!/^\d{5}$/.test(zip) || zip.startsWith('787') || city === 'austin' || !DELIVERY_ALLOWED_ZIPS.has(zip)) {
+    return { ok: false, error: { status: 'delivery_unavailable', message: DELIVERY_SERVICE_AREA_MESSAGE, offer_pickup: true } };
+  }
+  return { ok: true };
+}
 function discardAddress(d) { ['delivery_address1','delivery_address2','delivery_city','delivery_state','delivery_zip','delivery_instructions','address_status','address_distance'].forEach(k => delete d[k]); }
 function orderSubtotal(order) { return String(order).split(';').reduce((sum, line) => { const m = line.trim().match(/^(.*?)\s+x(\d+)$/); return sum + (m && MENU[m[1]] ? MENU[m[1]] * Number(m[2]) : 0); }, 0); }
 async function verifyAddress(address, env) {
