@@ -31,21 +31,21 @@ This backlog is based on the current-state audit and avoids runtime code changes
 
 ## Near-term rollout sequence
 
-1. **Fulfillment messaging + Loaf Reserve implementation**
-   - Deploy only after the standard repository validation passes.
-   - Smoke test the public order and contact paths after deployment, including Thursday delivery, Friday pickup, Loaf Reserve Friday-only validation, confirmation email wording, and payment-link generation.
-   - Do not combine this deploy with inventory Script Property changes.
-2. **Existing preservation safeguards verified as additive**
-   - Keep `INVENTORY_ROLLOUT_MODE=OFF` and `INVENTORY_KILL_SWITCH` available during validation and deployment.
-   - Validate one-time order behavior and Loaf Reserve preservation against committed fixtures or a copied workbook before touching production data.
-   - Confirm active subscriptions remain active and pending subscriptions remain pending after the regression checks.
-3. **Focused pre-SHADOW subscription allocation correctness**
-   - Correct source attribution, membership-week eligibility, specialty product mapping, and subscription allocation idempotency before SHADOW is considered.
-   - Validate with committed synthetic fixtures only; do not mutate, rewrite, reorder, delete, or append existing production `Subscriptions` rows.
-   - Leave inventory operationally OFF until a separate owner-approved rollout step.
-4. **Owner approval before SHADOW**
-   - Enable SHADOW only after the preceding implementation and preservation checks pass and the controlled inventory checklist below has owner initials for the required staging/copy-workbook checks.
-   - In SHADOW, review mismatch reports and audits before any ENFORCE discussion.
+1. **Controlled inventory rollout integration completed**
+   - PR30 added the controlled inventory rollout integration while keeping operational inventory OFF.
+2. **Pre-SHADOW subscription-allocation corrections completed**
+   - PR32 completed the focused subscription allocation correctness work before any SHADOW approval.
+3. **Fulfillment messaging and Loaf Reserve cleanup implemented in this PR**
+   - This PR updates delivery/pickup messaging, Ready for Delivery status support, Loaf Reserve terminology, and verified stale-code cleanup.
+4. **Deploy with inventory OFF**
+   - Do not combine deployment with inventory Script Property changes. Keep inventory operationally OFF.
+5. **Smoke-test after deploy**
+   - One pickup order.
+   - One delivery order.
+   - One new Loaf Reserve request.
+   - One Square payment confirmation where practical.
+6. **Owner approval before any SHADOW configuration**
+   - SHADOW remains disabled until explicit owner approval. Review smoke-test results and validation output before any Script Property change.
 
 ## Controlled inventory production rollout readiness checklist
 
@@ -55,7 +55,7 @@ Before changing any production Script Properties or deploying Apps Script for th
 - [ ] Production workbook backup created and restore path confirmed.
 - [ ] Script Properties documented with placeholder values only: `INVENTORY_ROLLOUT_MODE`, `INVENTORY_KILL_SWITCH`, `INVENTORY_DRY_RUN`, `INVENTORY_PRODUCTION_SPREADSHEET_ID`, existing `SPREADSHEET_ID`/`SHEET_ID`, capacity limits, Square keys, and email configuration.
 - [ ] OFF mode verified for one-time orders and Loaf Reserve flows.
-- [ ] SHADOW mode verified without inventory writes.
+- [ ] SHADOW mode verified without production inventory writes.
 - [ ] One-time order mismatch report reviewed.
 - [ ] Subscription allocation mismatch report reviewed.
 - [ ] Inventory totals reconciled against order and reservation records.

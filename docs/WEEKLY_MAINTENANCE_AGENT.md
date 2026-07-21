@@ -56,7 +56,7 @@ Preferred terminology:
 
 Do not use:
 
-`Pilgrim Reserve`
+`Loaf Reserve`
 
 Current local SEO areas:
 

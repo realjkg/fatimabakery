@@ -25,8 +25,8 @@ Use:
 
 Do not use:
 
-- Pilgrim Reserve
-- Piligrim Reserve
+- Loaf Reserve
+- Loaf Reserve Reserve
 
 ## Current event details
 

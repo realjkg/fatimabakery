@@ -1,5 +1,9 @@
 const DELIVERY_FEE = 10;
 const DELIVERY_RADIUS_MILES_DEFAULT = 10;
+// Temporary conservative service-area guard until a future route-distance/geocoding solution is introduced.
+const CURRENT_DELIVERY_ALLOWED_ZIPS = new Set(['78642', '78641', '78628']);
+const CURRENT_DELIVERY_BLOCKED_ZIP_PREFIXES = ['787'];
+const DELIVERY_SERVICE_AREA_MESSAGE = 'Delivery is currently limited to the Santa Rita Ranch area near Liberty Hill, Leander, and Georgetown. Please choose Friday pickup, or contact us before placing a delivery order.';
 
 const MENU = { Fatima: 12, Lourdes: 15, Guadalupe: 15, Santiago: 15, Kibeho: 15, "Pilgrim's Dough": 10, 'Mt. Carmel Bowl (ind)': 12, 'Mt. Carmel Bowl (duo)': 20, "Pilgrim's Honey Butter": 5, "Pilgrim's Crunch": 7 };
 const SUBSCRIPTION_PRICES = { fatima: { '4 weeks': 44, '6 weeks': 60, '8 weeks': 72 }, specialty: { '4 weeks': 58, '6 weeks': 84, '8 weeks': 104 } };
@@ -32,17 +36,8 @@ export async function onRequestPost(context) {
 export async function normalizeAndValidate(input, env = {}) {
   const data = { ...input };
   const type = String(data.order_type || data.type || '').toLowerCase();
-  const route = type.includes('address_correction') ? 'address_correction' : (type.includes('membership') || data.subscription_tier ? 'subscription' : 'order');
+  const route = (type.includes('loaf reserve') || type.includes('membership') || data.subscription_tier || data.subscription_loaf || data.subscription_kind || data.subscription_label) ? 'subscription' : 'order';
   if (!data.name || (!data.email && !data.phone)) return fail('Please include your name and either email or phone.');
-  if (route === 'address_correction') {
-    const address = normalizeAddress(data);
-    if (!data.address_token || !address.delivery_address1 || !address.delivery_city || !address.delivery_state || !address.delivery_zip) return fail('Please enter your complete corrected delivery address.', 'missing_address');
-    Object.assign(data, address, { order_type: 'address_correction' });
-    const checked = await verifyAddress(address, env);
-    Object.assign(data, checked.fields);
-    if (checked.status === 'outside') return { ok: false, status: 422, error: { status: 'delivery_unavailable', message: 'Delivery is unavailable for that address. Friday curbside pickup is available instead.', offer_pickup: true } };
-    return { ok: true, payload: data };
-  }
 
   if (!data.preferred_date) return fail('Please choose a fulfillment date.');
 
@@ -56,7 +51,9 @@ export async function normalizeAndValidate(input, env = {}) {
   if (isDelivery) {
     if (!isThursday(data.preferred_date)) return fail('Delivery is available Thursday only from 3 PM to 5 PM.', 'invalid_date');
     const address = normalizeAddress(data);
-    if (!address.delivery_address1 || !address.delivery_city || !address.delivery_state || !address.delivery_zip) return fail('Please enter your complete delivery address.', 'missing_address');
+    const boundaryError = deliveryServiceAreaError({ ...data, ...address });
+    if (boundaryError) return fail(boundaryError, 'delivery_unavailable');
+    if (!address.delivery_address1 || !address.delivery_city || !address.delivery_state || !address.delivery_zip) return fail(DELIVERY_SERVICE_AREA_MESSAGE, 'delivery_unavailable');
     Object.assign(data, address, { fulfillment: 'delivery', preferred_time: 'Delivery — Thursday 3–5 PM', delivery_fee: money(DELIVERY_FEE) });
     const subtotal = orderSubtotal(data.order || '');
     data.subtotal = money(subtotal);
@@ -84,6 +81,27 @@ function isFriday(s) { const d = date(s); return d && d.getUTCDay() === 5; }
 function date(s) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s)); return m && new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])); }
 function normalizeAddress(d) { return { delivery_address1: clean(d.delivery_address1), delivery_address2: clean(d.delivery_address2), delivery_city: clean(d.delivery_city), delivery_state: clean(d.delivery_state || 'TX').toUpperCase(), delivery_zip: clean(d.delivery_zip), delivery_instructions: clean(d.delivery_instructions) }; }
 function clean(v) { return String(v || '').trim().replace(/\s+/g, ' '); }
+function extractDeliveryZip(d) {
+  const candidates = [d.delivery_zip, d.zip, d.postal_code, d.delivery_address, d.delivery_address1, d.delivery_city];
+  for (const value of candidates) {
+    const match = String(value ?? '').match(/\b\d{5}(?:-\d{4})?\b/);
+    if (match) return match[0].slice(0, 5);
+  }
+  return '';
+}
+function isSupportedDeliveryZip(zip) {
+  zip = String(zip || '').trim().slice(0, 5);
+  if (!/^\d{5}$/.test(zip)) return false;
+  if (CURRENT_DELIVERY_BLOCKED_ZIP_PREFIXES.some(prefix => zip.startsWith(prefix))) return false;
+  return CURRENT_DELIVERY_ALLOWED_ZIPS.has(zip);
+}
+function deliveryServiceAreaError(d) {
+  const hay = [d.delivery_address1, d.delivery_address2, d.delivery_city, d.delivery_state, d.delivery_zip, d.delivery_address, d.preferred_time].join(' ').toLowerCase();
+  const zip = extractDeliveryZip(d);
+  if (hay.includes('austin')) return DELIVERY_SERVICE_AREA_MESSAGE;
+  if (!zip || !isSupportedDeliveryZip(zip)) return DELIVERY_SERVICE_AREA_MESSAGE;
+  return '';
+}
 function discardAddress(d) { ['delivery_address1','delivery_address2','delivery_city','delivery_state','delivery_zip','delivery_instructions','address_status','address_distance'].forEach(k => delete d[k]); }
 function orderSubtotal(order) { return String(order).split(';').reduce((sum, line) => { const m = line.trim().match(/^(.*?)\s+x(\d+)$/); return sum + (m && MENU[m[1]] ? MENU[m[1]] * Number(m[2]) : 0); }, 0); }
 async function verifyAddress(address, env) {

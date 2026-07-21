@@ -10,8 +10,8 @@ Most production order intake terminates before persistence by design when payloa
 
 Major cleanup findings:
 
-- The deployed terminology still contains legacy “Pilgrim Membership” / “Bread Share” language in routing, email subjects, payment descriptions, analytics headings, and renewal emails, even though user-facing copy is now Loaf Reserve.
-- There are overlapping Square webhook paths: direct Apps Script webhook queueing, a disabled/optional Cloudflare Worker puller, and an unused `receiveSquareWebhook` legacy handler.
+- The deployed terminology still contains legacy “Loaf Reserve Membership” / “Loaf Reserve” language in routing, email subjects, payment descriptions, analytics headings, and renewal emails, even though user-facing copy is now Loaf Reserve.
+- There are overlapping Square webhook paths: direct Apps Script webhook queueing, a disabled/optional Cloudflare Worker puller, and an unused `removedSquareWebhookHandler` legacy handler.
 - Sheet/schema setup is duplicated across inline creation in handlers, `setupSheet`, `ensureOrderDeliveryColumns_`, `setupAnalyticsSheets`, and the individual analytics setup functions.
 - Manual menu functions and trigger functions are tightly coupled to spreadsheet column indexes; cleanup must preserve column order and existing data.
 
@@ -169,7 +169,7 @@ There is no single generic email retry queue. The active mechanisms are partial 
 Additional trigger helpers outside `installTriggers()`:
 
 - `installSquareQueueTrigger()` installs only `processSquareQueue` every 2 minutes after deleting existing matching triggers.
-- `ensureSquareQueueTrigger()` is legacy one-shot-ish/old behavior and is documented as no longer called from webhook flow.
+- `removedSquareQueueTriggerHelper()` is legacy one-shot-ish/old behavior and is documented as no longer called from webhook flow.
 - `scheduleReviewRequest()` creates one-off `sendPendingReviews` triggers 24 hours after an order is marked ready.
 - `installSquareWorkerPullTrigger()` installs `pullSquareEventsFromWorker` every minute and is not managed by `installTriggers()`.
 
@@ -227,10 +227,10 @@ Apps Script editor/manual-only helpers include:
 | `handleAddressCorrection` | unknown | Route exists, but customer correction links are disabled in order email path. |
 | `doPost` | trigger entrypoint | Web app POST entry for forms and Square webhooks. |
 | `normalizeOrderType` | active production path | Routes contact/order/subscription/address/Square payloads. |
-| `squareGetSignature` | likely unused | No call sites; returns sentinel only. |
+| `removedSquareSignatureHelper` | likely unused | No call sites; returns sentinel only. |
 | `squareVerifyByRefetch` | active production path | Square API verification for queued payments. |
 | `handleSquareWebhook` | active production path | Fast ACK and queue writer for Square events. |
-| `ensureSquareQueueTrigger` | duplicate or overlapping | Legacy trigger helper; no longer called from webhook. |
+| `removedSquareQueueTriggerHelper` | duplicate or overlapping | Legacy trigger helper; no longer called from webhook. |
 | `installSquareQueueTrigger` | manual recovery utility | Installs only Square queue trigger; overlaps `installTriggers`. |
 | `processSquareQueue` | trigger entrypoint | Scheduled Square confirmation worker; can also be manual. |
 | `squareResolveOrderId` | active production path | Maps verified Square payment to `FB-*`/`FBS-*`. |
@@ -251,9 +251,9 @@ Apps Script editor/manual-only helpers include:
 | `createSquarePaymentLink` | active production path | Payment link generator for orders, subscriptions, reminders, renewals. |
 | `createVenmoLink` | active production path | Venmo payment URL generator. |
 | `createCashAppLink` | active production path | Cash App URL generator. |
-| `receiveSquareWebhook` | likely unused | No call sites; obsolete direct handler overlaps `handleSquareWebhook`. |
+| `removedSquareWebhookHandler` | likely unused | No call sites; obsolete direct handler overlaps `handleSquareWebhook`. |
 | `confirmOrder` | manual recovery utility | Manual status/email confirmation helper. |
-| `confirmOrderVenmo` | likely unused | No call sites; overlaps `markOrderConfirmedVenmo`. |
+| `removedVenmoConfirmationHelper` | likely unused | No call sites; overlaps `markOrderConfirmedVenmo`. |
 | `refundOrder` | manual recovery utility | Manual refund/cancel helper. |
 | `sendRefundEmail` | active production path | Called by refund flow. |
 | `updateSubscriptionStatus` | active production path | Square/manual subscription activation/status updates. |
@@ -264,9 +264,9 @@ Apps Script editor/manual-only helpers include:
 | `sendPaymentConfirmedEmail` | active production path | Customer payment-confirmed email. |
 | `sendOwnerPaymentAlert` | active production path | Owner payment alert. |
 | `sendOwnerNewOrderAlert` | active production path | Owner new-order alert. |
-| `sendPickupNotification` | active production path | Called by ready/manual flow. |
+| `sendFulfillmentReadyNotification` | active production path | Called by ready/manual flow. |
 | `sendReviewRequest` | active production path | Called by scheduled review flow. |
-| `sendCapacityEmail` | likely unused | No call sites; older capacity-blocking behavior. |
+| `removedCapacityEmailHelper` | likely unused | No call sites; older capacity-blocking behavior. |
 | `sendAdvanceNoticeEmail` | active production path | Sent before rejecting specialty orders without enough notice. |
 | `markOrderReady` | manual recovery utility | Spreadsheet menu action. |
 | `markOrderConfirmedVenmo` | manual recovery utility | Spreadsheet menu action. |
@@ -364,7 +364,7 @@ These are calls to external Apps Script services or network APIs where failure c
 - Orders schema exists in both `setupSheet` and runtime `ensureOrderDeliveryColumns_`. Runtime header writes are convenient for migration but risky long-term because any order post can mutate row 1.
 - The `Subscriptions` sheet schema is created inline in `handleSubscription`, unlike `Orders`, which has a dedicated setup function.
 - Analytics setup is split across `setupAnalyticsSheets`, `setupRevenueSheet`, `setupItemSheet`, and `setupCustomerSheet`, while `setupSheet` also calls analytics/counter setup.
-- Trigger setup overlaps among `installTriggers`, `installSquareQueueTrigger`, `ensureSquareQueueTrigger`, `scheduleReviewRequest`, and `installSquareWorkerPullTrigger`.
+- Trigger setup overlaps among `installTriggers`, `installSquareQueueTrigger`, `removedSquareQueueTriggerHelper`, `scheduleReviewRequest`, and `installSquareWorkerPullTrigger`.
 - Square webhook intake overlaps direct Apps Script queueing and Worker pull queueing.
 - Email failure keys are fragmented: order failures, subscription failures, payment queues, review keys, and orphan attempts use separate prefixes and inconsistent diagnostic coverage.
 
@@ -372,13 +372,13 @@ These are calls to external Apps Script services or network APIs where failure c
 
 Terminology still present in code and data-facing output:
 
-- `Pilgrim Membership` appears in route detection compatibility, subscription payment descriptions, customer/owner subscription emails, active/renewal emails, and subject lines.
-- `Bread Share` appears in route detection and analytics headings.
+- `Loaf Reserve Membership` appears in route detection compatibility, subscription payment descriptions, customer/owner subscription emails, active/renewal emails, and subject lines.
+- `Loaf Reserve` appears in route detection and analytics headings.
 - `Pickup Window` column is also used for delivery window/fulfillment indicator.
-- `receiveSquareWebhook` appears obsolete compared with `handleSquareWebhook` + `processSquareQueue`.
-- `confirmOrderVenmo` appears obsolete/overlapped by `markOrderConfirmedVenmo`.
-- `sendCapacityEmail` appears obsolete after capacity blocking was removed.
-- `ensureSquareQueueTrigger` is explicitly documented as legacy and no longer called from the webhook path.
+- `removedSquareWebhookHandler` appears obsolete compared with `handleSquareWebhook` + `processSquareQueue`.
+- `removedVenmoConfirmationHelper` appears obsolete/overlapped by `markOrderConfirmedVenmo`.
+- `removedCapacityEmailHelper` appears obsolete after capacity blocking was removed.
+- `removedSquareQueueTriggerHelper` is explicitly documented as legacy and no longer called from the webhook path.
 
 ## File disposition recommendations
 
@@ -392,7 +392,7 @@ Terminology still present in code and data-facing output:
 
 Within `apps-script/Code.js`, eventually remove or quarantine only after deployment evidence:
 
-- Likely removable later: `receiveSquareWebhook`, `squareGetSignature`, `sendCapacityEmail`, `confirmOrderVenmo`, `correctionTokenUrl_` if address correction remains disabled.
+- Likely removable later: `removedSquareWebhookHandler`, `removedSquareSignatureHelper`, `removedCapacityEmailHelper`, `removedVenmoConfirmationHelper`, `correctionTokenUrl_` if address correction remains disabled.
 - Consolidate rather than remove first: Square trigger helpers, setup/schema helpers, email retry diagnostics, Loaf Reserve/Pilgrim terminology compatibility.
 
 ## Recommended cleanup sequence preserving production deployment and spreadsheet data
@@ -406,6 +406,6 @@ Within `apps-script/Code.js`, eventually remove or quarantine only after deploym
 7. **Isolate pre-persistence external dependencies.** Wrap one-time order payment-link generation so Square link failures do not prevent `Orders.appendRow`; follow the subscription pattern for Square and add equivalent isolation for Venmo/Cash helpers if needed.
 8. **Freeze sheet schemas.** Move inline `Subscriptions` header creation and runtime `ensureOrderDeliveryColumns_` mutation toward explicit migration/setup functions. Keep column order unchanged and append new columns only at the end.
 9. **Choose one Square intake strategy.** After observing production for at least one payment cycle, keep either direct Apps Script queueing or Worker pull as the primary path. Leave the other disabled but not deleted until several successful payments and manual recovery drills pass.
-10. **Retire obsolete handlers behind a compatibility window.** Mark `receiveSquareWebhook`, `sendCapacityEmail`, `confirmOrderVenmo`, `squareGetSignature`, and address-correction token helpers as deprecated first. Remove only after confirming no triggers, menu items, deployment URLs, or external docs reference them.
+10. **Retire obsolete handlers behind a compatibility window.** Mark `removedSquareWebhookHandler`, `removedCapacityEmailHelper`, `removedVenmoConfirmationHelper`, `removedSquareSignatureHelper`, and address-correction token helpers as deprecated first. Remove only after confirming no triggers, menu items, deployment URLs, or external docs reference them.
 11. **Run a full dry-run checklist.** Test order submission, delivery submission, Loaf Reserve request, Square test/real low-dollar payment, manual Venmo confirmation, subscription activation, orphan reminder behavior, and bake-sheet generation against a copied spreadsheet before promoting changes.
 12. **Promote in small versions.** Deploy one Apps Script version per cleanup category and preserve immediate rollback to the current production version.

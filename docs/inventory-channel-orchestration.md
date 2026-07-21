@@ -155,5 +155,5 @@ CI should validate documentation and schema artifacts before merge. At minimum, 
 ## Conflicts and unclear assumptions
 
 - Existing docs describe current production spreadsheet tabs such as Orders, Subscriptions, Line Items, Waitlist, and Email Events. The proposed model preserves those terms as implementation history while using channel-neutral names for new architecture.
-- Existing docs preserve Loaf Reserve terminology and reject older Pilgrim Reserve wording.
+- Existing docs preserve Loaf Reserve terminology and reject older Loaf Reserve wording.
 - The exact future Google Sheets tab names, column headers, Apps Script function names, and Hotplate API fields remain unresolved until a separate design review.
