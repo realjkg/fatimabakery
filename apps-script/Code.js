@@ -1476,6 +1476,10 @@ function recordInventoryShadowMismatch_(ss, event) {
 }
 
 function evaluateProductionInventoryForOrder_(ss, data, opts) {
+  opts = opts || {};
+  var sourceType = String(opts.sourceType || "ONE_TIME");
+  var sourceId = String(opts.sourceId || opts.orderId || "");
+  var operationId = String(opts.orderId || sourceId);
   var guard = inventoryProductionGuard_(ss);
   var mode = guard.mode;
   if (mode === "OFF") return { mode: "OFF", accepted: true, correlationId: opts.correlationId };
@@ -1494,7 +1498,7 @@ function evaluateProductionInventoryForOrder_(ss, data, opts) {
   }
   if (mode === "SHADOW") {
     if (opts.legacyResult !== orchestrationResult) recordInventoryShadowMismatch_(ss, {
-      sourceId: opts.orderId, weekId: opts.fulfillmentWeek, correlationId: opts.correlationId, mode: mode, sourceType: "ONE_TIME", legacyResult: opts.legacyResult, orchestrationResult: orchestrationResult, mismatchType: orchestrationResult
+      sourceId: sourceId, weekId: opts.fulfillmentWeek, correlationId: opts.correlationId, mode: mode, sourceType: sourceType, legacyResult: opts.legacyResult, orchestrationResult: orchestrationResult, mismatchType: orchestrationResult
     });
     return { mode: mode, accepted: true, correlationId: opts.correlationId };
   }
@@ -1503,17 +1507,68 @@ function evaluateProductionInventoryForOrder_(ss, data, opts) {
   var rows = sh.getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
     if (String(rows[i][7]) === String(opts.idempotencyKey)) {
-      if (String(rows[i][8]) !== String(opts.orderId)) return { mode: mode, accepted: false, status: "idempotency_conflict", message: "This order request could not be safely reused.", correlationId: opts.correlationId };
+      if (String(rows[i][8]) !== String(sourceId) || String(rows[i][6]) !== String(sourceType)) return { mode: mode, accepted: false, status: "idempotency_conflict", message: "This order request could not be safely reused.", correlationId: opts.correlationId };
       return { mode: mode, accepted: true, duplicate: true, correlationId: opts.correlationId };
     }
   }
   if (orchestrationResult !== "accepted") {
-    appendInventoryAudit_(ss, { correlationId: opts.correlationId, sourceType: "ONE_TIME", sourceId: opts.orderId, weekId: opts.fulfillmentWeek, mode: mode, result: orchestrationResult, idempotencyKey: opts.idempotencyKey });
+    appendInventoryAudit_(ss, { correlationId: opts.correlationId, sourceType: sourceType, sourceId: sourceId, weekId: opts.fulfillmentWeek, mode: mode, result: orchestrationResult, idempotencyKey: opts.idempotencyKey });
     return { mode: mode, accepted: false, status: orchestrationResult, correlationId: opts.correlationId };
   }
-  lines.forEach(function(l) { sh.appendRow([new Date(), "res-" + opts.orderId + "-" + l.product_id, opts.fulfillmentWeek, l.product_id, l.quantity, "RESERVED", "ONE_TIME", opts.idempotencyKey, opts.orderId, opts.correlationId]); });
-  appendInventoryAudit_(ss, { correlationId: opts.correlationId, sourceType: "ONE_TIME", sourceId: opts.orderId, weekId: opts.fulfillmentWeek, mode: mode, result: "reserved", idempotencyKey: opts.idempotencyKey });
+  lines.forEach(function(l) { sh.appendRow([new Date(), "res-" + operationId + "-" + l.product_id, opts.fulfillmentWeek, l.product_id, l.quantity, "RESERVED", sourceType, opts.idempotencyKey, sourceId, opts.correlationId]); });
+  appendInventoryAudit_(ss, { correlationId: opts.correlationId, sourceType: sourceType, sourceId: sourceId, weekId: opts.fulfillmentWeek, mode: mode, result: "reserved", idempotencyKey: opts.idempotencyKey });
   return { mode: mode, accepted: true, correlationId: opts.correlationId };
+}
+
+function parseInventoryIsoDate_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+  var text = String(value || "").trim();
+  var m = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  if (d.getFullYear() !== Number(m[1]) || d.getMonth() !== Number(m[2]) - 1 || d.getDate() !== Number(m[3])) return null;
+  return d;
+}
+
+function inventoryWeeksBetween_(start, end) {
+  return Math.floor((end.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000));
+}
+
+function subscriptionTierDurationWeeks_(tier) {
+  var m = String(tier || "").match(/(4|6|8)\s*weeks?/i);
+  return m ? Number(m[1]) : 0;
+}
+
+function subscriptionMembershipEligibility_(row, fulfillmentWeek) {
+  var membershipId = String(row[12] || "").trim();
+  var tier = String(row[5] || "");
+  var start = parseInventoryIsoDate_(row[7]);
+  var end = parseInventoryIsoDate_(row[8]);
+  var week = parseInventoryIsoDate_(fulfillmentWeek);
+  var duration = subscriptionTierDurationWeeks_(tier);
+  if (String(row[9] || "") !== "Active") return { eligible: false, reason: "inactive_status", membershipId: membershipId };
+  if (!membershipId) return { eligible: false, reason: "missing_membership_id", membershipId: membershipId };
+  if (!start || !end || !week || !duration) return { eligible: false, reason: "malformed_membership_schedule", membershipId: membershipId };
+  if (week.getDay() !== 5 || start.getDay() !== 5) return { eligible: false, reason: "malformed_membership_schedule", membershipId: membershipId };
+  var totalWeeks = inventoryWeeksBetween_(start, end);
+  if (totalWeeks !== duration) return { eligible: false, reason: "malformed_membership_schedule", membershipId: membershipId };
+  if (week.getTime() < start.getTime()) return { eligible: false, reason: "before_start_date", membershipId: membershipId };
+  if (week.getTime() >= end.getTime()) return { eligible: false, reason: "at_or_after_end_date", membershipId: membershipId };
+  var offsetWeeks = inventoryWeeksBetween_(start, week);
+  if (offsetWeeks < 0 || offsetWeeks >= duration || start.getTime() + offsetWeeks * 7 * 24 * 60 * 60 * 1000 !== week.getTime()) return { eligible: false, reason: "not_scheduled_pickup_week", membershipId: membershipId };
+  return { eligible: true, reason: "eligible", membershipId: membershipId, durationWeeks: duration };
+}
+
+function subscriptionProductForTier_(tier) {
+  var label = String(tier || "").split("·")[0].trim();
+  if (/^Fatima(\s+Classic)?$/i.test(label)) return "Fatima";
+  var specialty = label.match(/^Specialty\s*[—–-]\s*(.+)$/);
+  if (!specialty) return "";
+  var product = specialty[1].trim();
+  if (MENU[product] && MENU[product].type === "specialty") return product;
+  return "";
 }
 
 function subscriptionAllocationIdempotencyKey_(membershipId, weekId) {
@@ -1529,18 +1584,25 @@ function allocateWeeklySubscriptionInventory(fulfillmentWeek) {
   var rows = sheet.getDataRange().getValues();
   var allocated = 0;
   for (var i = 1; i < rows.length; i++) {
-    if (rows[i][9] !== "Active") continue;
-    var membershipId = rows[i][12];
-    if (!membershipId) continue;
-    var tier = String(rows[i][5] || "");
-    var product = tier.indexOf("Specialty") > -1 ? "" : "Fatima";
-    var corr = "suballoc-" + membershipId + "-" + fulfillmentWeek;
-    if (!product) {
-      if (mode === "SHADOW") recordInventoryShadowMismatch_(ss, { sourceId: membershipId, weekId: fulfillmentWeek, correlationId: corr, mode: mode, sourceType: "SUBSCRIPTION", legacyResult: "accepted", orchestrationResult: "rejected_invalid_product_mapping", mismatchType: "invalid_product_mapping" });
+    var eligibility = subscriptionMembershipEligibility_(rows[i], fulfillmentWeek);
+    var membershipId = eligibility.membershipId;
+    var corr = "suballoc-" + (membershipId || "unknown") + "-" + fulfillmentWeek;
+    if (!eligibility.eligible) {
+      if (membershipId && eligibility.reason === "malformed_membership_schedule") {
+        if (mode === "SHADOW") recordInventoryShadowMismatch_(ss, { sourceId: membershipId, weekId: fulfillmentWeek, correlationId: corr, mode: mode, sourceType: "SUBSCRIPTION", legacyResult: "accepted", orchestrationResult: "rejected_" + eligibility.reason, mismatchType: eligibility.reason });
+        if (mode === "ENFORCE") appendInventoryAudit_(ss, { correlationId: corr, sourceType: "SUBSCRIPTION", sourceId: membershipId, weekId: fulfillmentWeek, mode: mode, result: "rejected_" + eligibility.reason, idempotencyKey: subscriptionAllocationIdempotencyKey_(membershipId, fulfillmentWeek) });
+      }
       continue;
     }
-    var result = evaluateProductionInventoryForOrder_(ss, { order: product + " x1" }, { orderId: "SUB-" + membershipId + "-" + fulfillmentWeek, idempotencyKey: subscriptionAllocationIdempotencyKey_(membershipId, fulfillmentWeek), correlationId: corr, fulfillmentWeek: fulfillmentWeek, legacyResult: "accepted" });
-    if (result.accepted && mode === "ENFORCE") allocated++;
+    var tier = String(rows[i][5] || "");
+    var product = subscriptionProductForTier_(tier);
+    if (!product) {
+      if (mode === "SHADOW") recordInventoryShadowMismatch_(ss, { sourceId: membershipId, weekId: fulfillmentWeek, correlationId: corr, mode: mode, sourceType: "SUBSCRIPTION", legacyResult: "accepted", orchestrationResult: "rejected_invalid_product_mapping", mismatchType: "invalid_product_mapping" });
+      if (mode === "ENFORCE") appendInventoryAudit_(ss, { correlationId: corr, sourceType: "SUBSCRIPTION", sourceId: membershipId, weekId: fulfillmentWeek, mode: mode, result: "rejected_invalid_product_mapping", idempotencyKey: subscriptionAllocationIdempotencyKey_(membershipId, fulfillmentWeek) });
+      continue;
+    }
+    var result = evaluateProductionInventoryForOrder_(ss, { order: product + " x1" }, { orderId: "SUB-" + membershipId + "-" + fulfillmentWeek, sourceType: "SUBSCRIPTION", sourceId: membershipId, idempotencyKey: subscriptionAllocationIdempotencyKey_(membershipId, fulfillmentWeek), correlationId: corr, fulfillmentWeek: fulfillmentWeek, legacyResult: "accepted" });
+    if (result.accepted && !result.duplicate && mode === "ENFORCE") allocated++;
   }
   return { status: mode.toLowerCase(), allocated: allocated };
 }
