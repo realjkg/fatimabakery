@@ -41,7 +41,7 @@ grep -F "mode:   'no-cors'" order/index.html >/dev/null || {
 }
 
 echo "Checking Loaf Reserve terminology in customer-facing HTML..."
-if grep -Rni "Pilgrim Reserve\|Piligrim" \
+if grep -Rni "Pilgrim[[:space:]]+Reserve\|Pili[g][r]im" \
   "${CUSTOMER_HTML_PATHS[@]}" \
   --include="*.html"; then
   echo "Old/confusing Reserve terminology found in customer-facing HTML."

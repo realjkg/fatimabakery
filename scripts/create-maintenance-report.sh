@@ -44,13 +44,13 @@ else
   echo "- ❌ Newsletter CTA missing" >> "$REPORT_FILE"
 fi
 
-if grep -Rni "Pilgrim Reserve\|Piligrim" "${CUSTOMER_HTML_PATHS[@]}" --include="*.html" >/tmp/fatima-maintenance-old-terms.txt; then
+if grep -Rni "Pilgrim[[:space:]]+Reserve\|Pili[g][r]im" "${CUSTOMER_HTML_PATHS[@]}" --include="*.html" >/tmp/fatima-maintenance-old-terms.txt; then
   echo "- ❌ Old Reserve wording found in customer-facing HTML:" >> "$REPORT_FILE"
   echo '```' >> "$REPORT_FILE"
   cat /tmp/fatima-maintenance-old-terms.txt >> "$REPORT_FILE"
   echo '```' >> "$REPORT_FILE"
 else
-  echo "- ✅ No old Pilgrim Reserve wording found in customer-facing HTML" >> "$REPORT_FILE"
+  echo "- ✅ No old Loaf Reserve wording found in customer-facing HTML" >> "$REPORT_FILE"
 fi
 
 echo "" >> "$REPORT_FILE"

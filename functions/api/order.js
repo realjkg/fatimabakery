@@ -32,17 +32,8 @@ export async function onRequestPost(context) {
 export async function normalizeAndValidate(input, env = {}) {
   const data = { ...input };
   const type = String(data.order_type || data.type || '').toLowerCase();
-  const route = type.includes('address_correction') ? 'address_correction' : (type.includes('membership') || data.subscription_tier ? 'subscription' : 'order');
+  const route = (type.includes('loaf reserve') || type.includes('membership') || data.subscription_tier || data.subscription_loaf || data.subscription_kind || data.subscription_label) ? 'subscription' : 'order';
   if (!data.name || (!data.email && !data.phone)) return fail('Please include your name and either email or phone.');
-  if (route === 'address_correction') {
-    const address = normalizeAddress(data);
-    if (!data.address_token || !address.delivery_address1 || !address.delivery_city || !address.delivery_state || !address.delivery_zip) return fail('Please enter your complete corrected delivery address.', 'missing_address');
-    Object.assign(data, address, { order_type: 'address_correction' });
-    const checked = await verifyAddress(address, env);
-    Object.assign(data, checked.fields);
-    if (checked.status === 'outside') return { ok: false, status: 422, error: { status: 'delivery_unavailable', message: 'Delivery is unavailable for that address. Friday curbside pickup is available instead.', offer_pickup: true } };
-    return { ok: true, payload: data };
-  }
 
   if (!data.preferred_date) return fail('Please choose a fulfillment date.');
 

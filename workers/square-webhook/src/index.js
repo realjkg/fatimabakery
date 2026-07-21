@@ -15,7 +15,7 @@ export default {
     }
 
     if (request.method === "POST" && url.pathname === "/api/square-webhook") {
-      return await receiveSquareWebhook(request, env);
+      return await handleSquareWebhookRequest(request, env);
     }
 
     if (request.method === "GET") {
@@ -26,7 +26,7 @@ export default {
   }
 };
 
-async function receiveSquareWebhook(request, env) {
+async function handleSquareWebhookRequest(request, env) {
   const rawBody = await request.text();
 
   const signature =
