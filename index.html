@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Fatima Bakery ATX — Artisan Sourdough · Liberty Hill, TX</title>
-<meta name="description" content="Fatima Bakery ATX bakes artisan sourdough in Liberty Hill, serving Santa Rita Ranch, Leander, Georgetown, Cedar Park, and North Austin with Friday pickup, local delivery, and farmers market pop-ups."/>
+<title>Artisan Sourdough Bread | Liberty Hill, TX</title>
+<meta name="description" content="Fatima Bakery offers sourdough products and artisan bread with sourdough delivery or pickup for Liberty Hill and Leander."/>
 <link rel="icon" type="image/png" href="/images/logo.png"/>
 <link rel="apple-touch-icon" href="/images/logo.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500;1,700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
@@ -100,7 +100,40 @@ h1{
 h1 em{font-style:italic;color:var(--green-md);}
 .hero-sub{
   font-size:1rem;color:var(--ink3);
-  max-width:380px;margin-bottom:2rem;line-height:1.8;
+  max-width:480px;margin-bottom:1.5rem;line-height:1.8;
+}
+.hero-content h2{
+  color:var(--ink2);
+  font-family:var(--fd);
+  font-size:clamp(1.35rem,2vw,1.8rem);
+  font-weight:400;
+  line-height:1.25;
+  margin-bottom:.8rem;
+}
+.hero-highlights{
+  display:grid;
+  gap:.85rem;
+  margin:0 0 1.7rem;
+  max-width:520px;
+}
+.hero-highlight-card{
+  background:rgba(245,238,216,.68);
+  border:1px solid var(--border);
+  padding:1rem 1.1rem;
+}
+.hero-highlight-card h3{
+  color:var(--green);
+  font-family:var(--fc);
+  font-size:.72rem;
+  font-weight:600;
+  letter-spacing:.12em;
+  margin-bottom:.35rem;
+  text-transform:uppercase;
+}
+.hero-highlight-card p{
+  color:var(--ink3);
+  font-size:.92rem;
+  line-height:1.6;
 }
 .hero-btns{display:flex;gap:1rem;flex-wrap:wrap;}
 .btn-primary{
@@ -1021,6 +1054,90 @@ footer{
   body::after{display:none !important;}
 }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Bakery",
+  "name": "Fatima Bakery",
+  "url": "http://fatimabakery.com",
+  "sameAs": [
+    "https://instagram.com"
+  ],
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "112 Civita Rd",
+    "addressLocality": "Liberty Hill",
+    "addressRegion": "TX",
+    "postalCode": "78642",
+    "addressCountry": "US"
+  },
+  "areaServed": [
+    "Liberty Hill, TX",
+    "Leander, TX"
+  ],
+  "makesOffer": [
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@type": "Product",
+        "name": "Sourdough bread"
+      }
+    },
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@type": "Product",
+        "name": "Artisan bread"
+      }
+    },
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@type": "Product",
+        "name": "Sourdough products"
+      }
+    },
+    {
+      "@type": "Offer",
+      "name": "Sourdough delivery",
+      "itemOffered": {
+        "@type": "Service",
+        "name": "Sourdough delivery"
+      },
+      "areaServed": [
+        "Liberty Hill, TX",
+        "Leander, TX"
+      ]
+    },
+    {
+      "@type": "Offer",
+      "name": "Sourdough bread pickup",
+      "itemOffered": {
+        "@type": "Service",
+        "name": "Sourdough bread pickup"
+      },
+      "areaServed": [
+        "Liberty Hill, TX",
+        "Leander, TX"
+      ]
+    }
+  ],
+  "hasMenu": [
+    {
+      "@type": "MenuItem",
+      "name": "Sourdough bread"
+    },
+    {
+      "@type": "MenuItem",
+      "name": "Artisan bread"
+    },
+    {
+      "@type": "MenuItem",
+      "name": "Sourdough products"
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -1069,8 +1186,20 @@ footer{
     </div>
   </div>
   <div class="hero-content">
-    <h1>Handmade sourdough<br>from our<br><em>Liberty Hill kitchen.</em></h1>
-    <p class="hero-sub">Slow-fermented and baked by hand every Thursday, with Thursday afternoon delivery within 10 miles of the Santa Rita Ranch area and Friday curbside pickup. Orders close Wednesday evening.</p>
+    <span class="eyebrow">Small-batch bakery</span>
+    <h1>Artisan Sourdough in Liberty Hill, TX</h1>
+    <h2>Organic Sourdough Bread Pickup for Liberty Hill and Leander</h2>
+    <p class="hero-sub">Slow-fermented sourdough bread and artisan bread baked by hand every Thursday, with Thursday afternoon sourdough delivery within 10 miles of Santa Rita Ranch and Friday curbside pickup. Orders close Wednesday evening.</p>
+    <div class="hero-highlights" aria-label="Sourdough product and pickup highlights">
+      <article class="hero-highlight-card">
+        <h3>Sourdough products</h3>
+        <p>Choose naturally leavened loaves and rotating seasonal bakes made for local tables.</p>
+      </article>
+      <article class="hero-highlight-card">
+        <h3>Sourdough delivery</h3>
+        <p>Local delivery is available near Liberty Hill and Leander when weekly ordering is open.</p>
+      </article>
+    </div>
     <div class="hero-btns">
       <a class="btn-primary" href="/order" style="background:var(--gold);color:var(--green);border:none;">Order This Week</a>
       <a class="btn-ghost" href="/order">Order a Loaf</a>
