@@ -141,48 +141,136 @@ h1 em{font-style:italic;color:var(--green-md);}
 }
 .loaf-reserve-banner a:hover{text-decoration:underline;}
 .loaf-reserve-home{
-  background:var(--cream);
-  padding:4rem 1.5rem;
+  background:var(--cream-lt);
+  padding:3rem 1.5rem 4rem;
 }
 .loaf-reserve-home-inner{
-  max-width:920px;
+  max-width:1180px;
   margin:0 auto;
-  display:grid;
-  grid-template-columns:1.1fr .9fr;
-  gap:2rem;
-  align-items:center;
 }
-.loaf-reserve-home h2{
-  font-family:var(--fd);
-  font-size:clamp(2rem,3.5vw,3.3rem);
-  font-weight:400;
-  line-height:1.12;
-  color:var(--green);
-  margin-bottom:1rem;
+.loaf-reserve-home-hero{
+  background:var(--green);
+  border-radius:18px;
+  color:var(--cream);
+  margin-bottom:2rem;
+  padding:4.4rem 2rem 4.8rem;
+  text-align:center;
 }
-.loaf-reserve-home p{
-  color:var(--ink2);
-  font-size:1rem;
-  line-height:1.8;
-  margin-bottom:1.4rem;
-}
-.loaf-reserve-home-card{
-  background:var(--cream-lt);
-  border:1px solid var(--border);
-  padding:1.7rem;
-}
-.loaf-reserve-home-card strong{
-  color:var(--green);
-  display:block;
+.loaf-reserve-home-kicker{
+  color:var(--gold);
   font-family:var(--fc);
-  font-size:.72rem;
-  letter-spacing:.12em;
-  margin-bottom:.65rem;
+  font-size:.82rem;
+  font-weight:600;
+  letter-spacing:.18em;
+  margin-bottom:.85rem;
   text-transform:uppercase;
 }
-@media (max-width:760px){
-  .loaf-reserve-home{padding:3rem 1.25rem;}
-  .loaf-reserve-home-inner{grid-template-columns:1fr;}
+.loaf-reserve-home h2{
+  color:var(--cream-lt);
+  font-family:var(--fd);
+  font-size:clamp(3rem,6vw,5rem);
+  font-weight:700;
+  line-height:1;
+  margin-bottom:1rem;
+}
+.loaf-reserve-home-tagline{
+  color:var(--gold-lt);
+  font-family:var(--fd);
+  font-size:clamp(1.4rem,2.8vw,2rem);
+  font-style:italic;
+  line-height:1.3;
+}
+.loaf-reserve-home-benefits{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.2rem;
+  margin-bottom:2rem;
+}
+.loaf-reserve-home-benefit,
+.loaf-reserve-home-loaves{
+  background:rgba(245,238,216,.62);
+  border:1px solid rgba(201,168,76,.28);
+  border-radius:18px;
+}
+.loaf-reserve-home-benefit{
+  color:var(--green);
+  min-height:170px;
+  padding:2rem 1.5rem;
+  text-align:center;
+}
+.loaf-reserve-home-benefit svg{
+  color:#957714;
+  display:block;
+  height:34px;
+  margin:0 auto 1.3rem;
+  width:34px;
+}
+.loaf-reserve-home-benefit p{
+  font-family:var(--fd);
+  font-size:1.45rem;
+  line-height:1.25;
+}
+.loaf-reserve-home-loaves{
+  margin-bottom:3rem;
+  padding:3.2rem 2.5rem 3.5rem;
+  text-align:center;
+}
+.loaf-reserve-home-loaves h3{
+  color:var(--green);
+  font-family:var(--fd);
+  font-size:clamp(1.9rem,3vw,2.4rem);
+  line-height:1.15;
+  margin-bottom:2rem;
+}
+.loaf-reserve-home-loaf-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:1rem;
+}
+.loaf-reserve-home-loaf{
+  background:#fff;
+  border:1px solid rgba(201,168,76,.28);
+  border-radius:10px;
+  padding:1.35rem 1rem 1.15rem;
+}
+.loaf-reserve-home-loaf img{
+  border-radius:50%;
+  display:block;
+  height:70px;
+  margin:0 auto .9rem;
+  object-fit:cover;
+  width:70px;
+}
+.loaf-reserve-home-loaf strong{
+  color:var(--green);
+  display:block;
+  font-family:var(--fd);
+  font-size:1.25rem;
+  line-height:1.2;
+}
+.loaf-reserve-home-cta{
+  text-align:center;
+}
+.loaf-reserve-home-cta .btn-primary{
+  border-radius:12px;
+  font-family:var(--fd);
+  font-size:1.5rem;
+  letter-spacing:0;
+  padding:1rem 3rem;
+  text-transform:none;
+}
+.loaf-reserve-home-note{
+  color:#94846a;
+  font-family:var(--fd);
+  font-size:1.25rem;
+  font-style:italic;
+  margin-top:1rem;
+}
+@media (max-width:860px){
+  .loaf-reserve-home-benefits,
+  .loaf-reserve-home-loaf-grid{grid-template-columns:1fr;}
+  .loaf-reserve-home-hero{padding:3rem 1.25rem;}
+  .loaf-reserve-home-loaves{padding:2.3rem 1.25rem;}
 }
 
 /* ── STORY ── */
@@ -996,15 +1084,41 @@ footer{
 <!-- LOAF RESERVE HOME -->
 <section id="loaf-reserve-home" class="loaf-reserve-home" aria-labelledby="loaf-reserve-title">
   <div class="loaf-reserve-home-inner">
-    <div>
-      <div class="section-label gold-label">Loaf Reserve</div>
-      <h2 id="loaf-reserve-title">A weekly loaf, already saved for your Friday table.</h2>
-      <p>Founding members can reserve a fresh boule for a 4, 6, or 8 week term. Choose a classic or specialty loaf, then pick up every Friday morning in Liberty Hill.</p>
-      <a class="btn-primary" href="/order#loaf-reserve">Join Loaf Reserve</a>
+    <div class="loaf-reserve-home-hero">
+      <div class="loaf-reserve-home-kicker">Fatima Bakery ATX</div>
+      <h2 id="loaf-reserve-title">The Loaf Reserve</h2>
+      <p class="loaf-reserve-home-tagline">A standing place at the table, every week.</p>
     </div>
-    <div class="loaf-reserve-home-card">
-      <strong>Founding cohort</strong>
-      <p>Limited early spots help us shape the first weekly membership rhythm while keeping every batch small, slow-fermented, and baked by hand.</p>
+
+    <div class="loaf-reserve-home-benefits" aria-label="Loaf Reserve benefits">
+      <div class="loaf-reserve-home-benefit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 10h14l-1 9H6l-1-9Z"/><path d="M8 10a4 4 0 0 1 8 0"/><path d="M4 14h16"/></svg>
+        <p>Guaranteed loaf, never sold out</p>
+      </div>
+      <div class="loaf-reserve-home-benefit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m3 7 5 4 4-7 4 7 5-4-2 12H5L3 7Z"/></svg>
+        <p>First access to rotating bakes</p>
+      </div>
+      <div class="loaf-reserve-home-benefit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s7-6.1 7-12A7 7 0 1 0 5 9c0 5.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.2"/></svg>
+        <p>Named for the pilgrimage sites</p>
+      </div>
+    </div>
+
+    <div class="loaf-reserve-home-loaves">
+      <h3>Every reserve carries a name</h3>
+      <div class="loaf-reserve-home-loaf-grid">
+        <div class="loaf-reserve-home-loaf"><img src="/images/boule-fatima.jpg" alt="Fatima sourdough boule" loading="lazy"/><strong>Fatima</strong></div>
+        <div class="loaf-reserve-home-loaf"><img src="/images/boule-lourdes.jpg" alt="Lourdes sourdough boule" loading="lazy"/><strong>Lourdes</strong></div>
+        <div class="loaf-reserve-home-loaf"><img src="/images/boule-guadalupe.jpg" alt="Guadalupe sourdough boule" loading="lazy"/><strong>Guadalupe</strong></div>
+        <div class="loaf-reserve-home-loaf"><img src="/images/boule-santiago.jpg" alt="Santiago sourdough boule" loading="lazy"/><strong>Santiago</strong></div>
+        <div class="loaf-reserve-home-loaf"><img src="/images/boule-kibeho.jpg" alt="Kibeho sourdough boule" loading="lazy"/><strong>Kibeho</strong></div>
+      </div>
+    </div>
+
+    <div class="loaf-reserve-home-cta">
+      <a class="btn-primary" href="/order#loaf-reserve">Claim your reserve</a>
+      <p class="loaf-reserve-home-note">Limited reserves each week, by design.</p>
     </div>
   </div>
 </section>
@@ -1086,7 +1200,7 @@ footer{
     <div class="local-grid" aria-label="Fatima Bakery ATX local service areas">
       <article class="local-card">
         <h3>Liberty Hill</h3>
-        <p>Home-baked sourdough near Santa Rita Ranch with Friday pickup and Thursday delivery within 10 miles.</p>
+        <p>Home-baked sourdough near Santa Rita Ranch with Friday pickup and Thursday delivery.</p>
       </article>
       <article class="local-card">
         <h3>Leander</h3>
@@ -1116,7 +1230,7 @@ footer{
   <div class="faq-list">
     <details class="faq-item">
       <summary>Where can I see your menu?</summary>
-      <p>Our full Pilgrimage Collection of five sourdough boules plus seasonal extras is right on the <a href="/order">order page</a>. We bake in Liberty Hill and serve nearby customers in Santa Rita Ranch, Leander, Georgetown, Cedar Park, and North Austin through Friday preorders, market pickup, and limited local delivery.</p>
+      <p>Our full Pilgrimage Collection of five sourdough boules plus seasonal extras is right on the <a href="/order">order page</a>. We bake in Liberty Hill and serve nearby customers in Santa Rita Ranch, Liberty Hill, Leander and Georgetown through Friday preorders, market pickup, and limited local delivery.</p>
     </details>
     <details class="faq-item">
       <summary>Are your ingredients organic?</summary>
