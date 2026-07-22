@@ -120,6 +120,159 @@ h1 em{font-style:italic;color:var(--green-md);}
 }
 .btn-ghost:hover{border-color:var(--green-lt);color:var(--green);}
 
+
+/* Temporary founding-cohort banner. Remove once the founding cohort is full. */
+.loaf-reserve-banner{
+  background:var(--green);
+  color:var(--cream);
+  border-top:1px solid rgba(245,238,216,.16);
+  border-bottom:1px solid rgba(245,238,216,.16);
+  padding:.8rem 1.5rem;
+  text-align:center;
+}
+.loaf-reserve-banner a{
+  color:var(--gold-lt);
+  font-family:var(--fc);
+  font-size:.68rem;
+  font-weight:600;
+  letter-spacing:.13em;
+  text-decoration:none;
+  text-transform:uppercase;
+}
+.loaf-reserve-banner a:hover{text-decoration:underline;}
+.loaf-reserve-home{
+  background:var(--cream-lt);
+  padding:3rem 1.5rem 4rem;
+}
+.loaf-reserve-home-inner{
+  max-width:1180px;
+  margin:0 auto;
+}
+.loaf-reserve-home-hero{
+  background:var(--green);
+  border-radius:18px;
+  color:var(--cream);
+  margin-bottom:2rem;
+  padding:4.4rem 2rem 4.8rem;
+  text-align:center;
+}
+.loaf-reserve-home-kicker{
+  color:var(--gold);
+  font-family:var(--fc);
+  font-size:.82rem;
+  font-weight:600;
+  letter-spacing:.18em;
+  margin-bottom:.85rem;
+  text-transform:uppercase;
+}
+.loaf-reserve-home h2{
+  color:var(--cream-lt);
+  font-family:var(--fd);
+  font-size:clamp(3rem,6vw,5rem);
+  font-weight:700;
+  line-height:1;
+  margin-bottom:1rem;
+}
+.loaf-reserve-home-tagline{
+  color:var(--gold-lt);
+  font-family:var(--fd);
+  font-size:clamp(1.4rem,2.8vw,2rem);
+  font-style:italic;
+  line-height:1.3;
+}
+.loaf-reserve-home-benefits{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.2rem;
+  margin-bottom:2rem;
+}
+.loaf-reserve-home-benefit,
+.loaf-reserve-home-loaves{
+  background:rgba(245,238,216,.62);
+  border:1px solid rgba(201,168,76,.28);
+  border-radius:18px;
+}
+.loaf-reserve-home-benefit{
+  color:var(--green);
+  min-height:170px;
+  padding:2rem 1.5rem;
+  text-align:center;
+}
+.loaf-reserve-home-benefit svg{
+  color:#957714;
+  display:block;
+  height:34px;
+  margin:0 auto 1.3rem;
+  width:34px;
+}
+.loaf-reserve-home-benefit p{
+  font-family:var(--fd);
+  font-size:1.45rem;
+  line-height:1.25;
+}
+.loaf-reserve-home-loaves{
+  margin-bottom:3rem;
+  padding:3.2rem 2.5rem 3.5rem;
+  text-align:center;
+}
+.loaf-reserve-home-loaves h3{
+  color:var(--green);
+  font-family:var(--fd);
+  font-size:clamp(1.9rem,3vw,2.4rem);
+  line-height:1.15;
+  margin-bottom:2rem;
+}
+.loaf-reserve-home-loaf-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:1rem;
+}
+.loaf-reserve-home-loaf{
+  background:#fff;
+  border:1px solid rgba(201,168,76,.28);
+  border-radius:10px;
+  padding:1.35rem 1rem 1.15rem;
+}
+.loaf-reserve-home-loaf img{
+  border-radius:50%;
+  display:block;
+  height:70px;
+  margin:0 auto .9rem;
+  object-fit:cover;
+  width:70px;
+}
+.loaf-reserve-home-loaf strong{
+  color:var(--green);
+  display:block;
+  font-family:var(--fd);
+  font-size:1.25rem;
+  line-height:1.2;
+}
+.loaf-reserve-home-cta{
+  text-align:center;
+}
+.loaf-reserve-home-cta .btn-primary{
+  border-radius:12px;
+  font-family:var(--fd);
+  font-size:1.5rem;
+  letter-spacing:0;
+  padding:1rem 3rem;
+  text-transform:none;
+}
+.loaf-reserve-home-note{
+  color:#94846a;
+  font-family:var(--fd);
+  font-size:1.25rem;
+  font-style:italic;
+  margin-top:1rem;
+}
+@media (max-width:860px){
+  .loaf-reserve-home-benefits,
+  .loaf-reserve-home-loaf-grid{grid-template-columns:1fr;}
+  .loaf-reserve-home-hero{padding:3rem 1.25rem;}
+  .loaf-reserve-home-loaves{padding:2.3rem 1.25rem;}
+}
+
 /* ── STORY ── */
 .story{
   background:var(--cream);
@@ -899,6 +1052,12 @@ footer{
   <a href="/order#loaf-reserve" style="color:var(--gold);margin-top:.4rem;">Membership</a>
 </nav>
 
+
+<!-- Temporary founding-cohort banner. Remove once the founding cohort is full. -->
+<div class="loaf-reserve-banner">
+  <a href="#loaf-reserve-home">Founding Loaf Reserve spots are open — learn more</a>
+</div>
+
 <!-- HERO: BREAD FIRST -->
 <section class="hero">
   <div class="hero-photo hero-photo--dual">
@@ -915,6 +1074,51 @@ footer{
     <div class="hero-btns">
       <a class="btn-primary" href="/order" style="background:var(--gold);color:var(--green);border:none;">Order This Week</a>
       <a class="btn-ghost" href="/order">Order a Loaf</a>
+    </div>
+  </div>
+</section>
+
+<div class="grain-divider"></div>
+
+
+<!-- LOAF RESERVE HOME -->
+<section id="loaf-reserve-home" class="loaf-reserve-home" aria-labelledby="loaf-reserve-title">
+  <div class="loaf-reserve-home-inner">
+    <div class="loaf-reserve-home-hero">
+      <div class="loaf-reserve-home-kicker">Fatima Bakery ATX</div>
+      <h2 id="loaf-reserve-title">The Loaf Reserve</h2>
+      <p class="loaf-reserve-home-tagline">A standing place at the table, every week.</p>
+    </div>
+
+    <div class="loaf-reserve-home-benefits" aria-label="Loaf Reserve benefits">
+      <div class="loaf-reserve-home-benefit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 10h14l-1 9H6l-1-9Z"/><path d="M8 10a4 4 0 0 1 8 0"/><path d="M4 14h16"/></svg>
+        <p>Guaranteed loaf, never sold out</p>
+      </div>
+      <div class="loaf-reserve-home-benefit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m3 7 5 4 4-7 4 7 5-4-2 12H5L3 7Z"/></svg>
+        <p>First access to rotating bakes</p>
+      </div>
+      <div class="loaf-reserve-home-benefit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s7-6.1 7-12A7 7 0 1 0 5 9c0 5.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.2"/></svg>
+        <p>Named for the pilgrimage sites</p>
+      </div>
+    </div>
+
+    <div class="loaf-reserve-home-loaves">
+      <h3>Every reserve carries a name</h3>
+      <div class="loaf-reserve-home-loaf-grid">
+        <div class="loaf-reserve-home-loaf"><img src="/images/boule-fatima.jpg" alt="Fatima sourdough boule" loading="lazy"/><strong>Fatima</strong></div>
+        <div class="loaf-reserve-home-loaf"><img src="/images/boule-lourdes.jpg" alt="Lourdes sourdough boule" loading="lazy"/><strong>Lourdes</strong></div>
+        <div class="loaf-reserve-home-loaf"><img src="/images/boule-guadalupe.jpg" alt="Guadalupe sourdough boule" loading="lazy"/><strong>Guadalupe</strong></div>
+        <div class="loaf-reserve-home-loaf"><img src="/images/boule-santiago.jpg" alt="Santiago sourdough boule" loading="lazy"/><strong>Santiago</strong></div>
+        <div class="loaf-reserve-home-loaf"><img src="/images/boule-kibeho.jpg" alt="Kibeho sourdough boule" loading="lazy"/><strong>Kibeho</strong></div>
+      </div>
+    </div>
+
+    <div class="loaf-reserve-home-cta">
+      <a class="btn-primary" href="/order#loaf-reserve">Claim your reserve</a>
+      <p class="loaf-reserve-home-note">Limited reserves each week, by design.</p>
     </div>
   </div>
 </section>
