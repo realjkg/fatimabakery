@@ -91,6 +91,34 @@ grep -q '"assets"' wrangler.jsonc || {
   exit 1
 }
 
+echo "Checking Apps Script deployment automation..."
+test -f .github/workflows/deploy-apps-script.yml || {
+  echo "Missing Apps Script deployment workflow."
+  exit 1
+}
+
+grep -F 'environment: apps-script-production' .github/workflows/deploy-apps-script.yml >/dev/null || {
+  echo "Apps Script deployment must use the protected production environment."
+  exit 1
+}
+
+grep -F 'CLASP_VERSION: "3.3.0"' .github/workflows/deploy-apps-script.yml >/dev/null || {
+  echo "Apps Script deployment must pin the reviewed clasp version."
+  exit 1
+}
+
+grep -F 'clasp update-deployment "$APPS_SCRIPT_DEPLOYMENT_ID"' .github/workflows/deploy-apps-script.yml >/dev/null || {
+  echo "Apps Script deployment must preserve the existing deployment ID."
+  exit 1
+}
+
+grep -F 'github-actions-deployment-smoke-test' .github/workflows/deploy-apps-script.yml >/dev/null || {
+  echo "Apps Script deployment is missing the unsigned order-route smoke test."
+  exit 1
+}
+
+node --check apps-script/Code.js
+
 echo "Checking local HTML href/src references..."
 is_valid_local_path() {
   local target="$1"
